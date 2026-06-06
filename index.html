@@ -186,6 +186,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+
+/* PASSWORD TOGGLE */
+.pass-wrap{position:relative;display:flex;align-items:center}
+.pass-wrap input{flex:1;padding-right:40px!important}
+.eye-btn{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:16px;padding:4px;line-height:1}
+.eye-btn:hover{color:var(--navy)}
+
 /* HIDDEN */
 .hidden{display:none!important}
 
@@ -235,7 +242,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       </div>
       <div class="field">
         <label>Password <span class="req">*</span></label>
-        <input type="password" id="sl-pass" placeholder="Your password"/>
+        <div class="pass-wrap">
+          <input type="password" id="sl-pass" placeholder="Your password"/>
+          <button type="button" class="eye-btn" onclick="togglePass('sl-pass',this)" tabindex="-1">👁️</button>
+        </div>
       </div>
       <button class="btn btn-primary btn-full" onclick="loginStudent()"><span id="sl-spinner" class="spinner hidden"></span>Login as Student</button>
       <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--gray-600)">
@@ -254,7 +264,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       </div>
       <div class="field">
         <label>Password <span class="req">*</span></label>
-        <input type="password" id="cl-pass" placeholder="Admin password"/>
+        <div class="pass-wrap">
+          <input type="password" id="cl-pass" placeholder="Admin password"/>
+          <button type="button" class="eye-btn" onclick="togglePass('cl-pass',this)" tabindex="-1">👁️</button>
+        </div>
       </div>
       <button class="btn btn-primary btn-full" onclick="loginCashier()"><span id="cl-spinner" class="spinner hidden"></span>Login as Cashier</button>
     </div>
@@ -363,11 +376,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <div class="form-row">
         <div class="field">
           <label>Set Password <span class="req">*</span></label>
-          <input type="password" id="reg-pass" placeholder="Minimum 6 characters"/>
+          <div class="pass-wrap">
+            <input type="password" id="reg-pass" placeholder="Minimum 6 characters"/>
+            <button type="button" class="eye-btn" onclick="togglePass('reg-pass',this)" tabindex="-1">👁️</button>
+          </div>
         </div>
         <div class="field">
           <label>Confirm Password <span class="req">*</span></label>
-          <input type="password" id="reg-pass2" placeholder="Re-enter password"/>
+          <div class="pass-wrap">
+            <input type="password" id="reg-pass2" placeholder="Re-enter password"/>
+            <button type="button" class="eye-btn" onclick="togglePass('reg-pass2',this)" tabindex="-1">👁️</button>
+          </div>
         </div>
       </div>
       <div class="btn-row">
@@ -894,7 +913,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 //  CONFIGURATION — only non-sensitive values here
 // ═══════════════════════════════════════════════════════════
 // Replace with your deployed Cloudflare Worker URL
-const WORKER_URL = 'https://gpm-fee.gpmungerhostel.workers.dev';
+const WORKER_URL = 'https://gpm-fee.gpmungerhostel-3df.workers.dev';
 
 // Institute UPI ID (the account students pay into)
 const INSTITUTE_UPI_ID   = 'gpmmunger@pnb';
@@ -2049,6 +2068,18 @@ function shortCourse(c) {
   };
   return map[c] || c;
 }
+
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
+
 function getRollFull(noId, brId, yrId) {
   const no = (document.getElementById(noId)?.value || '').trim();
   const br = document.getElementById(brId)?.value || '';
