@@ -333,19 +333,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           <label>Course <span class="req">*</span></label>
           <select id="reg-course">
             <option value="">Select Course</option>
-            <option>Civil Engineering</option>
-            <option>Computer Science &amp; Engineering</option>
-            <option>Electrical Engineering</option>
-            <option>Electronics Engineering</option>
-            <option>Mechanical Engineering</option>
-            <option>Modern Office Management</option>
+            <option>Diploma in Civil Engineering</option>
+            <option>Diploma in Computer Science &amp; Engineering</option>
+            <option>Diploma in Electrical Engineering</option>
+            <option>Diploma in Electronics Engineering</option>
+            <option>Diploma in Fire Technology and Safety</option>
+            <option>Diploma in Mechanical Engineering</option>
           </select>
         </div>
         <div class="field">
-          <label>Year / Semester <span class="req">*</span></label>
+          <label>Semester <span class="req">*</span></label>
           <select id="reg-year">
-            <option value="">Select</option>
-            <option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option>
+            <option value="">Select Semester</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
+            <option value="3">3rd Semester</option>
+            <option value="4">4th Semester</option>
+            <option value="5">5th Semester</option>
+            <option value="6">6th Semester</option>
+            <option value="F1">1st Semester (Failed/Repeat)</option>
+            <option value="F2">2nd Semester (Failed/Repeat)</option>
+            <option value="F3">3rd Semester (Failed/Repeat)</option>
+            <option value="F4">4th Semester (Failed/Repeat)</option>
+            <option value="F5">5th Semester (Failed/Repeat)</option>
+            <option value="F6">6th Semester (Failed/Repeat)</option>
           </select>
         </div>
       </div>
@@ -752,21 +763,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <label>Course <span class="req">*</span></label>
         <select id="ft-course">
           <option value="ALL">All Courses</option>
-          <option>Civil Engineering</option>
-          <option>Computer Science &amp; Engineering</option>
-          <option>Electrical Engineering</option>
-          <option>Electronics Engineering</option>
-          <option>Mechanical Engineering</option>
-          <option>Modern Office Management</option>
+          <option>Diploma in Civil Engineering</option>
+          <option>Diploma in Computer Science &amp; Engineering</option>
+          <option>Diploma in Electrical Engineering</option>
+          <option>Diploma in Electronics Engineering</option>
+          <option>Diploma in Fire Technology and Safety</option>
+          <option>Diploma in Mechanical Engineering</option>
         </select>
       </div>
       <div class="field">
-        <label>Year</label>
+        <label>Semester</label>
         <select id="ft-year">
-          <option value="ALL">All Years</option>
-          <option value="1">1st Year</option>
-          <option value="2">2nd Year</option>
-          <option value="3">3rd Year</option>
+          <option value="ALL">All Semesters</option>
+          <option value="1">1st Semester</option>
+          <option value="2">2nd Semester</option>
+          <option value="3">3rd Semester</option>
+          <option value="4">4th Semester</option>
+          <option value="5">5th Semester</option>
+          <option value="6">6th Semester</option>
         </select>
       </div>
     </div>
@@ -775,7 +789,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <label>Category</label>
         <select id="ft-category">
           <option value="ALL">All Categories</option>
-          <option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>EWS</option>
+          <option>General</option><option>BC</option><option>EBC</option><option>SC</option><option>ST</option><option>EWS</option>
         </select>
       </div>
       <div class="field">
@@ -1280,7 +1294,7 @@ function loadStudentProfile() {
       <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
       <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
       <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
-      <div class="info-item"><div class="key">Year</div><div class="val">${s.year}${ordinal(s.year)} Year</div></div>
+      <div class="info-item"><div class="key">Semester</div><div class="val">${s.year}${ordinal(s.year)} Sem</div></div>
       <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
       <div class="info-item"><div class="key">Gender</div><div class="val">${s.gender}</div></div>
       <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
@@ -1392,7 +1406,7 @@ async function viewStudent(rollNo) {
       <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
       <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
       <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
-      <div class="info-item"><div class="key">Year</div><div class="val">${s.year}${ordinal(s.year)} Year</div></div>
+      <div class="info-item"><div class="key">Semester</div><div class="val">${s.year}${ordinal(s.year)} Sem</div></div>
       <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
       <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
     </div>
@@ -2052,19 +2066,26 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
 }
 function ordinal(n) {
+  if (!n) return '';
+  if (String(n).startsWith('F')) return String(n).slice(1) + getSuffix(parseInt(String(n).slice(1))) + ' (Repeat)';
   const s = ['th','st','nd','rd'];
   const v = parseInt(n) % 100;
+  return (s[(v-20)%10] || s[v] || s[0]);
+}
+function getSuffix(n) {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
   return (s[(v-20)%10] || s[v] || s[0]);
 }
 function shortCourse(c) {
   if (!c) return '—';
   const map = {
-    'Civil Engineering': 'Civil',
-    'Computer Science & Engineering': 'CSE',
-    'Electrical Engineering': 'EE',
-    'Electronics Engineering': 'ECE',
-    'Mechanical Engineering': 'ME',
-    'Modern Office Management': 'MOM'
+    'Diploma in Civil Engineering': 'Civil',
+    'Diploma in Computer Science & Engineering': 'CSE',
+    'Diploma in Electrical Engineering': 'EE',
+    'Diploma in Electronics Engineering': 'ECE',
+    'Diploma in Fire Technology and Safety': 'FTS',
+    'Diploma in Mechanical Engineering': 'ME'
   };
   return map[c] || c;
 }
