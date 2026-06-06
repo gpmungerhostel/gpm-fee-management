@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GPM Fee Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root{
+  --navy:#0f2744;--navy-light:#1a3a5c;--navy-mid:#2a4d73;
+  --gold:#c8973a;--gold-light:#e8b86d;--gold-pale:#fdf4e3;
+  --cream:#fafaf7;--white:#ffffff;
+  --gray-50:#f8f8f6;--gray-100:#ededea;--gray-200:#d8d8d4;
+  --gray-400:#9d9d97;--gray-600:#6b6b65;--gray-800:#2c2c28;
+  --success:#1a6b3c;--success-bg:#eaf5ef;
+  --danger:#8b1a1a;--danger-bg:#fdf0f0;
+  --warning:#7a5c00;--warning-bg:#fffbeb;
+  --info:#1a3a7c;--info-bg:#eef3ff;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:24px;
+  --shadow-sm:0 1px 3px rgba(15,39,68,.08);
+  --shadow-md:0 4px 16px rgba(15,39,68,.12);
+  --shadow-lg:0 12px 40px rgba(15,39,68,.18);
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-800);min-height:100vh;font-size:15px;line-height:1.6}
+
+/* INSTITUTE BANNER */
+.institute-banner{background:linear-gradient(135deg,#0f2744 0%,#1a3a5c 100%);padding:14px 24px;display:flex;align-items:center;gap:18px;border-bottom:3px solid var(--gold)}
+.inst-logo{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0}
+.inst-info{flex:1}
+.inst-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:700;letter-spacing:.3px}
+.inst-addr{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px}
+.inst-subtitle{font-size:13px;color:var(--gold-light);font-weight:600;letter-spacing:1.5px;margin-top:5px;text-transform:uppercase}
+@media(max-width:500px){.institute-banner{padding:12px 16px}.inst-name{font-size:16px}.inst-logo{width:48px;height:48px}}
+
+/* HEADER NAV */
+.site-header{background:var(--navy);padding:0 24px;display:flex;align-items:center;justify-content:flex-end;height:44px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25);border-bottom:1px solid rgba(200,151,58,.3)}
+.header-nav{display:flex;gap:4px}
+.header-btn{background:transparent;border:none;color:rgba(255,255,255,.7);padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;transition:var(--transition);white-space:nowrap}
+.header-btn:hover,.header-btn.active{background:rgba(255,255,255,.12);color:#fff}
+.header-btn.active{font-weight:500}
+.user-chip{display:flex;align-items:center;gap:8px;margin-left:12px;padding-left:12px;border-left:1px solid rgba(255,255,255,.15)}
+.user-chip span{font-size:12px;color:rgba(255,255,255,.7)}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--navy);flex-shrink:0}
+
+/* LAYOUT */
+.main{max-width:820px;margin:0 auto;padding:32px 20px 80px}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow-sm);animation:slideUp .3s ease}
+.card+.card{margin-top:16px}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--navy);margin-bottom:6px}
+.card-subtitle{font-size:13px;color:var(--gray-600);margin-bottom:24px}
+.divider{border:none;border-top:1px solid var(--gray-100);margin:20px 0}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}.form-row-3{grid-template-columns:1fr}}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase}
+.field label span.req{color:#c0392b;margin-left:2px}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--gray-800);background:var(--white);transition:var(--transition);outline:none;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--navy-mid);box-shadow:0 0 0 3px rgba(15,39,68,.08)}
+.field input.error,.field select.error{border-color:var(--danger)}
+.field .hint{font-size:11px;color:var(--gray-400);margin-top:4px}
+.field .err-msg{font-size:11px;color:var(--danger);margin-top:4px;font-weight:500}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--radius-md);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:var(--transition);border:1.5px solid transparent;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-primary:hover:not(:disabled){background:var(--navy-light)}
+.btn-secondary{background:transparent;color:var(--navy);border-color:var(--gray-200)}
+.btn-secondary:hover:not(:disabled){background:var(--gray-50);border-color:var(--gray-400)}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
+.btn-gold{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn-gold:hover:not(:disabled){background:var(--gold-light)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.btn-full{width:100%;justify-content:center}
+.btn-row{display:flex;justify-content:space-between;gap:12px;margin-top:24px}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.2px}
+.badge-pending{background:var(--warning-bg);color:var(--warning)}
+.badge-paid{background:var(--success-bg);color:var(--success)}
+.badge-overdue{background:var(--danger-bg);color:var(--danger)}
+
+/* ALERT */
+.alert{border-radius:var(--radius-md);padding:12px 16px;font-size:13px;margin-bottom:16px;border-left:3px solid}
+.alert-info{background:var(--info-bg);color:var(--info);border-color:#4a6fcf}
+.alert-success{background:var(--success-bg);color:var(--success);border-color:var(--success)}
+.alert-danger{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.alert-warning{background:var(--warning-bg);color:var(--warning);border-color:#c8973a}
+
+/* TABS */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.tab-btn{background:var(--gray-50);border:1.5px solid var(--gray-100);border-radius:20px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--gray-600);cursor:pointer;white-space:nowrap;transition:var(--transition)}
+.tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
+.tab-btn:hover:not(.active){background:var(--gray-100);color:var(--navy)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-600);background:var(--gray-50);border-bottom:1px solid var(--gray-100)}
+.data-table td{padding:11px 12px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--gray-50)}
+.table-wrap{overflow-x:auto;border-radius:var(--radius-md);border:1px solid var(--gray-100)}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:600px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--white);border-radius:var(--radius-md);padding:14px;border:1px solid var(--gray-100);box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px}
+.stat-card-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.stat-card .val{font-family:'Playfair Display',serif;font-size:20px;color:var(--navy);line-height:1;font-weight:700}
+.stat-card .lbl{font-size:10px;color:var(--gray-600);margin-top:3px;line-height:1.3}
+
+/* HOME */
+.home-grid{display:flex;flex-direction:column;gap:14px;max-width:480px;margin:0 auto}
+.home-card{background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:22px 24px;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm)}
+.home-card:hover{box-shadow:var(--shadow-md);border-color:var(--navy-mid);transform:translateY(-2px)}
+.home-card-left{display:flex;align-items:center;gap:16px}
+.home-card-icon{width:48px;height:48px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:22px}
+.home-card-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--navy)}
+.home-card-desc{font-size:12px;color:var(--gray-600);margin-top:3px}
+.home-card-arrow{color:var(--gray-400);font-size:20px}
+.home-header{text-align:center;margin-bottom:36px}
+.home-header h1{font-family:'Playfair Display',serif;font-size:28px;color:var(--navy);margin-bottom:6px}
+.home-header p{color:var(--gray-600);font-size:14px}
+.home-emblem{width:64px;height:64px;border-radius:50%;margin:0 auto 16px;overflow:hidden;border:3px solid var(--gold);box-shadow:var(--shadow-md)}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.info-item .key{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--gray-400)}
+.info-item .val{font-size:14px;color:var(--gray-800);margin-top:2px;font-weight:500}
+
+/* FEE DEMAND CARD */
+.demand-card{background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-md);padding:16px;margin-bottom:10px;transition:var(--transition)}
+.demand-card:hover{box-shadow:var(--shadow-sm)}
+.demand-card.paid{border-left:3px solid var(--success)}
+.demand-card.pending{border-left:3px solid var(--gold)}
+.demand-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.demand-fee-type{font-weight:600;font-size:14px;color:var(--navy)}
+.demand-amount{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy);font-weight:700}
+.demand-meta{font-size:12px;color:var(--gray-600)}
+
+/* QR BOX */
+.qr-box{text-align:center;padding:20px;background:var(--gray-50);border-radius:var(--radius-md);border:1px solid var(--gray-100)}
+.qr-box canvas{border-radius:8px;border:4px solid var(--white);box-shadow:var(--shadow-md)}
+.ref-code{font-family:monospace;font-size:13px;background:var(--navy);color:var(--gold-light);padding:8px 16px;border-radius:var(--radius-sm);display:inline-block;margin-top:10px;letter-spacing:1px}
+
+/* RECEIPT PRINT */
+@media print{
+  .no-print{display:none!important}
+  body{background:#fff}
+  .receipt-page{page-break-after:always}
+}
+.receipt-sheet{background:#fff;padding:0;font-family:'DM Sans',sans-serif}
+.receipt-stub{border:1px solid #ccc;padding:14px 16px;margin-bottom:0;page-break-inside:avoid}
+.receipt-stub+.receipt-stub{border-top:none}
+.receipt-stub:last-child{border-bottom:1px dashed #aaa}
+.receipt-header{display:flex;align-items:center;gap:10px;border-bottom:1.5px solid var(--navy);padding-bottom:8px;margin-bottom:10px}
+.receipt-inst-name{font-family:'Playfair Display',serif;font-size:13px;color:var(--navy);font-weight:700}
+.receipt-inst-addr{font-size:9px;color:#666}
+.receipt-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-top:2px}
+.receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:8px}
+.receipt-row{display:flex;gap:6px;font-size:11px}
+.receipt-key{color:#666;min-width:90px;flex-shrink:0}
+.receipt-val{font-weight:600;color:#111}
+.receipt-amount-box{background:var(--navy);color:#fff;padding:6px 12px;border-radius:4px;text-align:center;margin-top:8px}
+.receipt-amount-box .ra-label{font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.5px}
+.receipt-amount-box .ra-val{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+.receipt-sig{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px dashed #ccc;font-size:10px;color:#666}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,39,68,.45);backdrop-filter:blur(2px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--white);border-radius:var(--radius-lg);padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .2s ease}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--navy);margin-bottom:6px}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-400);margin-top:-4px}
+
+/* SPINNER */
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* HIDDEN */
+.hidden{display:none!important}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2744 0%,#1a3a5c 60%,#2a4d73 100%);padding:20px}
+.login-card{background:var(--white);border-radius:var(--radius-xl);padding:40px 36px;max-width:420px;width:100%;box-shadow:var(--shadow-lg)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo img{width:72px;height:72px;border-radius:50%;border:3px solid var(--gold);object-fit:cover}
+.login-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);text-align:center;margin-top:12px}
+.login-sub{font-size:13px;color:var(--gray-600);text-align:center;margin-top:4px}
+.role-tabs{display:flex;gap:0;margin-bottom:24px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);overflow:hidden}
+.role-tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray-600);transition:var(--transition);background:transparent;border:none;font-family:'DM Sans',sans-serif}
+.role-tab.active{background:var(--navy);color:#fff}
+
+/* SETUP BANNER */
+.setup-banner{background:var(--warning-bg);border:1px solid #e8c96d;border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--warning)}
+.setup-banner strong{display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+<!-- ═══════════════════════════════════════════ LOGIN SCREEN ═══ -->
+<div id="screen-login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="data:image/jpeg;base64,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" alt="GPM"/>
+      <div class="login-title">Government Polytechnic, Munger</div>
+      <div class="login-sub">Fee Management System</div>
+    </div>
+    <div class="role-tabs">
+      <button class="role-tab active" id="tab-student" onclick="setRole('student')">Student</button>
+      <button class="role-tab" id="tab-cashier" onclick="setRole('cashier')">Cashier / Admin</button>
+    </div>
+    <div id="login-alert" class="alert alert-danger hidden"></div>
+
+    <!-- Student login fields -->
+    <div id="student-login-fields">
+      <div class="field">
+        <label>Roll Number <span class="req">*</span></label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" id="sl-roll-no" maxlength="3" placeholder="25" style="text-align:center;font-weight:600;width:70px;flex-shrink:0"/>
+          <select id="sl-roll-branch" style="padding:10px 8px;font-weight:600;flex:1">
+            <option>CE</option><option selected>CSE</option><option>EE</option><option>EC</option><option>ME</option><option>FTS</option>
+          </select>
+          <input type="text" id="sl-roll-year" maxlength="4" placeholder="2026" style="text-align:center;font-weight:600;width:80px;flex-shrink:0"/>
+        </div>
+        <div class="hint">Format: 25 / CSE / 2026</div>
+      </div>
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <input type="password" id="sl-pass" placeholder="Your password"/>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="loginStudent()"><span id="sl-spinner" class="spinner hidden"></span>Login as Student</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--gray-600)">
+        New student? <a href="#" onclick="showScreen('screen-register');return false" style="color:var(--navy);font-weight:600">Register here</a>
+      </p>
+      <p style="text-align:center;margin-top:8px;font-size:13px;color:var(--gray-600)">
+        Verify a receipt? <a href="#" onclick="showScreen('screen-verify-public');return false" style="color:var(--gold);font-weight:600">🔍 Verify here</a>
+      </p>
+    </div>
+
+    <!-- Cashier login fields -->
+    <div id="cashier-login-fields" class="hidden">
+      <div class="field">
+        <label>Username <span class="req">*</span></label>
+        <input type="text" id="cl-user" placeholder="cashier" value="cashier"/>
+      </div>
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <input type="password" id="cl-pass" placeholder="Admin password"/>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="loginCashier()"><span id="cl-spinner" class="spinner hidden"></span>Login as Cashier</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ REGISTER SCREEN ═══ -->
+<div id="screen-register" class="hidden">
+  <div class="institute-banner">
+    <img src="data:image/jpeg;base64,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" alt="GPM Logo" class="inst-logo"/>
+    <div class="inst-info">
+      <div class="inst-name">Government Polytechnic, Munger</div>
+      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+      <div class="inst-subtitle">💰 FEE MANAGEMENT SYSTEM — STUDENT REGISTRATION</div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="card">
+      <div class="card-title">Student Registration</div>
+      <div class="card-subtitle">Register once to access the fee portal. Your Roll No. is your unique identifier.</div>
+      <div id="reg-alert" class="alert alert-danger hidden"></div>
+      <div class="form-row">
+        <div class="field">
+          <label>Roll Number <span class="req">*</span></label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="reg-roll-no" maxlength="3" placeholder="25" oninput="updateRegRollPreview()" style="text-align:center;font-weight:600;width:70px;flex-shrink:0"/>
+            <select id="reg-roll-branch" onchange="updateRegRollPreview()" style="padding:10px 8px;font-weight:600;flex:1">
+              <option>CE</option><option selected>CSE</option><option>EE</option><option>EC</option><option>ME</option><option>FTS</option>
+            </select>
+            <input type="text" id="reg-roll-year" maxlength="4" placeholder="2026" oninput="updateRegRollPreview()" style="text-align:center;font-weight:600;width:80px;flex-shrink:0"/>
+          </div>
+          <div class="hint" id="reg-roll-preview" style="font-weight:600;color:var(--navy-mid)">Preview: __/CSE/2026</div>
+        </div>
+        <div class="field">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="reg-name" placeholder="As per documents"/>
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="field">
+          <label>Gender <span class="req">*</span></label>
+          <select id="reg-gender">
+            <option value="">Select</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Category <span class="req">*</span></label>
+          <select id="reg-category">
+            <option value="">Select</option>
+            <option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>EWS</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Differently Abled</label>
+          <select id="reg-pwd">
+            <option value="No">No</option><option value="Yes">Yes</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Course <span class="req">*</span></label>
+          <select id="reg-course">
+            <option value="">Select Course</option>
+            <option>Civil Engineering</option>
+            <option>Computer Science &amp; Engineering</option>
+            <option>Electrical Engineering</option>
+            <option>Electronics Engineering</option>
+            <option>Mechanical Engineering</option>
+            <option>Modern Office Management</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Year / Semester <span class="req">*</span></label>
+          <select id="reg-year">
+            <option value="">Select</option>
+            <option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Mobile Number <span class="req">*</span></label>
+          <input type="tel" id="reg-mobile" placeholder="10-digit mobile number" maxlength="10"/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="optional"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Father's Name</label>
+          <input type="text" id="reg-father" placeholder="Father's full name"/>
+        </div>
+        <div class="field">
+          <label>Mother's Name</label>
+          <input type="text" id="reg-mother" placeholder="Mother's full name"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Permanent Address</label>
+        <textarea id="reg-address" rows="2" placeholder="Village / Town, District, Bihar"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Set Password <span class="req">*</span></label>
+          <input type="password" id="reg-pass" placeholder="Minimum 6 characters"/>
+        </div>
+        <div class="field">
+          <label>Confirm Password <span class="req">*</span></label>
+          <input type="password" id="reg-pass2" placeholder="Re-enter password"/>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="showScreen('screen-login')">← Back to Login</button>
+        <button class="btn btn-primary" onclick="registerStudent()"><span id="reg-spinner" class="spinner hidden"></span>Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════ STUDENT PORTAL ═══ -->
+<div id="screen-student" class="hidden">
+  <div class="institute-banner">
+    <img src="data:image/jpeg;base64,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" alt="GPM Logo" class="inst-logo"/>
+    <div class="inst-info">
+      <div class="inst-name">Government Polytechnic, Munger</div>
+      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+      <div class="inst-subtitle">💰 FEE MANAGEMENT SYSTEM</div>
+    </div>
+  </div>
+  <div class="site-header no-print">
+    <div class="header-nav">
+      <button class="header-btn active" onclick="stu_tab('dashboard')">Dashboard</button>
+      <button class="header-btn" onclick="stu_tab('dues')">My Dues</button>
+      <button class="header-btn" onclick="stu_tab('payments')">Payment History</button>
+      <button class="header-btn" onclick="stu_tab('profile')">Profile</button>
+    </div>
+    <div class="user-chip">
+      <div class="user-avatar" id="stu-avatar-initials">S</div>
+      <span id="stu-nav-name">Student</span>
+      <button class="header-btn" onclick="logout()" style="margin-left:4px">Logout</button>
+    </div>
+  </div>
+  <div class="main">
+
+    <!-- Dashboard Tab -->
+    <div id="stu-tab-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-card-icon" style="background:#eef3ff">💳</div><div><div class="val" id="sd-total-due">₹0</div><div class="lbl">Total Due</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">✅</div><div><div class="val" id="sd-total-paid">₹0</div><div class="lbl">Total Paid</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏳</div><div><div class="val" id="sd-pending-count">0</div><div class="lbl">Pending</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">🧾</div><div><div class="val" id="sd-receipt-count">0</div><div class="lbl">Receipts</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Pending Fee Demands</div>
+        <div class="card-subtitle">Scan the QR code with any UPI app to pay. Your reference code is pre-filled.</div>
+        <div id="stu-demands-list"><div class="alert alert-info">Loading fee demands…</div></div>
+      </div>
+    </div>
+
+    <!-- Dues Tab -->
+    <div id="stu-tab-dues" class="hidden">
+      <div class="card">
+        <div class="card-title">All Fee Demands</div>
+        <div class="card-subtitle">Complete list of fee demands for your account.</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="filterDues('all',this)">All</button>
+          <button class="tab-btn" onclick="filterDues('pending',this)">Pending</button>
+          <button class="tab-btn" onclick="filterDues('paid',this)">Paid</button>
+        </div>
+        <div id="stu-dues-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Payments Tab -->
+    <div id="stu-tab-payments" class="hidden">
+      <div class="card">
+        <div class="card-title">Payment History</div>
+        <div class="card-subtitle">All verified payments and issued receipts.</div>
+        <div id="stu-payments-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div id="stu-tab-profile" class="hidden">
+      <div class="card">
+        <div class="card-title">My Profile</div>
+        <div class="card-subtitle">Your registration details on record.</div>
+        <div id="stu-profile-info"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CASHIER PORTAL ═══ -->
+<div id="screen-cashier" class="hidden">
+  <div class="institute-banner">
+    <img src="data:image/jpeg;base64,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" alt="GPM Logo" class="inst-logo"/>
+    <div class="inst-info">
+      <div class="inst-name">Government Polytechnic, Munger</div>
+      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+      <div class="inst-subtitle">💰 FEE MANAGEMENT SYSTEM — CASHIER PORTAL</div>
+    </div>
+  </div>
+  <div class="site-header no-print">
+    <div class="header-nav">
+      <button class="header-btn active" onclick="ca_tab('dashboard')">Dashboard</button>
+      <button class="header-btn" onclick="ca_tab('students')">Students</button>
+      <button class="header-btn" onclick="ca_tab('demands')">Issue Demands</button>
+      <button class="header-btn" onclick="ca_tab('managedemands')">Manage Demands</button>
+      <button class="header-btn" onclick="ca_tab('verify')">Verify Payment</button>
+      <button class="header-btn" onclick="ca_tab('receipts')">Receipts</button>
+      <button class="header-btn" onclick="ca_tab('feestructure')">Fee Structure</button>
+      <button class="header-btn" onclick="ca_tab('reports')">Reports</button>
+    </div>
+    <div class="user-chip">
+      <div class="user-avatar" style="background:var(--gold)">C</div>
+      <span>Cashier</span>
+      <button class="header-btn" onclick="logout()" style="margin-left:4px">Logout</button>
+    </div>
+  </div>
+  <div class="main">
+
+    <!-- Dashboard -->
+    <div id="ca-tab-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-card-icon" style="background:#eef3ff">👥</div><div><div class="val" id="ca-stat-students">0</div><div class="lbl">Students</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏳</div><div><div class="val" id="ca-stat-pending">0</div><div class="lbl">Pending Dues</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">✅</div><div><div class="val" id="ca-stat-verified">0</div><div class="lbl">Paid Today</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">💰</div><div><div class="val" id="ca-stat-collection">₹0</div><div class="lbl">Today's Collection</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Payments</div>
+        <div class="card-subtitle">Latest verified payments.</div>
+        <div id="ca-recent-payments"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Students -->
+    <div id="ca-tab-students" class="hidden">
+      <div class="card">
+        <div class="card-title">Student Registry</div>
+        <div class="card-subtitle">All registered students. Click a student to view details or issue a demand.</div>
+        <div class="field" style="margin-bottom:12px">
+          <input type="text" id="ca-student-search" placeholder="Search by name, roll no., course…" oninput="searchStudents()"/>
+        </div>
+        <div id="ca-students-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Issue Demands -->
+    <div id="ca-tab-demands" class="hidden">
+      <div class="card">
+        <div class="card-title">Issue Fee Demand</div>
+        <div class="card-subtitle">Select student and fee type to generate a demand with unique QR code.</div>
+        <div id="demand-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Student Roll No. <span class="req">*</span></label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="text" id="dm-roll-no" maxlength="3" placeholder="25" oninput="lookupStudentForDemand()" style="text-align:center;font-weight:600;width:70px;flex-shrink:0"/>
+              <select id="dm-roll-branch" onchange="lookupStudentForDemand()" style="padding:10px 8px;font-weight:600;flex:1">
+                <option>CE</option><option selected>CSE</option><option>EE</option><option>EC</option><option>ME</option><option>FTS</option>
+              </select>
+              <input type="text" id="dm-roll-year" maxlength="4" placeholder="2026" oninput="lookupStudentForDemand()" style="text-align:center;font-weight:600;width:80px;flex-shrink:0"/>
+            </div>
+            <div class="hint" id="dm-student-preview"></div>
+          </div>
+
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Fee Type <span class="req">*</span></label>
+            <select id="dm-fee-type" onchange="autofillAmount()">
+              <option value="">Select fee type</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount (₹) <span class="req">*</span></label>
+            <input type="number" id="dm-amount" placeholder="Auto-filled or edit"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Remarks</label>
+          <input type="text" id="dm-remarks" placeholder="Optional note (e.g. Semester 1, Late fine, etc.)"/>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-primary" onclick="issueDemand()"><span id="dm-spinner" class="spinner hidden"></span>Generate Demand &amp; QR</button>
+        </div>
+      </div>
+      <div id="dm-qr-result" class="hidden">
+        <div class="card">
+          <div class="card-title">Demand Issued ✅</div>
+          <div class="card-subtitle">QR code generated. Student can scan this with any UPI app to pay.</div>
+          <div class="qr-box">
+            <canvas id="dm-qr-canvas"></canvas>
+            <div class="ref-code" id="dm-ref-display"></div>
+            <div style="font-size:12px;color:var(--gray-600);margin-top:8px" id="dm-upi-display"></div>
+          </div>
+          <div class="info-grid" style="margin-top:16px" id="dm-result-info"></div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" onclick="document.getElementById('dm-qr-result').classList.add('hidden')">Issue Another</button>
+            <button class="btn btn-gold no-print" onclick="printDemandQR()">🖨️ Print QR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Demands -->
+    <div id="ca-tab-managedemands" class="hidden">
+      <div class="card">
+        <div class="card-title">Manage Fee Demands</div>
+        <div class="card-subtitle">View, edit, cancel, or delete pending demands. Paid demands cannot be deleted.</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="filterMgDemands('all',this)">All</button>
+          <button class="tab-btn" onclick="filterMgDemands('pending',this)">Pending</button>
+          <button class="tab-btn" onclick="filterMgDemands('paid',this)">Paid</button>
+          <button class="tab-btn" onclick="filterMgDemands('cancelled',this)">Cancelled</button>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <input type="text" id="mg-demand-search" placeholder="Search by roll no., name, fee type, ref code…" oninput="filterMgDemandsSearch()"/>
+        </div>
+        <div id="ca-managedemands-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Edit Demand Modal is defined in modals section below -->
+
+    <!-- Verify Payment -->
+    <div id="ca-tab-verify" class="hidden">
+      <div class="card">
+        <div class="card-title">Verify Payment & Issue Receipt</div>
+        <div class="card-subtitle">Enter UTR number from bank statement to verify and mark payment as received.</div>
+        <div id="verify-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Reference Code <span class="req">*</span></label>
+            <input type="text" id="vfy-ref" placeholder="e.g. 25CSE2026-TUITIONFEE-2026" oninput="lookupByRef()"/>
+            <div class="hint" id="vfy-ref-preview"></div>
+          </div>
+          <div class="field">
+            <label>UTR Number <span class="req">*</span></label>
+            <input type="text" id="vfy-utr" placeholder="12-digit UTR from bank statement" maxlength="22"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Amount Received (₹) <span class="req">*</span></label>
+            <input type="number" id="vfy-amount" placeholder="Enter exact amount received"/>
+          </div>
+          <div class="field">
+            <label>Payment Date <span class="req">*</span></label>
+            <input type="date" id="vfy-date"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Bank / UPI Remarks</label>
+          <input type="text" id="vfy-remarks" placeholder="Remarks from bank statement (optional)"/>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-success" onclick="verifyPayment()"><span id="vfy-spinner" class="spinner hidden"></span>Verify &amp; Mark Paid</button>
+        </div>
+      </div>
+      <div id="vfy-receipt-result" class="hidden">
+        <div class="card">
+          <div class="card-title">Payment Verified ✅</div>
+          <div class="card-subtitle">Receipt issued. Print below for student and office copy.</div>
+          <div id="vfy-receipt-preview"></div>
+          <div class="btn-row no-print">
+            <button class="btn btn-secondary" onclick="document.getElementById('vfy-receipt-result').classList.add('hidden')">Verify Another</button>
+            <button class="btn btn-gold" onclick="printReceipts()">🖨️ Print Receipts (A4)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk verify section -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Bulk Verify from Bank Statement</div>
+        <div class="card-subtitle">Paste UTR numbers (one per line) from bank statement to batch verify.</div>
+        <div class="field">
+          <label>UTR Numbers (one per line)</label>
+          <textarea id="bulk-utr" rows="5" placeholder="123456789012&#10;234567890123&#10;345678901234"></textarea>
+        </div>
+        <div class="field">
+          <label>Reference Codes (same order as UTR)</label>
+          <textarea id="bulk-ref" rows="5" placeholder="25CSE2026-TUITIONFEE-2026&#10;26EE2025-HOSTELFEE-2026"></textarea>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-primary" onclick="bulkVerify()">Bulk Verify All</button>
+        </div>
+        <div id="bulk-result" class="hidden" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- Receipts -->
+    <div id="ca-tab-receipts" class="hidden">
+      <div class="card">
+        <div class="card-title">Issued Receipts</div>
+        <div class="card-subtitle">Search and reprint receipts.</div>
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="field">
+            <input type="text" id="receipt-search" placeholder="Search by roll no., name, receipt no…" oninput="searchReceipts()"/>
+          </div>
+          <div class="field">
+            <input type="date" id="receipt-date-filter" onchange="searchReceipts()"/>
+          </div>
+        </div>
+        <div id="ca-receipts-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Fee Structure -->
+    <div id="ca-tab-feestructure" class="hidden">
+      <div class="card">
+        <div class="card-title">Fee Structure</div>
+        <div class="card-subtitle">Define fee types and amounts by course, year, and category.</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddFeeType()" style="margin-bottom:16px">+ Add Fee Type</button>
+        <div id="ca-feestructure-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div id="ca-tab-reports" class="hidden">
+      <div class="card">
+        <div class="card-title">Collection Reports</div>
+        <div class="card-subtitle">Fee collection summary and pending dues.</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="reportTab('summary',this)">Summary</button>
+          <button class="tab-btn" onclick="reportTab('pending',this)">Pending Dues</button>
+          <button class="tab-btn" onclick="reportTab('collected',this)">Collected</button>
+        </div>
+        <div class="form-row" style="margin-bottom:16px">
+
+          <div class="field">
+            <label>Fee Type</label>
+            <select id="rpt-fee-type" onchange="loadReport()">
+              <option value="">All Types</option>
+            </select>
+          </div>
+        </div>
+        <div id="ca-report-content"><div class="alert alert-info">Select filters above to load report.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════ MODALS ═══ -->
+
+<!-- Student Detail Modal -->
+<div id="modal-student" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-student')">✕</button>
+    <div class="modal-title">Student Details</div>
+    <div id="modal-student-content"></div>
+  </div>
+</div>
+
+<!-- Fee Type Add/Edit Modal -->
+<div id="modal-feetype" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-feetype')">✕</button>
+    <div class="modal-title" id="ft-modal-title">Add Fee Type</div>
+    <div id="ft-alert" class="alert alert-danger hidden"></div>
+    <div class="field">
+      <label>Fee Type Name <span class="req">*</span></label>
+      <input type="text" id="ft-name" placeholder="e.g. Tuition Fee, Hostel Fee, Fine"/>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Course <span class="req">*</span></label>
+        <select id="ft-course">
+          <option value="ALL">All Courses</option>
+          <option>Civil Engineering</option>
+          <option>Computer Science &amp; Engineering</option>
+          <option>Electrical Engineering</option>
+          <option>Electronics Engineering</option>
+          <option>Mechanical Engineering</option>
+          <option>Modern Office Management</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Year</label>
+        <select id="ft-year">
+          <option value="ALL">All Years</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Category</label>
+        <select id="ft-category">
+          <option value="ALL">All Categories</option>
+          <option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>EWS</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Amount (₹) <span class="req">*</span></label>
+        <input type="number" id="ft-amount" placeholder="0"/>
+      </div>
+    </div>
+    <input type="hidden" id="ft-edit-id"/>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-feetype')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFeeType()"><span id="ft-spinner" class="spinner hidden"></span>Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR View Modal (for student) -->
+<div id="modal-qr" class="modal-overlay hidden">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <button class="modal-close" onclick="closeModal('modal-qr')">✕</button>
+    <div class="modal-title" id="qr-modal-title">Scan to Pay</div>
+    <div class="qr-box" style="margin-top:16px">
+      <canvas id="modal-qr-canvas"></canvas>
+      <div class="ref-code" id="modal-qr-ref"></div>
+      <div style="font-size:12px;color:var(--gray-600);margin-top:8px">
+        Scan with Google Pay, PhonePe, Paytm or any UPI app
+      </div>
+    </div>
+    <div style="margin-top:16px;font-size:13px;color:var(--gray-600)" id="modal-qr-info"></div>
+    <div class="alert alert-warning" style="margin-top:12px;text-align:left;font-size:12px">
+      ⚠️ Do <strong>not</strong> edit the pre-filled remark/note. It is your unique reference code.
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Reprint Modal -->
+<div id="modal-receipt" class="modal-overlay hidden">
+  <div class="modal" style="max-width:600px">
+    <button class="modal-close no-print" onclick="closeModal('modal-receipt')">✕</button>
+    <div id="modal-receipt-content"></div>
+    <div class="btn-row no-print" style="margin-top:16px">
+      <div></div>
+      <button class="btn btn-gold" onclick="printReceipts()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Demand Modal -->
+<div id="modal-editdemand" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-editdemand')">✕</button>
+    <div class="modal-title">Edit Fee Demand</div>
+    <div id="ed-alert" class="alert alert-danger hidden"></div>
+    <div class="field">
+      <label>Student</label>
+      <input type="text" id="ed-student-info" disabled style="background:var(--gray-50);color:var(--gray-600)"/>
+    </div>
+    <div class="field">
+      <label>Fee Type</label>
+      <input type="text" id="ed-fee-type" disabled style="background:var(--gray-50);color:var(--gray-600)"/>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Amount (₹) <span class="req">*</span></label>
+        <input type="number" id="ed-amount" placeholder="Revised amount"/>
+      </div>
+
+    </div>
+    <div class="field">
+      <label>Remarks</label>
+      <input type="text" id="ed-remarks" placeholder="Update remarks if needed"/>
+    </div>
+    <input type="hidden" id="ed-demand-id"/>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-editdemand')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditDemand()"><span id="ed-spinner" class="spinner hidden"></span>Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Public Verification Screen (no login needed) -->
+<div id="screen-verify-public" class="hidden">
+  <div class="institute-banner">
+    <img src="data:image/jpeg;base64,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" alt="GPM Logo" class="inst-logo"/>
+    <div class="inst-info">
+      <div class="inst-name">Government Polytechnic, Munger</div>
+      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+      <div class="inst-subtitle">🔍 RECEIPT VERIFICATION PORTAL</div>
+    </div>
+  </div>
+  <div style="max-width:560px;margin:40px auto;padding:0 20px">
+    <div class="card">
+      <div class="card-title">Verify Fee Receipt</div>
+      <div class="card-subtitle">Enter the receipt number printed on the fee receipt to verify its authenticity. This service is free and available to anyone.</div>
+      <div class="alert alert-info" style="margin-bottom:20px">
+        🔒 This verification is directly linked to the institute's official database. A verified receipt <strong>cannot be forged.</strong>
+      </div>
+      <div id="pv-alert" class="alert alert-danger hidden"></div>
+      <div class="field">
+        <label>Receipt Number <span class="req">*</span></label>
+        <input type="text" id="pv-receipt-no" placeholder="e.g. GPM/FEE/2026/0001" style="font-family:monospace;font-size:15px;letter-spacing:1px" oninput="this.value=this.value.toUpperCase()"/>
+        <div class="hint">As printed on the fee receipt</div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="verifyPublicReceipt()"><span id="pv-spinner" class="spinner hidden"></span>🔍 Verify Receipt</button>
+      <div id="pv-result" class="hidden" style="margin-top:20px"></div>
+      <div style="margin-top:20px;text-align:center">
+        <a href="#" onclick="showScreen('screen-login');return false" style="font-size:13px;color:var(--navy)">← Back to Login</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPABASE SETUP GUIDE -->
+<div id="screen-setup" class="hidden">
+  <div style="max-width:640px;margin:40px auto;padding:20px">
+    <div class="card">
+      <div class="card-title">⚙️ Supabase Setup Required</div>
+      <div class="card-subtitle">Configure your Supabase project to start using the system.</div>
+      <div class="setup-banner">
+        <strong>First-time setup:</strong>
+        Replace YOUR_WORKER_URL with your Cloudflare Worker URL at the top of this file's JavaScript section.
+      </div>
+      <p style="font-size:14px;margin-bottom:12px"><strong>Step 1:</strong> Create Supabase project at <a href="https://supabase.com" target="_blank">supabase.com</a> and run SQL schema below</p>
+      <p style="font-size:14px;margin-bottom:12px"><strong>Step 2:</strong> Create Cloudflare Worker at <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> → Workers &amp; Pages → Create</p>
+      <p style="font-size:14px;margin-bottom:12px"><strong>Step 3:</strong> Paste the Worker script (gpm_worker.js) and add secrets: SUPABASE_URL, SUPABASE_ANON_KEY, CASHIER_PASS</p>
+      <p style="font-size:14px;margin-bottom:12px"><strong>Step 4:</strong> Copy your Worker URL (e.g. gpm-fee.yourname.workers.dev)</p>
+      <p style="font-size:14px;margin-bottom:16px"><strong>Step 5:</strong> Replace YOUR_WORKER_URL in this HTML file with your Worker URL</p>
+      <div style="background:var(--gray-800);color:#a8ff78;padding:16px;border-radius:8px;font-family:monospace;font-size:11px;overflow-x:auto;white-space:pre;line-height:1.6" id="sql-schema-box"></div>
+      <button class="btn btn-gold" style="margin-top:12px" onclick="copySchema()">Copy SQL Schema</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIGURATION — only non-sensitive values here
+// ═══════════════════════════════════════════════════════════
+// Replace with your deployed Cloudflare Worker URL
+const WORKER_URL = 'https://gpm-fee.gpmungerhostel.workers.dev';
+
+// Institute UPI ID (the account students pay into)
+const INSTITUTE_UPI_ID   = 'gpmmunger@pnb';
+const INSTITUTE_UPI_NAME = 'Govt Polytechnic Munger';
+
+// ═══════════════════════════════════════════════════════════
+const SQL_SCHEMA = `-- GPM Fee Management System — Supabase Schema
+-- Run this in Supabase SQL Editor
+
+create table if not exists students (
+  id            uuid primary key default gen_random_uuid(),
+  roll_no       text unique not null,
+  name          text not null,
+  gender        text,
+  category      text,
+  pwd           text default 'No',
+  course        text,
+  year          text,
+  mobile        text,
+  email         text,
+  father_name   text,
+  mother_name   text,
+  address       text,
+  password_hash text not null,
+  created_at    timestamptz default now()
+);
+
+create table if not exists fee_types (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  course      text default 'ALL',
+  year        text default 'ALL',
+  category    text default 'ALL',
+  amount      numeric(10,2) not null,
+  is_active   boolean default true,
+  created_at  timestamptz default now()
+);
+
+create table if not exists fee_demands (
+  id           uuid primary key default gen_random_uuid(),
+  roll_no      text references students(roll_no),
+  fee_type_id  uuid references fee_types(id),
+  fee_type_name text,
+  amount       numeric(10,2) not null,
+  ref_code     text unique not null,
+  upi_link     text,
+  remarks      text,
+  status       text default 'pending',
+  created_at   timestamptz default now()
+);
+
+create table if not exists payments (
+  id           uuid primary key default gen_random_uuid(),
+  demand_id    uuid references fee_demands(id),
+  roll_no      text,
+  utr          text unique not null,
+  amount_paid  numeric(10,2),
+  payment_date date,
+  bank_remarks text,
+  verified_by  text default 'cashier',
+  verified_at  timestamptz default now()
+);
+
+create table if not exists receipts (
+  id            uuid primary key default gen_random_uuid(),
+  payment_id    uuid references payments(id),
+  receipt_no    text unique not null,
+  roll_no       text,
+  student_name  text,
+  fee_type_name text,
+  amount        numeric(10,2),
+  issued_at     timestamptz default now()
+);
+
+-- Enable Row Level Security (open for demo; tighten in production)
+alter table students enable row level security;
+alter table fee_types enable row level security;
+alter table fee_demands enable row level security;
+alter table payments enable row level security;
+alter table receipts enable row level security;
+
+create policy "public read fee_types" on fee_types for select using (true);
+create policy "public read demands" on fee_demands for select using (true);
+create policy "public read payments" on payments for select using (true);
+create policy "public read receipts" on receipts for select using (true);
+create policy "public read students" on students for select using (true);
+create policy "insert students" on students for insert with check (true);
+create policy "insert demands" on fee_demands for insert with check (true);
+create policy "insert payments" on payments for insert with check (true);
+create policy "insert receipts" on receipts for insert with check (true);
+create policy "insert fee_types" on fee_types for insert with check (true);
+create policy "update demands" on fee_demands for update using (true);
+create policy "update fee_types" on fee_types for update using (true);
+create policy "delete fee_types" on fee_types for delete using (true);`;
+
+// ═══ GLOBAL STATE ══════════════════════════════════════════
+let currentStudent = null;
+let sessionToken   = null;
+let allDemands = [];
+let allFeeTypes = [];
+let currentReceiptData = null;
+
+// ═══ INIT ══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sql-schema-box').textContent = SQL_SCHEMA;
+
+  // Check for public receipt verification URL param
+  const params = new URLSearchParams(window.location.search);
+  const rcptParam = params.get('verify');
+
+  if (WORKER_URL === 'YOUR_WORKER_URL') {
+    showScreen('screen-setup');
+    return;
+  }
+
+  // Set today's date in verify form
+  document.getElementById('vfy-date').value = new Date().toISOString().split('T')[0];
+
+  // If ?verify= param present, go straight to public verification
+  if (rcptParam) {
+    showScreen('screen-verify-public');
+    document.getElementById('pv-receipt-no').value = rcptParam.toUpperCase();
+    verifyPublicReceipt();
+  } else {
+    showScreen('screen-login');
+  }
+});
+
+function copySchema() {
+  navigator.clipboard.writeText(SQL_SCHEMA);
+  alert('SQL Schema copied to clipboard!');
+}
+
+// ═══ API HELPER ════════════════════════════════════════════
+async function api(method, path, body = null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(sessionToken ? { 'X-Session-Token': sessionToken } : {}),
+    },
+  };
+  if (body && method !== 'GET') opts.body = JSON.stringify(body);
+  const res = await fetch(WORKER_URL + path, opts);
+  if (res.status === 401) {
+    // Session expired — logout
+    sessionToken = null;
+    currentStudent = null;
+    showScreen('screen-login');
+    showLoginAlert('Session expired. Please login again.');
+    return null;
+  }
+  try { return await res.json(); } catch { return null; }
+}
+// Kept for compatibility but no longer pass auth in headers — sessionToken used automatically
+function cashierHeaders() { return {}; }
+function studentHeaders() { return {}; }
+
+// ═══ SCREEN MANAGEMENT ════════════════════════════════════
+const SCREENS = ['screen-login','screen-register','screen-student','screen-cashier','screen-setup','screen-verify-public'];
+function showScreen(id) {
+  SCREENS.forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ═══ ROLE TOGGLE ══════════════════════════════════════════
+function setRole(r) {
+  document.getElementById('student-login-fields').classList.toggle('hidden', r !== 'student');
+  document.getElementById('cashier-login-fields').classList.toggle('hidden', r !== 'cashier');
+  document.getElementById('tab-student').classList.toggle('active', r === 'student');
+  document.getElementById('tab-cashier').classList.toggle('active', r === 'cashier');
+  document.getElementById('login-alert').classList.add('hidden');
+}
+
+// ═══ AUTH ══════════════════════════════════════════════════
+async function loginStudent() {
+  const roll = getRollFull('sl-roll-no','sl-roll-branch','sl-roll-year');
+  const pass = v('sl-pass').trim();
+  if (!roll || roll === '//' || !pass) { showLoginAlert('Enter Roll No. and Password.'); return; }
+  setSpinner('sl-spinner', true);
+  const res = await api('POST', '/api/auth/student', { roll_no: roll, password: pass });
+  setSpinner('sl-spinner', false);
+  if (!res || !res.success) { showLoginAlert(res?.message || 'Login failed.'); return; }
+  sessionToken = res.token;
+  currentStudent = res.student;
+  document.getElementById('stu-nav-name').textContent = res.student.name.split(' ')[0];
+  document.getElementById('stu-avatar-initials').textContent = res.student.name[0].toUpperCase();
+  showScreen('screen-student');
+  stu_tab('dashboard');
+  loadStudentData();
+}
+
+async function loginCashier() {
+  const user = v('cl-user').trim();
+  const pass = v('cl-pass').trim();
+  if (!user || !pass) { showLoginAlert('Enter username and password.'); return; }
+  setSpinner('cl-spinner', true);
+  const res = await api('POST', '/api/auth/cashier', { username: user, password: pass });
+  setSpinner('cl-spinner', false);
+  if (!res || !res.success) {
+    showLoginAlert(res?.message || 'Invalid credentials.');
+    return;
+  }
+  sessionToken = res.token;
+  showScreen('screen-cashier');
+  ca_tab('dashboard');
+  loadCashierDashboard();
+  loadFeeTypes();
+}
+
+async function registerStudent() {
+  const roll  = getRollFull('reg-roll-no','reg-roll-branch','reg-roll-year');
+  const name  = v('reg-name').trim();
+  const gender = v('reg-gender');
+  const cat   = v('reg-category');
+  const pwd   = v('reg-pwd');
+  const course = v('reg-course');
+  const year  = v('reg-year');
+  const mob   = v('reg-mobile').trim();
+  const pass  = v('reg-pass').trim();
+  const pass2 = v('reg-pass2').trim();
+
+  if (!roll || roll === '//' || !name || !gender || !cat || !course || !year || !mob || !pass) {
+    showAlert('reg-alert', 'Please fill all required fields.'); return;
+  }
+  if (!/^\d{1,3}\/[A-Z]+\/\d{4}$/.test(roll)) {
+    showAlert('reg-alert', 'Invalid Roll No. Format should be: 25/CSE/2026'); return;
+  }
+  if (mob.length !== 10 || !/^\d+$/.test(mob)) {
+    showAlert('reg-alert', 'Enter valid 10-digit mobile number.'); return;
+  }
+  if (pass.length < 6) { showAlert('reg-alert', 'Password must be at least 6 characters.'); return; }
+  if (pass !== pass2) { showAlert('reg-alert', 'Passwords do not match.'); return; }
+
+  setSpinner('reg-spinner', true);
+  const res = await api('POST', '/api/auth/register', {
+    roll_no: roll, name, gender, category: cat, pwd,
+    course, year, mobile: mob,
+    email: v('reg-email').trim(),
+    father_name: v('reg-father').trim(),
+    mother_name: v('reg-mother').trim(),
+    address: v('reg-address').trim(),
+    password: pass
+  });
+  setSpinner('reg-spinner', false);
+  if (!res || !res.success) { showAlert('reg-alert', res?.message || 'Registration failed.'); return; }
+  alert('✅ Registration successful! You can now login.');
+  showScreen('screen-login');
+}
+
+async function logout() {
+  if (sessionToken) {
+    await api('POST', '/api/auth/logout', {});
+  }
+  sessionToken = null;
+  currentStudent = null;
+  allDemands = [];
+  allFeeTypes = [];
+  currentReceiptData = null;
+  document.getElementById('sl-roll-no').value = '';
+  document.getElementById('sl-roll-year').value = '';
+  document.getElementById('sl-pass').value = '';
+  document.getElementById('cl-pass').value = '';
+  document.getElementById('login-alert').classList.add('hidden');
+  showScreen('screen-login');
+}
+
+// ═══ STUDENT PORTAL ═══════════════════════════════════════
+function stu_tab(t) {
+  ['dashboard','dues','payments','profile'].forEach(tab => {
+    document.getElementById('stu-tab-' + tab).classList.toggle('hidden', tab !== t);
+  });
+  document.querySelectorAll('#screen-student .site-header .header-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['dashboard','dues','payments','profile'][i] === t);
+  });
+  if (t === 'dues') loadStudentDues();
+  if (t === 'payments') loadStudentPayments();
+  if (t === 'profile') loadStudentProfile();
+}
+
+async function loadStudentData() {
+  const data = await api('GET', '/api/student/demands', null, studentHeaders());
+  allDemands = Array.isArray(data) ? data : [];
+  renderStudentDashboard();
+}
+
+function renderStudentDashboard() {
+  const pending = allDemands.filter(d => d.status === 'pending');
+  const paid    = allDemands.filter(d => d.status === 'paid');
+  const totalDue  = pending.reduce((s,d) => s + parseFloat(d.amount), 0);
+  const totalPaid = paid.reduce((s,d) => s + parseFloat(d.amount), 0);
+  setText('sd-total-due', '₹' + fmt(totalDue));
+  setText('sd-total-paid', '₹' + fmt(totalPaid));
+  setText('sd-pending-count', pending.length);
+  setText('sd-receipt-count', paid.length);
+
+  const el = document.getElementById('stu-demands-list');
+  if (pending.length === 0) {
+    el.innerHTML = '<div class="alert alert-success">🎉 No pending fee demands. You are all clear!</div>';
+    return;
+  }
+  el.innerHTML = pending.map(d => demandCard(d, true)).join('');
+}
+
+function demandCard(d, showQR) {
+  return `<div class="demand-card pending">
+    <div class="demand-header">
+      <div class="demand-fee-type">${d.fee_type_name}</div>
+      <span class="badge badge-pending">Pending</span>
+    </div>
+    <div class="demand-amount">₹${fmt(d.amount)}</div>
+    <div class="demand-meta">Ref: <code>${d.ref_code}</code></div>
+    ${d.remarks ? `<div class="demand-meta" style="margin-top:3px">Note: ${d.remarks}</div>` : ''}
+    ${showQR ? `<div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="showQRModal('${d.ref_code}','${d.amount}','${d.fee_type_name}','${d.upi_link||''}')">📱 View QR / Pay</button></div>` : ''}
+  </div>`;
+}
+
+function paidCard(d) {
+  return `<div class="demand-card paid">
+    <div class="demand-header">
+      <div class="demand-fee-type">${d.fee_type_name}</div>
+      <span class="badge badge-paid">Paid</span>
+    </div>
+    <div class="demand-amount">₹${fmt(d.amount)}</div>
+    <div class="demand-meta">Ref: <code>${d.ref_code}</code></div>
+  </div>`;
+}
+
+function filterDues(f, btn) {
+  document.querySelectorAll('#stu-tab-dues .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const el = document.getElementById('stu-dues-list');
+  const items = f === 'all' ? allDemands : allDemands.filter(d => d.status === f);
+  if (items.length === 0) { el.innerHTML = '<div class="alert alert-info">No records found.</div>'; return; }
+  el.innerHTML = items.map(d => d.status === 'paid' ? paidCard(d) : demandCard(d, true)).join('');
+}
+
+async function loadStudentDues() {
+  await loadStudentData();
+  filterDues('all', document.querySelector('#stu-tab-dues .tab-btn'));
+}
+
+async function loadStudentPayments() {
+  const data = await api('GET', '/api/student/receipts', null, studentHeaders());
+  const el = document.getElementById('stu-payments-list');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No payment records found.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Receipt No.</th><th>Fee Type</th><th>Amount</th><th>Date</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td><code>${r.receipt_no}</code></td>
+      <td>${r.fee_type_name}</td>
+      <td>₹${fmt(r.amount)}</td>
+      <td>${fmtDate(r.issued_at)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function loadStudentProfile() {
+  const s = currentStudent;
+  document.getElementById('stu-profile-info').innerHTML = `
+    <div class="info-grid">
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+      <div class="info-item"><div class="key">Year</div><div class="val">${s.year}${ordinal(s.year)} Year</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
+      <div class="info-item"><div class="key">Gender</div><div class="val">${s.gender}</div></div>
+      <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
+      <div class="info-item"><div class="key">Email</div><div class="val">${s.email || '—'}</div></div>
+      <div class="info-item"><div class="key">Father</div><div class="val">${s.father_name || '—'}</div></div>
+      <div class="info-item"><div class="key">Mother</div><div class="val">${s.mother_name || '—'}</div></div>
+    </div>
+    ${s.address ? `<div class="info-item"><div class="key">Address</div><div class="val" style="margin-top:4px">${s.address}</div></div>` : ''}`;
+}
+
+function showQRModal(refCode, amount, feeType, upiLink) {
+  document.getElementById('qr-modal-title').textContent = 'Pay: ' + feeType;
+  document.getElementById('modal-qr-info').textContent = `Amount: ₹${fmt(amount)} | Ref: ${refCode}`;
+  document.getElementById('modal-qr-ref').textContent = refCode;
+  const link = upiLink || buildUPILink(refCode, amount);
+  openModal('modal-qr');
+  setTimeout(() => {
+    QRCode.toCanvas(document.getElementById('modal-qr-canvas'), link, { width: 200, margin: 2 });
+  }, 100);
+}
+
+function buildUPILink(refCode, amount) {
+  return `upi://pay?pa=${INSTITUTE_UPI_ID}&pn=${encodeURIComponent(INSTITUTE_UPI_NAME)}&am=${amount}&tn=${encodeURIComponent(refCode)}&cu=INR`;
+}
+
+// ═══ CASHIER PORTAL ════════════════════════════════════════
+function ca_tab(t) {
+  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports'].forEach(tab => {
+    document.getElementById('ca-tab-' + tab).classList.toggle('hidden', tab !== t);
+  });
+  document.querySelectorAll('#screen-cashier .site-header .header-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports'][i] === t);
+  });
+  if (t === 'students') loadCashierStudents();
+  if (t === 'managedemands') loadManageDemands();
+  if (t === 'receipts') loadCashierReceipts();
+  if (t === 'feestructure') loadFeeStructure();
+  if (t === 'reports') loadReport();
+}
+
+async function loadCashierDashboard() {
+  const res = await api('GET', '/api/cashier/dashboard', null, cashierHeaders());
+  if (!res) return;
+  setText('ca-stat-students', res.students || 0);
+  setText('ca-stat-pending', res.pending || 0);
+  setText('ca-stat-verified', res.today_count || 0);
+  setText('ca-stat-collection', '₹' + fmt(res.today_total || 0));
+
+  const recent = res.recent || [];
+  const el = document.getElementById('ca-recent-payments');
+  if (!recent || recent.length === 0) { el.innerHTML = '<div class="alert alert-info">No payments yet today.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Receipt No.</th><th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th><th>Date</th></tr></thead>
+    <tbody>${recent.map(r => `<tr>
+      <td><code>${r.receipt_no}</code></td>
+      <td>${r.roll_no}</td>
+      <td>${r.student_name}</td>
+      <td>${r.fee_type_name}</td>
+      <td>₹${fmt(r.amount)}</td>
+      <td>${fmtDate(r.issued_at)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function loadCashierStudents() {
+  const data = await api('GET', '/api/cashier/students', null, cashierHeaders());
+  renderStudentList(Array.isArray(data) ? data : []);
+}
+
+function renderStudentList(students) {
+  const el = document.getElementById('ca-students-list');
+  if (students.length === 0) { el.innerHTML = '<div class="alert alert-info">No students found.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Year</th><th>Category</th><th>Mobile</th><th>Action</th></tr></thead>
+    <tbody>${students.map(s => `<tr>
+      <td><code>${s.roll_no}</code></td>
+      <td>${s.name}</td>
+      <td>${shortCourse(s.course)}</td>
+      <td>${s.year}${ordinal(s.year)}</td>
+      <td>${s.category}</td>
+      <td>${s.mobile}</td>
+      <td><button class="btn btn-sm btn-secondary" onclick="viewStudent('${s.roll_no}')">View</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+let _allStudentsCache = [];
+async function searchStudents() {
+  const q = v('ca-student-search').toLowerCase();
+  if (_allStudentsCache.length === 0) {
+    const data = await api('GET', '/api/cashier/students', null, cashierHeaders());
+    _allStudentsCache = Array.isArray(data) ? data : [];
+  }
+  const filtered = _allStudentsCache.filter(s =>
+    s.roll_no.toLowerCase().includes(q) ||
+    s.name.toLowerCase().includes(q) ||
+    (s.course || '').toLowerCase().includes(q)
+  );
+  renderStudentList(filtered);
+}
+
+async function viewStudent(rollNo) {
+  const res = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`, null, cashierHeaders());
+  const s = res?.student;
+  const demands = res?.demands || [];
+  const content = document.getElementById('modal-student-content');
+  content.innerHTML = `
+    <div class="info-grid">
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+      <div class="info-item"><div class="key">Year</div><div class="val">${s.year}${ordinal(s.year)} Year</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
+      <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
+    </div>
+    <hr class="divider"/>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--navy)">Fee Demands</div>
+    ${(demands || []).length === 0 ? '<div class="alert alert-info">No demands issued yet.</div>' :
+      demands.map(d => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+        <div><strong>${d.fee_type_name}</strong><div style="color:var(--gray-600);font-size:11px">${d.ref_code}</div></div>
+        <div style="text-align:right"><strong>₹${fmt(d.amount)}</strong><div><span class="badge badge-${d.status==='paid'?'paid':'pending'}">${d.status}</span></div></div>
+      </div>`).join('')}
+    <div style="margin-top:12px">
+      <button class="btn btn-primary btn-sm" onclick="closeModal('modal-student');ca_tab('demands');(function(){var p='${s.roll_no}'.split('/');document.getElementById('dm-roll-no').value=p[0];document.getElementById('dm-roll-branch').value=p[1];document.getElementById('dm-roll-year').value=p[2];lookupStudentForDemand();})()">Issue New Demand</button>
+    </div>`;
+  openModal('modal-student');
+}
+
+// ═══ FEE TYPES ════════════════════════════════════════════
+async function loadFeeTypes() {
+  const data = await api('GET', '/api/cashier/fee-types', null, cashierHeaders());
+  allFeeTypes = Array.isArray(data) ? data : [];
+  // Populate dropdowns
+  ['dm-fee-type','rpt-fee-type'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    allFeeTypes.forEach(ft => {
+      const o = new Option(`${ft.name} — ${ft.course==='ALL'?'All Courses':shortCourse(ft.course)} / ${ft.category==='ALL'?'All':ft.category} — ₹${fmt(ft.amount)}`, ft.id);
+      sel.add(o);
+    });
+    sel.value = prev;
+  });
+}
+
+async function loadFeeStructure() {
+  await loadFeeTypes();
+  const el = document.getElementById('ca-feestructure-list');
+  if (allFeeTypes.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No fee types defined yet. Click "Add Fee Type" to begin.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Fee Type</th><th>Course</th><th>Year</th><th>Category</th><th>Amount</th><th>Actions</th></tr></thead>
+    <tbody>${allFeeTypes.map(ft => `<tr>
+      <td><strong>${ft.name}</strong></td>
+      <td>${ft.course === 'ALL' ? 'All Courses' : shortCourse(ft.course)}</td>
+      <td>${ft.year === 'ALL' ? 'All Years' : ft.year + ordinal(ft.year) + ' Year'}</td>
+      <td>${ft.category === 'ALL' ? 'All' : ft.category}</td>
+      <td><strong>₹${fmt(ft.amount)}</strong></td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="editFeeType('${ft.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteFeeType('${ft.id}')">Delete</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function openAddFeeType() {
+  document.getElementById('ft-modal-title').textContent = 'Add Fee Type';
+  document.getElementById('ft-name').value = '';
+  document.getElementById('ft-course').value = 'ALL';
+  document.getElementById('ft-year').value = 'ALL';
+  document.getElementById('ft-category').value = 'ALL';
+  document.getElementById('ft-amount').value = '';
+  document.getElementById('ft-edit-id').value = '';
+  document.getElementById('ft-alert').classList.add('hidden');
+  openModal('modal-feetype');
+}
+
+function editFeeType(id) {
+  const ft = allFeeTypes.find(f => f.id === id);
+  if (!ft) return;
+  document.getElementById('ft-modal-title').textContent = 'Edit Fee Type';
+  document.getElementById('ft-name').value = ft.name;
+  document.getElementById('ft-course').value = ft.course;
+  document.getElementById('ft-year').value = ft.year;
+  document.getElementById('ft-category').value = ft.category;
+  document.getElementById('ft-amount').value = ft.amount;
+  document.getElementById('ft-edit-id').value = ft.id;
+  document.getElementById('ft-alert').classList.add('hidden');
+  openModal('modal-feetype');
+}
+
+async function saveFeeType() {
+  const name = v('ft-name').trim();
+  const amount = parseFloat(v('ft-amount'));
+  if (!name || isNaN(amount) || amount <= 0) {
+    showAlert('ft-alert', 'Name and valid Amount are required.'); return;
+  }
+  const payload = {
+    name, course: v('ft-course'), year: v('ft-year'),
+    category: v('ft-category'), amount
+  };
+  setSpinner('ft-spinner', true);
+  const editId = v('ft-edit-id');
+  let res;
+  if (editId) {
+    res = await api('PATCH', `/api/cashier/fee-types/${editId}`, payload, cashierHeaders());
+  } else {
+    res = await api('POST', '/api/cashier/fee-types', payload, cashierHeaders());
+  }
+  setSpinner('ft-spinner', false);
+  if (!res || res.error) { showAlert('ft-alert', 'Error: ' + (res?.error || 'Unknown')); return; }
+  closeModal('modal-feetype');
+  await loadFeeStructure();
+  await loadFeeTypes();
+}
+
+async function deleteFeeType(id) {
+  if (!confirm('Delete this fee type? This cannot be undone.')) return;
+  await api('DELETE', `/api/cashier/fee-types/${id}`, null, cashierHeaders());
+  await loadFeeStructure();
+  await loadFeeTypes();
+}
+
+// ═══ DEMAND MANAGEMENT ════════════════════════════════════
+async function lookupStudentForDemand() {
+  const roll = getRollFull('dm-roll-no','dm-roll-branch','dm-roll-year');
+  if (!roll || roll.startsWith('/') || roll.endsWith('/')) { setText('dm-student-preview', ''); return; }
+  const data = await api('GET', `/api/cashier/student-lookup?roll_no=${encodeURIComponent(roll)}`, null, cashierHeaders());
+  if (data && data.name) {
+    document.getElementById('dm-student-preview').textContent =
+      `✅ ${data.name} | ${shortCourse(data.course)} | ${data.year}${ordinal(data.year)} Year | ${data.category}`;
+    document.getElementById('dm-student-preview').style.color = 'var(--success)';
+  } else {
+    document.getElementById('dm-student-preview').textContent = '❌ Student not found';
+    document.getElementById('dm-student-preview').style.color = 'var(--danger)';
+  }
+}
+
+async function autofillAmount() {
+  const ftId = v('dm-fee-type');
+  if (!ftId) return;
+  const ft = allFeeTypes.find(f => f.id === ftId);
+  if (ft) document.getElementById('dm-amount').value = ft.amount;
+}
+
+async function issueDemand() {
+  const roll = getRollFull('dm-roll-no','dm-roll-branch','dm-roll-year');
+  const ftId = v('dm-fee-type');
+  const amount = parseFloat(v('dm-amount'));
+  const remarks = v('dm-remarks').trim();
+  const curYear = new Date().getFullYear();
+
+  if (!roll || !ftId || isNaN(amount) || amount <= 0) {
+    showAlert('demand-alert', 'Fill all required fields.'); return;
+  }
+
+  const stuData = await api('GET', `/api/cashier/student-lookup?roll_no=${encodeURIComponent(roll)}`, null, cashierHeaders());
+  if (!stuData || !stuData.name) { showAlert('demand-alert', 'Student not found.'); return; }
+
+  const ft = allFeeTypes.find(f => f.id === ftId);
+  const ftName = ft ? ft.name : 'FEE';
+
+  // Generate reference code: 25CSE2026-TUITIONFEE-2026
+  const rollClean = roll.replace(/\//g, '');
+  const ftSlug = ftName.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,12);
+  const refCode = `${rollClean}-${ftSlug}-${curYear}`;
+
+  const upiLink = buildUPILink(refCode, amount);
+
+  setSpinner('dm-spinner', true);
+  const res = await api('POST', '/api/cashier/demands', {
+    roll_no: roll, fee_type_id: ftId, fee_type_name: ftName,
+    amount, ref_code: refCode,
+    upi_link: upiLink, remarks, status: 'pending'
+  }, cashierHeaders());
+  setSpinner('dm-spinner', false);
+  if (!res || !res.success) { showAlert('demand-alert', res?.message || 'Error creating demand.'); return; }
+
+  // Show QR
+  document.getElementById('dm-ref-display').textContent = refCode;
+  document.getElementById('dm-upi-display').textContent = `UPI: ${INSTITUTE_UPI_ID} | ₹${fmt(amount)}`;
+  document.getElementById('dm-result-info').innerHTML = `
+    <div class="info-item"><div class="key">Student</div><div class="val">${stuData.name}</div></div>
+    <div class="info-item"><div class="key">Roll No.</div><div class="val">${roll}</div></div>
+    <div class="info-item"><div class="key">Fee Type</div><div class="val">${ftName}</div></div>
+    <div class="info-item"><div class="key">Amount</div><div class="val">₹${fmt(amount)}</div></div>`;
+  document.getElementById('dm-qr-result').classList.remove('hidden');
+  document.getElementById('demand-alert').classList.add('hidden');
+  setTimeout(() => {
+    QRCode.toCanvas(document.getElementById('dm-qr-canvas'), upiLink, { width: 220, margin: 2 });
+  }, 100);
+}
+
+function printDemandQR() { window.print(); }
+
+// ═══ PAYMENT VERIFICATION ════════════════════════════════
+async function lookupByRef() {
+  const ref = v('vfy-ref').trim().toUpperCase();
+  if (ref.length < 8) { setText('vfy-ref-preview', ''); return; }
+  const data = await api('GET', `/api/cashier/demand-lookup?ref_code=${encodeURIComponent(ref)}`, null, cashierHeaders());
+  const el = document.getElementById('vfy-ref-preview');
+  if (!data) { el.textContent = '❌ Reference code not found'; el.style.color='var(--danger)'; return; }
+  if (data.status === 'paid') { el.textContent = '⚠️ Already marked as paid'; el.style.color='var(--warning)'; return; }
+  el.textContent = `✅ ${data.students?.name} | ${data.fee_type_name} | ₹${fmt(data.amount)}`;
+  el.style.color = 'var(--success)';
+  document.getElementById('vfy-amount').value = data.amount;
+}
+
+async function verifyPayment() {
+  const ref    = v('vfy-ref').trim().toUpperCase();
+  const utr    = v('vfy-utr').trim();
+  const amount = parseFloat(v('vfy-amount'));
+  const date   = v('vfy-date');
+  const remarks = v('vfy-remarks').trim();
+
+  if (!ref || !utr || isNaN(amount) || !date) {
+    showAlert('verify-alert', 'Fill all required fields.'); return;
+  }
+  if (utr.length < 10) { showAlert('verify-alert', 'UTR must be at least 10 digits.'); return; }
+
+  setSpinner('vfy-spinner', true);
+  const res = await api('POST', '/api/cashier/verify-payment', {
+    ref_code: ref, utr, amount_paid: amount,
+    payment_date: date, bank_remarks: remarks
+  }, cashierHeaders());
+  setSpinner('vfy-spinner', false);
+
+  if (!res || !res.success) { showAlert('verify-alert', res?.message || 'Verification failed.'); return; }
+
+  currentReceiptData = {
+    receiptNo: res.receipt_no,
+    rollNo: res.demand?.roll_no,
+    studentName: res.student?.name,
+    course: res.student?.course,
+    category: res.student?.category,
+    feeType: res.demand?.fee_type_name,
+    amount: res.payment?.amount_paid,
+    utr: res.payment?.utr,
+    paymentDate: res.payment?.payment_date,
+    refCode: ref
+  };
+
+  document.getElementById('vfy-receipt-preview').innerHTML = buildReceiptHTML([currentReceiptData]);
+  document.getElementById('vfy-receipt-result').classList.remove('hidden');
+  document.getElementById('verify-alert').classList.add('hidden');
+  document.getElementById('vfy-ref').value = '';
+  document.getElementById('vfy-utr').value = '';
+  document.getElementById('vfy-amount').value = '';
+  document.getElementById('vfy-ref-preview').textContent = '';
+
+  // Refresh dashboard stats
+  loadCashierDashboard();
+}
+
+async function bulkVerify() {
+  const utrs = v('bulk-utr').trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  const refs = v('bulk-ref').trim().split('\n').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  if (utrs.length !== refs.length) {
+    alert('UTR count and Reference code count must match.'); return;
+  }
+  const items = utrs.map((utr, i) => ({ utr, ref_code: refs[i] }));
+  const res = await api('POST', '/api/cashier/bulk-verify', { items }, cashierHeaders());
+  const results = res?.results || [];
+  const el = document.getElementById('bulk-result');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Reference Code</th><th>UTR</th><th>Result</th></tr></thead>
+    <tbody>${results.map(r=>`<tr><td><code>${r.ref}</code></td><td>${r.utr}</td><td>${r.status}</td></tr>`).join('')}</tbody>
+  </table></div>`;
+  loadCashierDashboard();
+}
+
+// ═══ RECEIPTS ════════════════════════════════════════════
+async function loadCashierReceipts() {
+  const data = await api('GET', '/api/cashier/receipts', null, cashierHeaders());
+  renderReceiptsList(Array.isArray(data) ? data : []);
+}
+
+async function searchReceipts() {
+  const q = v('receipt-search');
+  const d = v('receipt-date-filter');
+  let url = '/api/cashier/receipts?';
+  if (q) url += `q=${encodeURIComponent(q)}&`;
+  if (d) url += `date=${d}`;
+  const data = await api('GET', url, null, cashierHeaders());
+  renderReceiptsList(Array.isArray(data) ? data : []);
+}
+
+function renderReceiptsList(list) {
+  const el = document.getElementById('ca-receipts-list');
+  if (list.length === 0) { el.innerHTML = '<div class="alert alert-info">No receipts found.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Receipt No.</th><th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Print</th></tr></thead>
+    <tbody>${list.map(r=>`<tr>
+      <td><code>${r.receipt_no}</code></td>
+      <td>${r.roll_no}</td>
+      <td>${r.student_name}</td>
+      <td>${r.fee_type_name}</td>
+      <td>₹${fmt(r.amount)}</td>
+      <td>${fmtDate(r.issued_at)}</td>
+      <td><button class="btn btn-sm btn-gold" onclick="reprintReceipt('${r.receipt_no}')">🖨️</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function reprintReceipt(rcptNo) {
+  const r = await api('GET', `/api/cashier/receipts/${encodeURIComponent(rcptNo)}`, null, cashierHeaders());
+  if (!r) return;
+  currentReceiptData = {
+    receiptNo: r.receipt_no, rollNo: r.roll_no,
+    studentName: r.student_name, feeType: r.fee_type_name,
+    amount: r.amount, utr: r.payments?.utr,
+    paymentDate: r.payments?.payment_date,
+  };
+  document.getElementById('modal-receipt-content').innerHTML = buildReceiptHTML([currentReceiptData]);
+  openModal('modal-receipt');
+}
+
+// ═══ REPORTS ════════════════════════════════════════════
+let _currentReportTab = 'summary';
+function reportTab(t, btn) {
+  _currentReportTab = t;
+  document.querySelectorAll('#ca-tab-reports .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadReport();
+}
+
+async function loadReport() {
+  await loadFeeTypes();
+  const ftId = v('rpt-fee-type');
+  const el = document.getElementById('ca-report-content');
+  el.innerHTML = '<div class="alert alert-info">Loading…</div>';
+
+  let url = '/api/cashier/reports';
+  if (ftId) url += `?fee_type_id=${ftId}`;
+  const demands = await api('GET', url, null, cashierHeaders());
+  if (!Array.isArray(demands)) { el.innerHTML = '<div class="alert alert-danger">Error loading data.</div>'; return; }
+
+  if (_currentReportTab === 'summary') {
+    const total = demands.length;
+    const paid = demands.filter(d=>d.status==='paid');
+    const pending = demands.filter(d=>d.status==='pending');
+    const collectedAmt = paid.reduce((s,d)=>s+parseFloat(d.amount),0);
+    const pendingAmt = pending.reduce((s,d)=>s+parseFloat(d.amount),0);
+    el.innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-card-icon" style="background:#eef3ff">📋</div><div><div class="val">${total}</div><div class="lbl">Total Demands</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">✅</div><div><div class="val">₹${fmt(collectedAmt)}</div><div class="lbl">Collected</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏳</div><div><div class="val">₹${fmt(pendingAmt)}</div><div class="lbl">Pending</div></div></div>
+      </div>`;
+  } else if (_currentReportTab === 'pending') {
+    const pending = demands.filter(d=>d.status==='pending');
+    if (pending.length === 0) { el.innerHTML='<div class="alert alert-success">No pending dues.</div>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th><th>Ref Code</th></tr></thead>
+      <tbody>${pending.map(d=>`<tr>
+        <td>${d.roll_no}</td><td>${d.students?.name}</td>
+        <td>${d.fee_type_name}</td><td>₹${fmt(d.amount)}</td>
+        <td><code style="font-size:11px">${d.ref_code}</code></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  } else {
+    const paid = demands.filter(d=>d.status==='paid');
+    if (paid.length === 0) { el.innerHTML='<div class="alert alert-info">No collected payments.</div>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th><th>Ref Code</th></tr></thead>
+      <tbody>${paid.map(d=>`<tr>
+        <td>${d.roll_no}</td><td>${d.students?.name}</td>
+        <td>${d.fee_type_name}</td><td>₹${fmt(d.amount)}</td>
+        <td><code style="font-size:11px">${d.ref_code}</code></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  }
+}
+
+// ═══ RECEIPT BUILDER ══════════════════════════════════════
+function buildReceiptHTML(receipts) {
+  // A4 = 2 stubs: 1 student copy + 1 office copy
+  const r = receipts[0];
+  if (!r) return '<div class="receipt-stub" style="min-height:240px;opacity:0"></div>';
+  const copies = ['STUDENT COPY', 'OFFICE COPY'];
+  const stubs = copies.map((copy, i) => {
+    const verifyURL = `${window.location.href.split('?')[0]}?verify=${encodeURIComponent(r.receiptNo)}`;
+    const qrId = 'rcpt-qr-' + i + '-' + Date.now();
+    return `<div class="receipt-stub">
+      <div class="receipt-header">
+        <div style="flex:1">
+          <div class="receipt-inst-name">Government Polytechnic, Munger</div>
+          <div class="receipt-inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+          <div class="receipt-title">Fee Receipt — ${copy}</div>
+        </div>
+        <div style="margin-left:12px;text-align:center">
+          <canvas id="${qrId}" width="54" height="54" style="border-radius:3px;display:block"></canvas>
+          <div style="font-size:8px;color:#666;margin-top:2px">Scan to Verify</div>
+        </div>
+        <div style="margin-left:12px;text-align:right">
+          <div style="font-size:11px;color:#666">Receipt No.</div>
+          <div style="font-weight:700;font-size:12px;color:var(--navy)">${r.receiptNo}</div>
+          <div style="font-size:10px;color:#666;margin-top:2px">${fmtDate(new Date().toISOString())}</div>
+        </div>
+      </div>
+      <div class="receipt-grid">
+        <div class="receipt-row"><span class="receipt-key">Roll No.:</span><span class="receipt-val">${r.rollNo}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Name:</span><span class="receipt-val">${r.studentName}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Fee Type:</span><span class="receipt-val">${r.feeType}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Year:</span><span class="receipt-val">${new Date().getFullYear()}</span></div>
+        <div class="receipt-row"><span class="receipt-key">Payment Date:</span><span class="receipt-val">${r.paymentDate || fmtDate(new Date().toISOString())}</span></div>
+        <div class="receipt-row"><span class="receipt-key">UTR No.:</span><span class="receipt-val">${r.utr || '—'}</span></div>
+      </div>
+      <div class="receipt-row" style="font-size:11px"><span class="receipt-key">Ref. Code:</span><span class="receipt-val" style="font-family:monospace">${r.refCode || '—'}</span></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+        <div class="receipt-amount-box" style="flex:1">
+          <div class="ra-label">Amount Received</div>
+          <div class="ra-val">₹${fmt(r.amount)}</div>
+        </div>
+        <div style="font-size:9px;color:#888;max-width:130px;line-height:1.4">
+          ✅ Verify at:<br/><span style="font-family:monospace;color:var(--navy);word-break:break-all">${window.location.hostname}</span>
+        </div>
+      </div>
+      <div class="receipt-sig">
+        <div>Student Signature: _______________</div>
+        <div>Cashier Signature &amp; Seal: _______________</div>
+      </div>
+      <script>
+        (function(){
+          var el=document.getElementById('${qrId}');
+          if(el&&typeof QRCode!=='undefined'){
+            QRCode.toCanvas(el,'${verifyURL}',{width:54,margin:1,color:{dark:'#0f2744',light:'#ffffff'}},function(){});
+          }
+        })();
+      <\/script>
+    </div>`;
+  });
+  return `<div class="receipt-sheet">${stubs.join('')}</div>`;
+}
+
+function printReceipts() {
+  const el = document.getElementById('modal-receipt');
+  if (!el.classList.contains('hidden')) {
+    window.print(); return;
+  }
+  // From verify result
+  if (currentReceiptData) {
+    const w = window.open('','_blank','width=800,height=900');
+    w.document.write(`<!DOCTYPE html><html><head>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+      <style>
+        :root{--navy:#0f2744;--gold:#c8973a;--gold-pale:#fdf4e3}
+        body{font-family:'DM Sans',sans-serif;margin:0;padding:10mm;font-size:13px}
+        .receipt-stub{border:1px solid #ccc;padding:14px 16px}
+        .receipt-stub+.receipt-stub{border-top:none}
+        .receipt-header{display:flex;align-items:flex-start;border-bottom:1.5px solid #0f2744;padding-bottom:8px;margin-bottom:10px}
+        .receipt-inst-name{font-family:'Playfair Display',serif;font-size:13px;color:#0f2744;font-weight:700}
+        .receipt-inst-addr{font-size:9px;color:#666}
+        .receipt-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c8973a;margin-top:2px}
+        .receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:8px}
+        .receipt-row{display:flex;gap:6px;font-size:11px;margin-bottom:3px}
+        .receipt-key{color:#666;min-width:90px;flex-shrink:0}
+        .receipt-val{font-weight:600;color:#111}
+        .receipt-amount-box{background:#0f2744;color:#fff;padding:6px 12px;border-radius:4px;text-align:center;margin-top:8px}
+        .ra-label{font-size:9px;opacity:.7;text-transform:uppercase}
+        .ra-val{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+        .receipt-sig{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px dashed #ccc;font-size:10px;color:#666}
+      </style></head><body>${buildReceiptHTML([currentReceiptData])}</body></html>`);
+    w.document.close();
+    w.print();
+  }
+}
+
+// ═══ MANAGE DEMANDS ═══════════════════════════════════════
+let _allDemandsCache = [];
+let _mgDemandFilter = 'all';
+
+async function loadManageDemands() {
+  const data = await api('GET', '/api/cashier/demands', null, cashierHeaders());
+  _allDemandsCache = Array.isArray(data) ? data : [];
+  renderManageDemands(_allDemandsCache);
+}
+
+function filterMgDemands(f, btn) {
+  _mgDemandFilter = f;
+  document.querySelectorAll('#ca-tab-managedemands .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const q = document.getElementById('mg-demand-search').value.toLowerCase();
+  applyMgDemandsFilter(q);
+}
+
+function filterMgDemandsSearch() {
+  const q = document.getElementById('mg-demand-search').value.toLowerCase();
+  applyMgDemandsFilter(q);
+}
+
+function applyMgDemandsFilter(q) {
+  let list = _allDemandsCache;
+  if (_mgDemandFilter !== 'all') list = list.filter(d => d.status === _mgDemandFilter);
+  if (q) list = list.filter(d =>
+    d.roll_no?.toLowerCase().includes(q) ||
+    d.students?.name?.toLowerCase().includes(q) ||
+    d.fee_type_name?.toLowerCase().includes(q) ||
+    d.ref_code?.toLowerCase().includes(q)
+  );
+  renderManageDemands(list);
+}
+
+function renderManageDemands(list) {
+  const el = document.getElementById('ca-managedemands-list');
+  if (!list || list.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No demands found.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr>
+      <th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th>
+      <th>Ref Code</th><th>Status</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${list.map(d => {
+      const isPaid = d.status === 'paid';
+      const isCancelled = d.status === 'cancelled';
+      return `<tr>
+        <td>${d.roll_no}</td>
+        <td>${d.students?.name || '—'}</td>
+        <td>${d.fee_type_name}</td>
+        <td>₹${fmt(d.amount)}</td>
+        <td><code style="font-size:11px">${d.ref_code}</code></td>
+        <td><span class="badge badge-${isPaid?'paid':isCancelled?'overdue':'pending'}">${d.status}</span></td>
+        <td>
+          ${!isPaid && !isCancelled ? `
+            <button class="btn btn-sm btn-secondary" onclick="openEditDemand('${d.id}')">✏️ Edit</button>
+            <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cancelDemand('${d.id}')">🚫 Cancel</button>
+            <button class="btn btn-sm btn-danger" style="margin-left:4px;background:#6b1a1a" onclick="deleteDemand('${d.id}')">🗑️ Delete</button>
+          ` : isPaid ? `
+            <span style="font-size:12px;color:var(--success)">✅ Paid — cannot edit</span>
+          ` : `
+            <button class="btn btn-sm btn-secondary" onclick="restoreDemand('${d.id}')">↩️ Restore</button>
+            <button class="btn btn-sm btn-danger" style="margin-left:4px;background:#6b1a1a" onclick="deleteDemand('${d.id}')">🗑️ Delete</button>
+          `}
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function openEditDemand(id) {
+  const d = _allDemandsCache.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('ed-student-info').value = `${d.roll_no} — ${d.students?.name || ''}`;
+  document.getElementById('ed-fee-type').value = d.fee_type_name;
+  document.getElementById('ed-amount').value = d.amount;
+  document.getElementById('ed-remarks').value = d.remarks || '';
+  document.getElementById('ed-demand-id').value = id;
+  document.getElementById('ed-alert').classList.add('hidden');
+  openModal('modal-editdemand');
+}
+
+async function saveEditDemand() {
+  const id = document.getElementById('ed-demand-id').value;
+  const amount = parseFloat(document.getElementById('ed-amount').value);
+  const remarks = document.getElementById('ed-remarks').value.trim();
+  if (isNaN(amount) || amount <= 0) {
+    showAlert('ed-alert', 'Enter a valid amount.'); return;
+  }
+  setSpinner('ed-spinner', true);
+  const d = _allDemandsCache.find(x => x.id === id);
+  const newUpiLink = buildUPILink(d.ref_code, amount);
+  const res = await api('PATCH', `/api/cashier/demands/${id}`,
+    { amount, remarks, upi_link: newUpiLink }, cashierHeaders());
+  setSpinner('ed-spinner', false);
+  if (!res || res.error) { showAlert('ed-alert', 'Error saving changes.'); return; }
+  closeModal('modal-editdemand');
+  await loadManageDemands();
+  if (currentStudent) loadStudentData();
+}
+
+async function cancelDemand(id) {
+  if (!confirm('Cancel this demand? The student will see it as cancelled. You can restore it later.')) return;
+  await api('PATCH', `/api/cashier/demands/${id}`, { status: 'cancelled' }, cashierHeaders());
+  await loadManageDemands();
+}
+
+async function restoreDemand(id) {
+  if (!confirm('Restore this cancelled demand back to pending?')) return;
+  await api('PATCH', `/api/cashier/demands/${id}`, { status: 'pending' }, cashierHeaders());
+  await loadManageDemands();
+}
+
+async function deleteDemand(id) {
+  const d = _allDemandsCache.find(x => x.id === id);
+  if (!d) return;
+  if (d.status === 'paid') { alert('Cannot delete a paid demand.'); return; }
+  if (!confirm(`Permanently delete demand "${d.ref_code}"? This cannot be undone.`)) return;
+  const res = await api('DELETE', `/api/cashier/demands/${id}`, null, cashierHeaders());
+  if (res?.error) { alert('Error: ' + res.error); return; }
+  await loadManageDemands();
+}
+
+// ═══ PUBLIC RECEIPT VERIFICATION ══════════════════════════
+async function verifyPublicReceipt() {
+  const rcptNo = document.getElementById('pv-receipt-no').value.trim().toUpperCase();
+  if (!rcptNo) { showAlert('pv-alert', 'Please enter a receipt number.'); return; }
+  document.getElementById('pv-alert').classList.add('hidden');
+  document.getElementById('pv-result').classList.add('hidden');
+  setSpinner('pv-spinner', true);
+
+  if (WORKER_URL === 'YOUR_WORKER_URL') {
+    setSpinner('pv-spinner', false);
+    showAlert('pv-alert', 'System not configured. Contact institute.');
+    return;
+  }
+
+  const res = await api('GET', `/api/verify?receipt_no=${encodeURIComponent(rcptNo)}`);
+  setSpinner('pv-spinner', false);
+
+  const el = document.getElementById('pv-result');
+  el.classList.remove('hidden');
+
+  if (!res || !res.found) {
+    el.innerHTML = `<div class="alert alert-danger" style="font-size:15px">
+      ❌ <strong>Receipt Not Found</strong><br/>
+      No record of receipt <code>${rcptNo}</code> exists in the official database.<br/>
+      <span style="font-size:13px;margin-top:6px;display:block">This receipt may be <strong>forged or invalid.</strong> Please contact the institute immediately.</span>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div style="border:2px solid var(--success);border-radius:var(--radius-md);overflow:hidden">
+      <div style="background:var(--success);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">✅</span>
+        <div>
+          <div style="font-weight:700;font-size:15px">GENUINE RECEIPT VERIFIED</div>
+          <div style="font-size:12px;opacity:.85">This receipt is authentic and recorded in the official database.</div>
+        </div>
+      </div>
+      <div style="padding:16px">
+        <div class="info-grid">
+          <div class="info-item"><div class="key">Receipt No.</div><div class="val" style="font-family:monospace">${res.receipt.receipt_no}</div></div>
+          <div class="info-item"><div class="key">Student Name</div><div class="val">${res.receipt.student_name}</div></div>
+          <div class="info-item"><div class="key">Roll No.</div><div class="val">${res.receipt.roll_no}</div></div>
+          <div class="info-item"><div class="key">Fee Type</div><div class="val">${res.receipt.fee_type_name}</div></div>
+          <div class="info-item"><div class="key">Amount Paid</div><div class="val" style="color:var(--success);font-weight:700">₹${fmt(res.receipt.amount)}</div></div>
+          <div class="info-item"><div class="key">Payment Date</div><div class="val">${fmtDate(res.receipt.payments?.payment_date)}</div></div>
+          <div class="info-item"><div class="key">UTR Number</div><div class="val" style="font-family:monospace">${res.receipt.payments?.utr || '—'}</div></div>
+          <div class="info-item"><div class="key">Receipt Issued</div><div class="val">${fmtDate(res.receipt.issued_at)}</div></div>
+        </div>
+        <div class="alert alert-info" style="margin-top:12px;font-size:12px">
+          🔒 This data is fetched live from the institute's secure database and cannot be tampered with.
+          The UTR number above can be independently verified with PNB bank.
+        </div>
+      </div>
+    </div>`;
+}
+
+// ═══ UTILITIES ════════════════════════════════════════════
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function fmt(n) {
+  return Number(n).toLocaleString('en-IN');
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function ordinal(n) {
+  const s = ['th','st','nd','rd'];
+  const v = parseInt(n) % 100;
+  return (s[(v-20)%10] || s[v] || s[0]);
+}
+function shortCourse(c) {
+  if (!c) return '—';
+  const map = {
+    'Civil Engineering': 'Civil',
+    'Computer Science & Engineering': 'CSE',
+    'Electrical Engineering': 'EE',
+    'Electronics Engineering': 'ECE',
+    'Mechanical Engineering': 'ME',
+    'Modern Office Management': 'MOM'
+  };
+  return map[c] || c;
+}
+function getRollFull(noId, brId, yrId) {
+  const no = (document.getElementById(noId)?.value || '').trim();
+  const br = document.getElementById(brId)?.value || '';
+  const yr = (document.getElementById(yrId)?.value || '').trim();
+  return `${no}/${br}/${yr}`;
+}
+function updateRegRollPreview() {
+  const roll = getRollFull('reg-roll-no','reg-roll-branch','reg-roll-year');
+  const el = document.getElementById('reg-roll-preview');
+  if (!el) return;
+  el.textContent = `Preview: ${roll}`;
+  el.style.color = /^\d{1,3}\/[A-Z]+\/\d{4}$/.test(roll) ? 'var(--success)' : 'var(--navy-mid)';
+}
+function showLoginAlert(msg) {
+  const el = document.getElementById('login-alert');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function setSpinner(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('hidden', !show);
+}
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+// Close modals on overlay click
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
