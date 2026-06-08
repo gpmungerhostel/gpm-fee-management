@@ -288,7 +288,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <div class="card">
       <div class="card-title">Student Registration</div>
       <div class="card-subtitle">Register once to access the fee portal. Your Roll No. is your unique identifier.</div>
-      <div id="reg-alert" class="alert alert-danger hidden"></div>
       <div class="form-row">
         <div class="field">
           <label>Roll Number <span class="req">*</span></label>
@@ -401,6 +400,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <button class="btn btn-secondary" onclick="showScreen('screen-login')">← Back to Login</button>
         <button class="btn btn-primary" onclick="registerStudent()"><span id="reg-spinner" class="spinner hidden"></span>Register</button>
       </div>
+      <div id="reg-alert" class="alert alert-danger hidden" style="margin-top:12px"></div>
     </div>
   </div>
 </div>
@@ -1491,7 +1491,7 @@ async function registerStudent() {
   const res = await api('POST', '/api/auth/register', {
     roll_no: roll, name, gender, category: cat, pwd,
     course,
-    year: document.getElementById('reg-roll-no').value.trim(),
+    year: batchYear,
     batch_year: batchYear,
     mobile: mob,
     student_type: v('reg-student-type') || 'Non-Hosteller',
