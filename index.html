@@ -356,11 +356,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
             <option>Diploma in Mechanical Engineering</option>
           </select>
         </div>
-        <div class="field">
-          <label>Batch Year <span class="req">*</span></label>
-          <input type="text" id="reg-batch-year" maxlength="4" placeholder="e.g. 2024" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
-          <div class="hint">Year of admission e.g. 2024</div>
-        </div>
       </div>
       <div class="form-row">
         <div class="field">
@@ -572,7 +567,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <div class="header-nav">
       <button class="header-btn active" onclick="ca_tab('dashboard')">Dashboard</button>
       <button class="header-btn" onclick="ca_tab('students')">Students</button>
-      <button class="header-btn" onclick="ca_tab('demands')">Issue Demands</button>
       <button class="header-btn" onclick="ca_tab('managedemands')">Manage Demands</button>
       <button class="header-btn" onclick="ca_tab('verify')">Verify Payment</button>
       <button class="header-btn" onclick="ca_tab('receipts')">Receipts</button>
@@ -582,7 +576,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <button class="header-btn" onclick="ca_tab('prepaid')">Pre-Paid</button>
       <button class="header-btn" onclick="ca_tab('nodues')">No Dues</button>
       <button class="header-btn" onclick="ca_tab('fines')">Fines</button>
-      <button class="header-btn" onclick="ca_tab('passout')">Pass-Out</button>
     </div>
     <div class="user-chip">
       <div class="user-avatar" style="background:var(--gold)">C</div>
@@ -876,25 +869,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       </div>
     </div>
 
-    <!-- ═══ PASS-OUT TAB ═══ -->
-    <div id="ca-tab-passout" class="hidden">
-      <div class="card">
-        <div class="card-title">Pass-Out Verification</div>
-        <div class="card-subtitle">Verify course completion and issue pass-out status. System checks all 6 semesters and fines automatically.</div>
-        <div class="field" style="margin-bottom:12px">
-          <div style="display:flex;gap:10px">
-            <input type="text" id="po-roll" placeholder="Enter Roll No. to verify" style="flex:1"/>
-            <button class="btn btn-primary" onclick="verifyPassOut()">Verify</button>
-          </div>
-        </div>
-        <div id="po-result" class="hidden"></div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <div class="card-title">Pass-Out Records</div>
-        <button class="btn btn-secondary btn-sm" onclick="loadPassOutList()" style="margin-bottom:12px">↻ Refresh</button>
-        <div id="ca-passout-list"><div class="alert alert-info">Click Refresh to load.</div></div>
-      </div>
-    </div>
+    <!-- ═══ PASS-OUT TAB (removed — handled by No Dues) ═══ -->
+    <div id="ca-tab-passout" class="hidden"></div>
 
     <!-- ═══ SEMESTER MANAGEMENT TAB ═══ -->
     <div id="ca-tab-semester" class="hidden">
@@ -956,30 +932,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
             <input type="date" id="sem-hostel-deadline"/>
             <div class="hint">Leave blank if same as academic deadline</div>
           </div>
-          <div class="field">
-            <label>Fee for Regular Students (₹) <span class="req">*</span></label>
-            <input type="number" id="sem-fee-regular" placeholder="e.g. 5000"/>
-            <div class="hint">Used when no specific fee structure found</div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Fee for Repeat Students (₹)</label>
-            <input type="number" id="sem-fee-repeat" placeholder="Leave blank if same as Regular"/>
-          </div>
-          <div class="field">
-            <label>Fee Window (days)</label>
-            <input type="number" id="sem-window-days" value="10" min="1" max="60"/>
-            <div class="hint">For reference only — use deadlines above</div>
-          </div>
         </div>
         <div class="alert alert-info" style="font-size:12px;margin-top:4px">
-          💡 Fee amounts are taken from Fee Structure. Set them in the <strong>Fee Structure</strong> tab before activating semester.
+          💡 Fee amounts are taken automatically from the <strong>Fee Structure</strong> tab. Define them there before activating a semester.
         </div>
         <div class="alert alert-warning" style="margin-top:12px">
-          ⚠️ This will auto-generate Academic fee demands for ALL active students of selected semester/course
-          who do not have a No Dues certificate. Regular and Repeat students will both get demands.
-          Hostel demands will also be generated for Hosteller students. This action cannot be undone.
+          ⚠️ Once activated, students of the selected course and batch will be able to log in and generate their own fee demands for this semester. Fee amounts are pulled from the Fee Structure tab. This action cannot be undone.
         </div>
         <div class="btn-row">
           <button class="btn btn-secondary" onclick="loadSemesterConfig()">↻ Refresh Status</button>
@@ -1511,15 +1469,16 @@ async function registerStudent() {
   const pass  = v('reg-pass').trim();
   const pass2 = v('reg-pass2').trim();
 
-  const batchYear = v('reg-batch-year').trim();
-  if (!roll || roll === '//' || !name || !gender || !cat || !course || !batchYear || !mob || !pass) {
+  if (!roll || roll === '//' || !name || !gender || !cat || !course || !mob || !pass) {
     showAlert('reg-alert', 'Please fill all required fields.'); return;
-  }
-  if (batchYear.length !== 4 || isNaN(batchYear)) {
-    showAlert('reg-alert', 'Enter valid 4-digit batch year e.g. 2024'); return;
   }
   if (!/^\d{1,3}\/[A-Z]+\/\d{4}$/.test(roll)) {
     showAlert('reg-alert', 'Invalid Roll No. Format should be: 25/CSE/2026'); return;
+  }
+  // Derive batch year from roll year part (e.g. 25/CSE/2026 → 2026)
+  const batchYear = roll.split('/')[2];
+  if (!batchYear || batchYear.length !== 4 || isNaN(batchYear)) {
+    showAlert('reg-alert', 'Roll year must be a valid 4-digit year e.g. 2026'); return;
   }
   if (mob.length !== 10 || !/^\d+$/.test(mob)) {
     showAlert('reg-alert', 'Enter valid 10-digit mobile number.'); return;
@@ -1531,7 +1490,10 @@ async function registerStudent() {
   const admissionType = v('reg-lateral-entry') || 'Regular';
   const res = await api('POST', '/api/auth/register', {
     roll_no: roll, name, gender, category: cat, pwd,
-    course, batch_year: batchYear, mobile: mob,
+    course,
+    year: document.getElementById('reg-roll-no').value.trim(),
+    batch_year: batchYear,
+    mobile: mob,
     student_type: v('reg-student-type') || 'Non-Hosteller',
     lateral_entry: admissionType === 'Lateral',
     admission_year: batchYear,
@@ -1766,7 +1728,7 @@ function ca_tab(t) {
     if (el) el.classList.toggle('hidden', tab !== t);
   });
   document.querySelectorAll('#screen-cashier .site-header .header-btn').forEach((b,i) => {
-    b.classList.toggle('active', ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','passout'][i] === t);
+    b.classList.toggle('active', ['dashboard','students','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines'][i] === t);
   });
   if (t === 'students') loadCashierStudents();
   if (t === 'managedemands') loadManageDemands();
@@ -1777,7 +1739,6 @@ function ca_tab(t) {
   if (t === 'prepaid') { document.getElementById('ca-prepaid-list').innerHTML = '<div class="alert alert-info">Search above to view records.</div>'; }
   if (t === 'nodues') loadNoDuesList();
   if (t === 'fines') loadFinesList();
-  if (t === 'passout') loadPassOutList();
 }
 
 async function loadCashierDashboard() {
@@ -1865,8 +1826,7 @@ async function viewStudent(rollNo) {
         <div style="text-align:right"><strong>₹${fmt(d.amount)}</strong><div><span class="badge badge-${d.status==='paid'?'paid':'pending'}">${d.status}</span></div></div>
       </div>`).join('')}
     <div style="margin-top:12px">
-      <button class="btn btn-primary btn-sm" onclick="closeModal('modal-student');ca_tab('demands');(function(){var p='${s.roll_no}'.split('/');document.getElementById('dm-roll-no').value=p[0];document.getElementById('dm-roll-branch').value=p[1];document.getElementById('dm-roll-year').value=p[2];lookupStudentForDemand();})()">Issue New Demand</button>
-      <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="updateStudentType('${s.roll_no}', '${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}')">
+      <button class="btn btn-secondary btn-sm" style="margin-left:0" onclick="updateStudentType('${s.roll_no}', '${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}')">
         Switch to ${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}
       </button>
     </div>`;
@@ -2802,9 +2762,6 @@ async function startSemester() {
   const start_date  = v('sem-start-date');
   const academic_deadline = v('sem-academic-deadline');
   const hostel_deadline   = v('sem-hostel-deadline') || academic_deadline;
-  const fee_regular = parseFloat(v('sem-fee-regular')) || 0;
-  const fee_repeat  = parseFloat(v('sem-fee-repeat')) || fee_regular;
-  const window_days = v('sem-window-days') || '10';
 
   if (!course || !semester || !batch_year || !start_date || !academic_deadline) {
     showAlert('sem-alert', 'Please fill Course, Semester, Batch Year, Start Date and Academic Deadline.'); return;
@@ -2813,20 +2770,21 @@ async function startSemester() {
     showAlert('sem-alert', 'Enter valid 4-digit batch year.'); return;
   }
 
-  if (!confirm(`Activate Semester ${semester} for Batch ${batch_year}?\nCourse: ${course === 'ALL' ? 'All Courses' : course}\n\nStudents can now generate their own fee demands.\nAcademic Deadline: ${academic_deadline}\nHostel Deadline: ${hostel_deadline || academic_deadline}\nDefault Fee (Regular): ₹${fmt(fee_regular)}\nDefault Fee (Repeat): ₹${fmt(fee_repeat)}\n\nThis cannot be undone.`)) return;
+  if (!confirm(`Activate Semester ${semester} for Batch ${batch_year}?\nCourse: ${course === 'ALL' ? 'All Courses' : course}\n\nStudents can now generate their own fee demands.\nAcademic Deadline: ${academic_deadline}\nHostel Deadline: ${hostel_deadline}\n\nFee amounts will be taken from Fee Structure.\nThis cannot be undone.`)) return;
 
   setSpinner('sem-spinner', true);
   const res = await api('POST', '/api/cashier/semester-config', {
     course, semester, batch_year,
     start_date, academic_deadline,
     hostel_deadline: hostel_deadline || academic_deadline,
-    window_days: parseInt(window_days),
-    fee_regular, fee_repeat,
+    window_days: 10,
+    fee_regular: 0,
+    fee_repeat: 0,
   });
   setSpinner('sem-spinner', false);
   if (!res || !res.success) { showAlert('sem-alert', res?.error || 'Failed to activate semester.'); return; }
   document.getElementById('sem-alert').classList.add('hidden');
-  alert(`✅ Semester ${semester} activated for Batch ${batch_year}!\n\nStudents can now generate their fee demands by logging in and selecting their semester.\n📅 Academic deadline: ${academic_deadline}\n📅 Hostel deadline: ${hostel_deadline || academic_deadline}`);
+  alert(`✅ Semester ${semester} activated for Batch ${batch_year}!\n\nStudents can now generate their fee demands by logging in and selecting their semester.\n📅 Academic deadline: ${academic_deadline}\n📅 Hostel deadline: ${hostel_deadline}`);
   loadSemesterConfig();
   loadCashierDashboard();
 }
