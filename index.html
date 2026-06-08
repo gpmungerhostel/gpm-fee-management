@@ -260,7 +260,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <div id="cashier-login-fields" class="hidden">
       <div class="field">
         <label>Username <span class="req">*</span></label>
-        <input type="text" id="cl-user" placeholder="cashier" value="cashier"/>
+        <input type="text" id="cl-user" placeholder="cashier" value=""/>
       </div>
       <div class="field">
         <label>Password <span class="req">*</span></label>
@@ -318,8 +318,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           <label>Category <span class="req">*</span></label>
           <select id="reg-category">
             <option value="">Select</option>
-            <option>General</option><option>OBC</option><option>SC</option><option>ST</option><option>EWS</option>
+            <option>General</option><option>BC</option><option>EBC</option><option>SC</option><option>ST</option><option>EWS</option>
           </select>
+        </div>
+        <div class="field">
+          <label>Student Type <span class="req">*</span></label>
+          <select id="reg-student-type">
+            <option value="Non-Hosteller">Non-Hosteller</option>
+            <option value="Hosteller">Hosteller</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Admission Type <span class="req">*</span></label>
+          <select id="reg-lateral-entry" onchange="updateLateralHint()">
+            <option value="Regular">Regular (1st Semester)</option>
+            <option value="Lateral">Lateral Entry (3rd Semester)</option>
+          </select>
+          <div class="hint" id="lateral-hint">Regular admission from 1st semester</div>
         </div>
         <div class="field">
           <label>Differently Abled</label>
@@ -342,22 +357,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           </select>
         </div>
         <div class="field">
-          <label>Semester <span class="req">*</span></label>
-          <select id="reg-year">
-            <option value="">Select Semester</option>
-            <option value="1">1st Semester</option>
-            <option value="2">2nd Semester</option>
-            <option value="3">3rd Semester</option>
-            <option value="4">4th Semester</option>
-            <option value="5">5th Semester</option>
-            <option value="6">6th Semester</option>
-            <option value="F1">1st Semester (Failed/Repeat)</option>
-            <option value="F2">2nd Semester (Failed/Repeat)</option>
-            <option value="F3">3rd Semester (Failed/Repeat)</option>
-            <option value="F4">4th Semester (Failed/Repeat)</option>
-            <option value="F5">5th Semester (Failed/Repeat)</option>
-            <option value="F6">6th Semester (Failed/Repeat)</option>
-          </select>
+          <label>Batch Year <span class="req">*</span></label>
+          <input type="text" id="reg-batch-year" maxlength="4" placeholder="e.g. 2024" oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
+          <div class="hint">Year of admission e.g. 2024</div>
         </div>
       </div>
       <div class="form-row">
@@ -440,10 +442,84 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏳</div><div><div class="val" id="sd-pending-count">0</div><div class="lbl">Pending</div></div></div>
         <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">🧾</div><div><div class="val" id="sd-receipt-count">0</div><div class="lbl">Receipts</div></div></div>
       </div>
+      <!-- Pay New Semester Fee -->
+      <div class="card" style="border-left:3px solid var(--gold);background:var(--gold-pale)">
+        <div class="card-title" style="font-size:16px">💰 Pay Semester Fee</div>
+        <div class="card-subtitle">Select your semester and enrollment type to generate a fee demand.</div>
+        <div id="sem-pay-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Semester <span class="req">*</span></label>
+            <select id="stu-pay-semester">
+              <option value="">Select Semester</option>
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
+              <option value="3">3rd Semester</option>
+              <option value="4">4th Semester</option>
+              <option value="5">5th Semester</option>
+              <option value="6">6th Semester</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Enrollment Type <span class="req">*</span></label>
+            <select id="stu-pay-enrollment">
+              <option value="Regular">Regular</option>
+              <option value="Repeat">Repeat / Ex-Student</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:8px">
+          <div></div>
+          <button class="btn btn-gold" onclick="generateSemesterDemand()">
+            <span id="sem-pay-spinner" class="spinner hidden"></span>
+            Generate Fee Demand
+          </button>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="card-title">Pending Fee Demands</div>
+        <div class="card-title">All Pending Dues</div>
         <div class="card-subtitle">Scan the QR code with any UPI app to pay. Your reference code is pre-filled.</div>
         <div id="stu-demands-list"><div class="alert alert-info">Loading fee demands…</div></div>
+      </div>
+
+      <!-- Hostel Fee Self-Entry -->
+      <div class="card" style="border-left:3px solid #1a3a7c;margin-top:14px">
+        <div class="card-title" style="font-size:16px">🏠 Pay Hostel Fee</div>
+        <div class="card-subtitle">Enter amount from your Hostel Demand Notice and pay.</div>
+        <div id="hostel-pay-alert" class="alert alert-danger hidden"></div>
+        <div class="field">
+          <label>Semester <span class="req">*</span></label>
+          <select id="stu-hostel-semester">
+            <option value="">Select Semester</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
+            <option value="3">3rd Semester</option>
+            <option value="4">4th Semester</option>
+            <option value="5">5th Semester</option>
+            <option value="6">6th Semester</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Total Amount from Demand Notice (₹) <span class="req">*</span></label>
+            <input type="number" id="stu-hostel-amount" placeholder="Enter exact amount from notice"/>
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input type="text" id="stu-hostel-desc" placeholder="e.g. Hostel Rent + Mess charges"/>
+          </div>
+        </div>
+        <div class="alert alert-info" style="font-size:12px;margin-bottom:10px">
+          ℹ️ Hostel fee receipt is issued by cashier after verifying payment in bank statement.
+        </div>
+        <div class="btn-row" style="margin-top:8px">
+          <div></div>
+          <button class="btn btn-primary" onclick="generateHostelDemand()">
+            <span id="hostel-pay-spinner" class="spinner hidden"></span>
+            Generate Hostel QR
+          </button>
+        </div>
       </div>
     </div>
 
@@ -502,6 +578,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <button class="header-btn" onclick="ca_tab('receipts')">Receipts</button>
       <button class="header-btn" onclick="ca_tab('feestructure')">Fee Structure</button>
       <button class="header-btn" onclick="ca_tab('reports')">Reports</button>
+      <button class="header-btn" onclick="ca_tab('semester')">Semester</button>
+      <button class="header-btn" onclick="ca_tab('prepaid')">Pre-Paid</button>
+      <button class="header-btn" onclick="ca_tab('nodues')">No Dues</button>
+      <button class="header-btn" onclick="ca_tab('fines')">Fines</button>
+      <button class="header-btn" onclick="ca_tab('passout')">Pass-Out</button>
     </div>
     <div class="user-chip">
       <div class="user-avatar" style="background:var(--gold)">C</div>
@@ -735,6 +816,287 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       </div>
     </div>
 
+    <!-- ═══ PRE-PAID SEMESTERS TAB ═══ -->
+    <div id="ca-tab-prepaid" class="hidden">
+      <div class="card">
+        <div class="card-title">Mark Pre-Paid Semesters</div>
+        <div class="card-subtitle">For existing students who paid fees before this system was implemented. This allows them to pay current semester without being blocked.</div>
+        <div id="pp-alert" class="alert alert-danger hidden"></div>
+        <div class="alert alert-warning">
+          ⚠️ Use this only for fees paid <strong>before system implementation</strong>. This cannot be undone.
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Student Roll No. <span class="req">*</span></label>
+            <input type="text" id="pp-roll" placeholder="e.g. 25/CSE/2026" oninput="lookupStudentPrePaid()"/>
+            <div class="hint" id="pp-student-preview"></div>
+          </div>
+          <div class="field">
+            <label>Semesters Already Paid <span class="req">*</span></label>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal;font-size:13px">
+                <input type="checkbox" class="pp-sem-check" value="1"/> 1st Sem
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal;font-size:13px">
+                <input type="checkbox" class="pp-sem-check" value="2"/> 2nd Sem
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal;font-size:13px">
+                <input type="checkbox" class="pp-sem-check" value="3"/> 3rd Sem
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal;font-size:13px">
+                <input type="checkbox" class="pp-sem-check" value="4"/> 4th Sem
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal;font-size:13px">
+                <input type="checkbox" class="pp-sem-check" value="5"/> 5th Sem
+              </label>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:normal;font-size:13px">
+                <input type="checkbox" class="pp-sem-check" value="6"/> 6th Sem
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Remark</label>
+          <input type="text" id="pp-remark" value="Fee paid before system implementation" placeholder="Reason for marking as pre-paid"/>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-primary" onclick="markPrePaid()">
+            <span id="pp-spinner" class="spinner hidden"></span>
+            ✅ Mark as Pre-Paid
+          </button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Pre-Paid Records</div>
+        <div class="field" style="margin-bottom:12px">
+          <input type="text" id="pp-search" placeholder="Search by roll no." oninput="searchPrePaid()"/>
+        </div>
+        <div id="ca-prepaid-list"><div class="alert alert-info">Search above to view records.</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ PASS-OUT TAB ═══ -->
+    <div id="ca-tab-passout" class="hidden">
+      <div class="card">
+        <div class="card-title">Pass-Out Verification</div>
+        <div class="card-subtitle">Verify course completion and issue pass-out status. System checks all 6 semesters and fines automatically.</div>
+        <div class="field" style="margin-bottom:12px">
+          <div style="display:flex;gap:10px">
+            <input type="text" id="po-roll" placeholder="Enter Roll No. to verify" style="flex:1"/>
+            <button class="btn btn-primary" onclick="verifyPassOut()">Verify</button>
+          </div>
+        </div>
+        <div id="po-result" class="hidden"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Pass-Out Records</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadPassOutList()" style="margin-bottom:12px">↻ Refresh</button>
+        <div id="ca-passout-list"><div class="alert alert-info">Click Refresh to load.</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ SEMESTER MANAGEMENT TAB ═══ -->
+    <div id="ca-tab-semester" class="hidden">
+      <div class="card">
+        <div class="card-title">Semester Management</div>
+        <div class="card-subtitle">Start a new semester — auto-generates fee demands for all eligible students.</div>
+        <div id="sem-alert" class="alert alert-danger hidden"></div>
+
+        <!-- Active Semester Config -->
+        <div class="card" style="background:var(--gold-pale);border-color:var(--gold);margin-bottom:16px">
+          <div style="font-weight:600;color:var(--navy);margin-bottom:12px">⚙️ Active Semester Configuration</div>
+          <div id="active-sem-info"><div class="alert alert-info">No active semester. Configure below.</div></div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="field">
+            <label>Course <span class="req">*</span></label>
+            <select id="sem-course">
+              <option value="ALL">All Courses</option>
+              <option>Diploma in Civil Engineering</option>
+              <option>Diploma in Computer Science &amp; Engineering</option>
+              <option>Diploma in Electrical Engineering</option>
+              <option>Diploma in Electronics Engineering</option>
+              <option>Diploma in Fire Technology and Safety</option>
+              <option>Diploma in Mechanical Engineering</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Semester <span class="req">*</span></label>
+            <select id="sem-number">
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
+              <option value="3">3rd Semester</option>
+              <option value="4">4th Semester</option>
+              <option value="5">5th Semester</option>
+              <option value="6">6th Semester</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Batch Year <span class="req">*</span></label>
+            <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2024"/>
+            <div class="hint">Admission year of target batch</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Semester Start Date <span class="req">*</span></label>
+            <input type="date" id="sem-start-date"/>
+          </div>
+          <div class="field">
+            <label>Academic Fee Deadline <span class="req">*</span></label>
+            <input type="date" id="sem-academic-deadline"/>
+            <div class="hint">Late fine starts after this date</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Hostel Fee Deadline</label>
+            <input type="date" id="sem-hostel-deadline"/>
+            <div class="hint">Leave blank if same as academic deadline</div>
+          </div>
+          <div class="field">
+            <label>Fee for Regular Students (₹) <span class="req">*</span></label>
+            <input type="number" id="sem-fee-regular" placeholder="e.g. 5000"/>
+            <div class="hint">Used when no specific fee structure found</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Fee for Repeat Students (₹)</label>
+            <input type="number" id="sem-fee-repeat" placeholder="Leave blank if same as Regular"/>
+          </div>
+          <div class="field">
+            <label>Fee Window (days)</label>
+            <input type="number" id="sem-window-days" value="10" min="1" max="60"/>
+            <div class="hint">For reference only — use deadlines above</div>
+          </div>
+        </div>
+        <div class="alert alert-info" style="font-size:12px;margin-top:4px">
+          💡 Fee amounts are taken from Fee Structure. Set them in the <strong>Fee Structure</strong> tab before activating semester.
+        </div>
+        <div class="alert alert-warning" style="margin-top:12px">
+          ⚠️ This will auto-generate Academic fee demands for ALL active students of selected semester/course
+          who do not have a No Dues certificate. Regular and Repeat students will both get demands.
+          Hostel demands will also be generated for Hosteller students. This action cannot be undone.
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="loadSemesterConfig()">↻ Refresh Status</button>
+          <button class="btn btn-gold" onclick="startSemester()"><span id="sem-spinner" class="spinner hidden"></span>🎓 Activate Semester &amp; Generate Demands</button>
+        </div>
+      </div>
+
+      <!-- Late Fine Config -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Late Fine Settings</div>
+        <div class="card-subtitle">Automatically applied after payment window closes.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Fine per Day (₹)</label>
+            <input type="number" id="late-fine-per-day" value="50" disabled style="background:var(--gray-50)"/>
+          </div>
+          <div class="field">
+            <label>Maximum Fine (₹)</label>
+            <input type="number" id="late-fine-max" value="500" disabled style="background:var(--gray-50)"/>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:4px">Fine: ₹50/day, maximum ₹500 (fixed as per institute policy)</div>
+      </div>
+    </div>
+
+    <!-- ═══ NO DUES TAB ═══ -->
+    <div id="ca-tab-nodues" class="hidden">
+      <div class="card">
+        <div class="card-title">No Dues Management</div>
+        <div class="card-subtitle">Issue No Dues certificate to students who have cleared all pending dues.</div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Search Student</label>
+          <div style="display:flex;gap:10px">
+            <input type="text" id="nd-search" placeholder="Enter Roll No. e.g. 25/CSE/2026" style="flex:1"/>
+            <button class="btn btn-primary" onclick="searchStudentForNoDues()">Search</button>
+          </div>
+        </div>
+        <div id="nd-result" class="hidden"></div>
+      </div>
+
+      <!-- No Dues Issued List -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Issued No Dues Certificates</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadNoDuesList()" style="margin-bottom:12px">↻ Refresh</button>
+        <div id="nd-issued-list"><div class="alert alert-info">Click Refresh to load.</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ FINES TAB ═══ -->
+    <div id="ca-tab-fines" class="hidden">
+      <div class="card">
+        <div class="card-title">Office Order Fines</div>
+        <div class="card-subtitle">Apply fines to students based on office orders.</div>
+        <div id="fine-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Office Order No. <span class="req">*</span></label>
+            <input type="text" id="fine-order-no" placeholder="e.g. OO/GPM/2026/001"/>
+          </div>
+          <div class="field">
+            <label>Fine Amount (₹) <span class="req">*</span></label>
+            <input type="number" id="fine-amount" placeholder="Amount per student"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Reason <span class="req">*</span></label>
+          <input type="text" id="fine-reason" placeholder="Reason for fine as per office order"/>
+        </div>
+        <div class="field">
+          <label>Apply To <span class="req">*</span></label>
+          <select id="fine-apply-to" onchange="toggleFineTarget()">
+            <option value="specific">Specific Student(s)</option>
+            <option value="all">All Students</option>
+            <option value="course">Entire Course</option>
+          </select>
+        </div>
+        <div id="fine-specific-field" class="field">
+          <label>Roll Numbers (one per line)</label>
+          <textarea id="fine-roll-nos" rows="4" placeholder="25/CSE/2026&#10;26/EE/2026&#10;27/ME/2025"></textarea>
+        </div>
+        <div class="field">
+          <label>Fine Category</label>
+          <div style="display:flex;gap:16px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:normal">
+              <input type="radio" name="fine-type" value="Academic" checked/> Academic Fine
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:normal">
+              <input type="radio" name="fine-type" value="Hostel"/> Hostel Fine
+            </label>
+          </div>
+          <div class="hint">Hostel Fine only applies to Hosteller students</div>
+        </div>
+        <div id="fine-course-field" class="field hidden">
+          <label>Course</label>
+          <select id="fine-course-select">
+            <option>Diploma in Civil Engineering</option>
+            <option>Diploma in Computer Science &amp; Engineering</option>
+            <option>Diploma in Electrical Engineering</option>
+            <option>Diploma in Electronics Engineering</option>
+            <option>Diploma in Fire Technology and Safety</option>
+            <option>Diploma in Mechanical Engineering</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-danger" onclick="applyOfficeFine()"><span id="fine-spinner" class="spinner hidden"></span>Apply Fine</button>
+        </div>
+      </div>
+
+      <!-- Fines list -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Applied Fines</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadFinesList()" style="margin-bottom:12px">↻ Refresh</button>
+        <div id="ca-fines-list"><div class="alert alert-info">Click Refresh to load.</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 <!-- ═══════════════════════════════════════════ MODALS ═══ -->
@@ -772,7 +1134,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         </select>
       </div>
       <div class="field">
-        <label>Semester</label>
+        <label>Semester <span class="req">*</span></label>
         <select id="ft-year">
           <option value="ALL">All Semesters</option>
           <option value="1">1st Semester</option>
@@ -1145,13 +1507,16 @@ async function registerStudent() {
   const cat   = v('reg-category');
   const pwd   = v('reg-pwd');
   const course = v('reg-course');
-  const year  = v('reg-year');
   const mob   = v('reg-mobile').trim();
   const pass  = v('reg-pass').trim();
   const pass2 = v('reg-pass2').trim();
 
-  if (!roll || roll === '//' || !name || !gender || !cat || !course || !year || !mob || !pass) {
+  const batchYear = v('reg-batch-year').trim();
+  if (!roll || roll === '//' || !name || !gender || !cat || !course || !batchYear || !mob || !pass) {
     showAlert('reg-alert', 'Please fill all required fields.'); return;
+  }
+  if (batchYear.length !== 4 || isNaN(batchYear)) {
+    showAlert('reg-alert', 'Enter valid 4-digit batch year e.g. 2024'); return;
   }
   if (!/^\d{1,3}\/[A-Z]+\/\d{4}$/.test(roll)) {
     showAlert('reg-alert', 'Invalid Roll No. Format should be: 25/CSE/2026'); return;
@@ -1163,9 +1528,13 @@ async function registerStudent() {
   if (pass !== pass2) { showAlert('reg-alert', 'Passwords do not match.'); return; }
 
   setSpinner('reg-spinner', true);
+  const admissionType = v('reg-lateral-entry') || 'Regular';
   const res = await api('POST', '/api/auth/register', {
     roll_no: roll, name, gender, category: cat, pwd,
-    course, year, mobile: mob,
+    course, batch_year: batchYear, mobile: mob,
+    student_type: v('reg-student-type') || 'Non-Hosteller',
+    lateral_entry: admissionType === 'Lateral',
+    admission_year: batchYear,
     email: v('reg-email').trim(),
     father_name: v('reg-father').trim(),
     mother_name: v('reg-mother').trim(),
@@ -1232,16 +1601,83 @@ function renderStudentDashboard() {
   el.innerHTML = pending.map(d => demandCard(d, true)).join('');
 }
 
+function calcLateFine(d) {
+  if (!d.due_date) return 0;
+  const today = new Date();
+  const due = new Date(d.due_date);
+  if (today <= due) return 0;
+  const days = Math.floor((today - due) / (1000 * 60 * 60 * 24));
+  return Math.min(days * 50, 500);
+}
+
+function calcLateFine(d) {
+  if (!d.due_date) return 0;
+  const today = new Date();
+  const due = new Date(d.due_date);
+  if (today <= due) return 0;
+  const days = Math.floor((today - due) / (1000 * 60 * 60 * 24));
+  return Math.min(days * 50, 500);
+}
+
+function isHostelDemand(d) {
+  return d.fee_category === 'Hostel';
+}
+
 function demandCard(d, showQR) {
-  return `<div class="demand-card pending">
+  const fine = calcLateFine(d);
+  const isHostel = isHostelDemand(d);
+  const hasAmount = parseFloat(d.amount) > 0;
+  const totalAmount = parseFloat(d.amount) + fine;
+
+  const fineHtml = fine > 0 ? `<div class="alert alert-warning" style="padding:6px 10px;font-size:12px;margin-top:6px">
+    ⚠️ Late fine: ₹${fmt(fine)} | Total payable: ₹${fmt(totalAmount)}
+  </div>` : '';
+
+  const dueDateHtml = d.due_date ? `<div class="demand-meta">Due: ${fmtDate(d.due_date)}</div>` : '';
+
+  const categoryBadge = isHostel
+    ? `<span class="badge" style="background:#e8f4fd;color:#1a3a7c">🏠 Hostel</span>`
+    : `<span class="badge" style="background:#eaf5ef;color:#1a6b3c">📚 Academic</span>`;
+
+  // Hostel fee — student enters amount
+  if (isHostel && !hasAmount) {
+    return `<div class="demand-card pending" style="border-left-color:#1a3a7c">
+      <div class="demand-header">
+        <div class="demand-fee-type">${d.fee_type_name}</div>
+        ${categoryBadge}
+      </div>
+      <div class="alert alert-info" style="font-size:12px;margin:8px 0">
+        📋 Enter amount from your <strong>Hostel Demand Notice</strong>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input type="number" id="hostel-amt-${d.id}" placeholder="Enter amount from demand notice"
+          style="flex:1;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:14px"/>
+        <button class="btn btn-primary btn-sm" onclick="submitHostelAmount('${d.id}', '${d.ref_code}')">
+          Set Amount
+        </button>
+      </div>
+      <div class="demand-meta" style="margin-top:6px">Ref: <code>${d.ref_code}</code></div>
+      ${dueDateHtml}
+    </div>`;
+  }
+
+  return `<div class="demand-card pending" style="${isHostel?'border-left-color:#1a3a7c':''}">
     <div class="demand-header">
       <div class="demand-fee-type">${d.fee_type_name}</div>
-      <span class="badge badge-pending">Pending</span>
+      <div style="display:flex;gap:6px;align-items:center">${categoryBadge}<span class="badge badge-pending">Pending</span></div>
     </div>
     <div class="demand-amount">₹${fmt(d.amount)}</div>
+    ${dueDateHtml}
     <div class="demand-meta">Ref: <code>${d.ref_code}</code></div>
     ${d.remarks ? `<div class="demand-meta" style="margin-top:3px">Note: ${d.remarks}</div>` : ''}
-    ${showQR ? `<div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="showQRModal('${d.ref_code}','${d.amount}','${d.fee_type_name}','${d.upi_link||''}')">📱 View QR / Pay</button></div>` : ''}
+    ${fineHtml}
+    ${isHostel ? `<div class="alert alert-info" style="font-size:11px;margin-top:6px;padding:6px 10px">
+      🏠 Hostel fee — receipt issued after cashier verification</div>` : ''}
+    ${showQR && hasAmount ? `<div style="margin-top:10px">
+      <button class="btn btn-primary btn-sm" onclick="showQRModal('${d.ref_code}','${fine>0?totalAmount:d.amount}','${d.fee_type_name}','${d.upi_link||''}')">
+        📱 View QR / Pay
+      </button>
+    </div>` : ''}
   </div>`;
 }
 
@@ -1298,6 +1734,9 @@ function loadStudentProfile() {
       <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
       <div class="info-item"><div class="key">Gender</div><div class="val">${s.gender}</div></div>
       <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
+      <div class="info-item"><div class="key">Student Type</div><div class="val">${s.student_type || 'Non-Hosteller'}</div></div>
+      <div class="info-item"><div class="key">Enrollment</div><div class="val">${s.enrollment_type || 'Regular'}</div></div>
+      <div class="info-item"><div class="key">No Dues</div><div class="val">${s.no_dues ? '✅ Issued on ' + fmtDate(s.no_dues_issued_at) : '—'}</div></div>
       <div class="info-item"><div class="key">Email</div><div class="val">${s.email || '—'}</div></div>
       <div class="info-item"><div class="key">Father</div><div class="val">${s.father_name || '—'}</div></div>
       <div class="info-item"><div class="key">Mother</div><div class="val">${s.mother_name || '—'}</div></div>
@@ -1322,17 +1761,23 @@ function buildUPILink(refCode, amount) {
 
 // ═══ CASHIER PORTAL ════════════════════════════════════════
 function ca_tab(t) {
-  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports'].forEach(tab => {
-    document.getElementById('ca-tab-' + tab).classList.toggle('hidden', tab !== t);
+  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','passout'].forEach(tab => {
+    const el = document.getElementById('ca-tab-' + tab);
+    if (el) el.classList.toggle('hidden', tab !== t);
   });
   document.querySelectorAll('#screen-cashier .site-header .header-btn').forEach((b,i) => {
-    b.classList.toggle('active', ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports'][i] === t);
+    b.classList.toggle('active', ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','passout'][i] === t);
   });
   if (t === 'students') loadCashierStudents();
   if (t === 'managedemands') loadManageDemands();
   if (t === 'receipts') loadCashierReceipts();
   if (t === 'feestructure') loadFeeStructure();
   if (t === 'reports') loadReport();
+  if (t === 'semester') loadSemesterConfig();
+  if (t === 'prepaid') { document.getElementById('ca-prepaid-list').innerHTML = '<div class="alert alert-info">Search above to view records.</div>'; }
+  if (t === 'nodues') loadNoDuesList();
+  if (t === 'fines') loadFinesList();
+  if (t === 'passout') loadPassOutList();
 }
 
 async function loadCashierDashboard() {
@@ -1368,13 +1813,15 @@ function renderStudentList(students) {
   const el = document.getElementById('ca-students-list');
   if (students.length === 0) { el.innerHTML = '<div class="alert alert-info">No students found.</div>'; return; }
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Year</th><th>Category</th><th>Mobile</th><th>Action</th></tr></thead>
+    <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Batch</th><th>Type</th><th>Category</th><th>Admission</th><th>Mobile</th><th>Action</th></tr></thead>
     <tbody>${students.map(s => `<tr>
       <td><code>${s.roll_no}</code></td>
       <td>${s.name}</td>
       <td>${shortCourse(s.course)}</td>
-      <td>${s.year}${ordinal(s.year)}</td>
+      <td>${s.batch_year || s.admission_year || '—'}</td>
+      <td><span class="badge" style="background:${s.student_type==='Hosteller'?'#e8f4fd':'#eaf5ef'};color:${s.student_type==='Hosteller'?'#1a3a7c':'#1a6b3c'}">${s.student_type||'Non-Hosteller'}</span></td>
       <td>${s.category}</td>
+      <td><span class="badge ${s.lateral_entry?'badge-pending':'badge-paid'}">${s.lateral_entry?'Lateral':'Regular'}</span></td>
       <td>${s.mobile}</td>
       <td><button class="btn btn-sm btn-secondary" onclick="viewStudent('${s.roll_no}')">View</button></td>
     </tr>`).join('')}</tbody>
@@ -1419,6 +1866,9 @@ async function viewStudent(rollNo) {
       </div>`).join('')}
     <div style="margin-top:12px">
       <button class="btn btn-primary btn-sm" onclick="closeModal('modal-student');ca_tab('demands');(function(){var p='${s.roll_no}'.split('/');document.getElementById('dm-roll-no').value=p[0];document.getElementById('dm-roll-branch').value=p[1];document.getElementById('dm-roll-year').value=p[2];lookupStudentForDemand();})()">Issue New Demand</button>
+      <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="updateStudentType('${s.roll_no}', '${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}')">
+        Switch to ${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}
+      </button>
     </div>`;
   openModal('modal-student');
 }
@@ -2049,6 +2499,564 @@ async function verifyPublicReceipt() {
     </div>`;
 }
 
+
+
+// ═══ STUDENT SEMESTER FEE GENERATION ══════════════════════════
+async function generateSemesterDemand() {
+  const semester = v('stu-pay-semester');
+  const enrollType = v('stu-pay-enrollment');
+  if (!semester) { showAlert('sem-pay-alert', 'Please select semester.'); return; }
+
+  setSpinner('sem-pay-spinner', true);
+  const res = await api('POST', '/api/student/generate-demand', {
+    semester, enrollment_type: enrollType
+  });
+  setSpinner('sem-pay-spinner', false);
+
+  if (!res) { showAlert('sem-pay-alert', 'Connection error.'); return; }
+  if (!res.success) { showAlert('sem-pay-alert', res.message || 'Cannot generate demand.'); return; }
+
+  document.getElementById('sem-pay-alert').classList.add('hidden');
+  if (res.already_exists) {
+    alert('ℹ️ A fee demand for this semester already exists. Check your pending dues below.');
+  } else if (res.blocked) {
+    document.getElementById('sem-pay-alert').classList.remove('hidden');
+    document.getElementById('sem-pay-alert').textContent = res.message;
+    return;
+  } else {
+    let msg = `✅ Fee demand generated!\n\nSemester: ${semester}\nEnrollment: ${enrollType}`;
+    if (res.breakdown && res.breakdown.length > 0) {
+      msg += `\n\nBreakdown:`;
+      res.breakdown.forEach(b => { msg += `\n• ${b.label}: ₹${fmt(b.amount)}`; });
+    }
+    msg += `\n\nTotal: ₹${fmt(res.amount)}\n\nScroll down to see QR code.`;
+    alert(msg);
+  }
+  await loadStudentData();
+}
+
+async function generateHostelDemand() {
+  const semester = v('stu-hostel-semester');
+  const amount = parseFloat(v('stu-hostel-amount'));
+  const desc = v('stu-hostel-desc').trim();
+  if (!semester) { showAlert('hostel-pay-alert', 'Please select semester.'); return; }
+  if (isNaN(amount) || amount <= 0) { showAlert('hostel-pay-alert', 'Enter valid amount from hostel demand notice.'); return; }
+
+  setSpinner('hostel-pay-spinner', true);
+  const res = await api('POST', '/api/student/generate-hostel-demand', {
+    semester, amount, description: desc
+  });
+  setSpinner('hostel-pay-spinner', false);
+
+  if (!res) { showAlert('hostel-pay-alert', 'Connection error.'); return; }
+  if (!res.success) { showAlert('hostel-pay-alert', res.message || 'Cannot generate hostel demand.'); return; }
+
+  document.getElementById('hostel-pay-alert').classList.add('hidden');
+  if (res.already_exists) {
+    alert('ℹ️ Hostel fee demand already exists. Check your pending dues below.');
+  } else {
+    alert(`✅ Hostel fee demand generated!\nAmount: ₹${fmt(amount)}\nScroll down to scan QR and pay.`);
+  }
+  await loadStudentData();
+}
+
+
+// ═══ PRE-PAID SEMESTERS ════════════════════════════════════════
+async function lookupStudentPrePaid() {
+  const roll = v('pp-roll').trim().toUpperCase();
+  if (roll.length < 5) { document.getElementById('pp-student-preview').textContent = ''; return; }
+  const data = await api('GET', `/api/cashier/student-lookup?roll_no=${encodeURIComponent(roll)}`, null);
+  const el = document.getElementById('pp-student-preview');
+  if (data && data.name) {
+    // Load existing pre-paid records
+    const ppData = await api('GET', `/api/cashier/pre-paid?roll_no=${encodeURIComponent(roll)}`, null);
+    const paidSems = (ppData || []).map(p => p.semester);
+    // Auto-check existing
+    document.querySelectorAll('.pp-sem-check').forEach(cb => {
+      cb.checked = paidSems.includes(cb.value);
+    });
+    el.textContent = `✅ ${data.name} | ${shortCourse(data.course)} | ${data.category} | Type: ${data.student_type}`;
+    el.style.color = 'var(--success)';
+  } else {
+    el.textContent = '❌ Student not found';
+    el.style.color = 'var(--danger)';
+  }
+}
+
+async function markPrePaid() {
+  const roll = v('pp-roll').trim().toUpperCase();
+  const remark = v('pp-remark').trim();
+  const semesters = [...document.querySelectorAll('.pp-sem-check:checked')].map(cb => cb.value);
+  if (!roll) { showAlert('pp-alert', 'Enter Roll No.'); return; }
+  if (semesters.length === 0) { showAlert('pp-alert', 'Select at least one semester.'); return; }
+  if (!confirm(`Mark Semesters ${semesters.join(', ')} as Pre-Paid for ${roll}?\n\nRemark: ${remark}\n\nThis cannot be undone.`)) return;
+  setSpinner('pp-spinner', true);
+  const res = await api('POST', '/api/cashier/pre-paid', { roll_no: roll, semesters, remark });
+  setSpinner('pp-spinner', false);
+  if (!res || !res.success) { showAlert('pp-alert', res?.message || 'Failed.'); return; }
+  document.getElementById('pp-alert').classList.add('hidden');
+  alert(`✅ Semesters ${semesters.join(', ')} marked as pre-paid for ${roll}`);
+  document.getElementById('pp-roll').value = '';
+  document.getElementById('pp-student-preview').textContent = '';
+  document.querySelectorAll('.pp-sem-check').forEach(cb => cb.checked = false);
+}
+
+async function searchPrePaid() {
+  const q = v('pp-search').trim().toUpperCase();
+  if (!q) return;
+  const data = await api('GET', `/api/cashier/pre-paid?roll_no=${encodeURIComponent(q)}`, null);
+  const el = document.getElementById('ca-prepaid-list');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No pre-paid records found.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Roll No.</th><th>Semester</th><th>Remark</th><th>Marked At</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td>${r.roll_no}</td>
+      <td>Semester ${r.semester}</td>
+      <td>${r.remark}</td>
+      <td>${fmtDate(r.created_at)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ═══ PASS-OUT VERIFICATION ════════════════════════════════════
+async function verifyPassOut() {
+  const roll = v('po-roll').trim().toUpperCase();
+  if (!roll) { alert('Enter Roll No.'); return; }
+  const res = await api('GET', `/api/cashier/pass-out/check?roll_no=${encodeURIComponent(roll)}`, null);
+  const el = document.getElementById('po-result');
+  el.classList.remove('hidden');
+  if (!res || !res.found) {
+    el.innerHTML = '<div class="alert alert-danger">Student not found.</div>'; return;
+  }
+  const { student: s, sem_status, unpaid_fines, pass_out_type, eligible, already_issued } = res;
+
+  if (already_issued) {
+    el.innerHTML = `<div class="alert alert-success">✅ Pass-Out already recorded for <strong>${s.name}</strong> as <strong>${res.pass_out_type}</strong>.</div>`;
+    return;
+  }
+
+  const semRows = Object.entries(sem_status).map(([sem, status]) =>
+    `<tr><td>Semester ${sem}</td><td><span class="badge ${status.paid ? 'badge-paid' : 'badge-overdue'}">${status.paid ? '✅ Paid' : status.pre_paid ? '✅ Pre-Paid' : status.skip ? '⏭️ N/A (Lateral)' : '❌ Unpaid'}</span></td><td>${status.amount ? '₹' + fmt(status.amount) : '—'}</td></tr>`
+  ).join('');
+
+  const fineRows = unpaid_fines.length > 0
+    ? `<div class="alert alert-danger" style="margin-top:8px">❌ ${unpaid_fines.length} unpaid fine(s): ${unpaid_fines.map(f => f.fee_type_name + ' ₹' + fmt(f.amount)).join(', ')}</div>`
+    : '<div class="alert alert-success" style="margin-top:8px">✅ No unpaid fines</div>';
+
+  const admYear = s.batch_year || s.admission_year || '—';
+  const expectedYear = admYear !== '—' ? parseInt(admYear) + 3 : '—';
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="info-grid">
+        <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
+        <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
+        <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+        <div class="info-item"><div class="key">Admission Year</div><div class="val">${admYear}</div></div>
+        <div class="info-item"><div class="key">Expected Pass-Out</div><div class="val">${expectedYear}</div></div>
+        <div class="info-item"><div class="key">Pass-Out Type</div><div class="val"><span class="badge ${pass_out_type === 'Regular' ? 'badge-paid' : 'badge-pending'}">${pass_out_type}</span></div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px">Semester Fee Status:</div>
+        <div class="table-wrap"><table class="data-table">
+          <thead><tr><th>Semester</th><th>Status</th><th>Amount</th></tr></thead>
+          <tbody>${semRows}</tbody>
+        </table></div>
+      </div>
+      ${fineRows}
+      ${eligible ? `
+        <div style="margin-top:16px">
+          <button class="btn btn-success" onclick="issuePassOut('${s.roll_no}', '${pass_out_type}')">
+            🎓 Issue Pass-Out Certificate (${pass_out_type})
+          </button>
+          <button class="btn btn-gold" style="margin-left:8px" onclick="printPassOut('${s.roll_no}')">
+            🖨️ Print Pass-Out Certificate
+          </button>
+        </div>` : `
+        <div class="alert alert-danger" style="margin-top:12px">
+          ❌ Cannot issue Pass-Out — clear all dues first.
+        </div>`}
+    </div>`;
+}
+
+async function issuePassOut(rollNo, passOutType) {
+  if (!confirm(`Issue Pass-Out Certificate as "${passOutType}" for this student?`)) return;
+  const res = await api('POST', '/api/cashier/pass-out', { roll_no: rollNo, pass_out_type: passOutType });
+  if (!res || !res.success) { alert(res?.message || 'Failed.'); return; }
+  alert('✅ Pass-Out recorded successfully!');
+  verifyPassOut();
+  loadPassOutList();
+}
+
+async function loadPassOutList() {
+  const el = document.getElementById('ca-passout-list');
+  if (!el) return;
+  const data = await api('GET', '/api/cashier/pass-out', null);
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No pass-out records yet.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Roll No.</th><th>Name</th><th>Type</th><th>Admission</th><th>Completion</th><th>Date</th><th>Print</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td>${r.roll_no}</td>
+      <td>${r.student_name || '—'}</td>
+      <td><span class="badge ${r.pass_out_type === 'Regular' ? 'badge-paid' : 'badge-pending'}">${r.pass_out_type}</span></td>
+      <td>${r.admission_year || '—'}</td>
+      <td>${r.completion_year || '—'}</td>
+      <td>${fmtDate(r.created_at)}</td>
+      <td><button class="btn btn-sm btn-gold" onclick="printPassOut('${r.roll_no}')">🖨️</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function printPassOut(rollNo) {
+  const res = await api('GET', `/api/cashier/pass-out/check?roll_no=${encodeURIComponent(rollNo)}`, null);
+  if (!res || !res.found) { alert('Student not found'); return; }
+  const s = res.student;
+  const admYear = s.batch_year || s.admission_year || '—';
+  const expectedYear = admYear !== '—' ? parseInt(admYear) + 3 : '—';
+  const actualYear = res.completion_year || new Date().getFullYear();
+  const w = window.open('','_blank','width=800,height=600');
+  w.document.write(`<!DOCTYPE html><html><head>
+    <style>
+      body{font-family:Arial,sans-serif;margin:0;padding:30px;font-size:13px}
+      .header{text-align:center;border-bottom:2px solid #0f2744;padding-bottom:16px;margin-bottom:20px}
+      .inst-name{font-size:18px;font-weight:700;color:#0f2744}
+      .inst-addr{font-size:11px;color:#666;margin-top:4px}
+      .cert-title{font-size:16px;font-weight:700;text-align:center;margin:20px 0;text-transform:uppercase;letter-spacing:2px;color:#0f2744;text-decoration:underline}
+      .info-row{display:flex;margin-bottom:10px}
+      .info-key{width:200px;font-weight:600;color:#444}
+      .valid-box{background:#eaf5ef;border:1px solid #1a6b3c;border-radius:6px;padding:12px;text-align:center;margin:20px 0;color:#1a6b3c;font-weight:600}
+      .sig-area{display:flex;justify-content:space-between;margin-top:60px;font-size:12px}
+    </style></head><body>
+    <div class="header">
+      <div class="inst-name">Government Polytechnic, Munger</div>
+      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+      <div style="font-size:11px;color:#c8973a;font-weight:600;margin-top:4px">ACCOUNTS SECTION</div>
+    </div>
+    <div class="cert-title">Pass-Out Certificate</div>
+    <div class="valid-box">✅ ${res.pass_out_type} Pass-Out — All dues cleared</div>
+    <div class="info-row"><div class="info-key">Student Name:</div><div>${s.name}</div></div>
+    <div class="info-row"><div class="info-key">Roll No.:</div><div>${s.roll_no}</div></div>
+    <div class="info-row"><div class="info-key">Course:</div><div>${s.course}</div></div>
+    <div class="info-row"><div class="info-key">Category:</div><div>${s.category}</div></div>
+    <div class="info-row"><div class="info-key">Admission Year:</div><div>${admYear}</div></div>
+    <div class="info-row"><div class="info-key">Expected Completion:</div><div>${expectedYear}</div></div>
+    <div class="info-row"><div class="info-key">Actual Completion:</div><div>${actualYear}</div></div>
+    <div class="info-row"><div class="info-key">Pass-Out Type:</div><div>${res.pass_out_type}</div></div>
+    <div class="info-row"><div class="info-key">Date of Issue:</div><div>${new Date().toLocaleDateString('en-IN')}</div></div>
+    <p style="font-size:12px;color:#666;margin-top:20px">
+      This certificate confirms that the above-named student has completed the course at Government Polytechnic, Munger
+      and has cleared all financial dues with the Accounts Section.
+    </p>
+    <div class="sig-area">
+      <div style="border:2px dashed #ccc;width:120px;height:80px;text-align:center;line-height:80px;color:#ccc;font-size:11px">Official Stamp</div>
+      <div style="text-align:right">
+        <div style="margin-bottom:40px"></div>
+        <div style="border-top:1px solid #000;padding-top:6px;width:180px">
+          Cashier / Accounts Officer<br/>Govt. Polytechnic, Munger
+        </div>
+      </div>
+    </div>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+// ═══ SEMESTER MANAGEMENT ══════════════════════════════════════
+async function loadSemesterConfig() {
+  const el = document.getElementById('active-sem-info');
+  if (!el) return;
+  const data = await api('GET', '/api/cashier/semester-config', null);
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No semester configured yet.</div>';
+    return;
+  }
+  const latest = data[0];
+  const today = new Date();
+  const end = new Date(latest.end_date);
+  const isActive = today <= end;
+  el.innerHTML = `
+    <div class="info-grid">
+      <div class="info-item"><div class="key">Course</div><div class="val">${latest.course}</div></div>
+      <div class="info-item"><div class="key">Semester</div><div class="val">${latest.semester}</div></div>
+      <div class="info-item"><div class="key">Start Date</div><div class="val">${fmtDate(latest.start_date)}</div></div>
+      <div class="info-item"><div class="key">Due Date</div><div class="val">${fmtDate(latest.end_date)}</div></div>
+      <div class="info-item"><div class="key">Non-Hosteller Fee</div><div class="val">₹${fmt(latest.non_hosteller_fee)}</div></div>
+      <div class="info-item"><div class="key">Hosteller Fee</div><div class="val">₹${fmt(latest.hosteller_fee)}</div></div>
+    </div>
+    <div style="margin-top:8px">
+      <span class="badge ${isActive ? 'badge-paid' : 'badge-overdue'}">${isActive ? '✅ Active' : '⏰ Window Closed — Late Fine Applying'}</span>
+    </div>`;
+  // Set default start date to today
+  const startEl = document.getElementById('sem-start-date');
+  if (startEl && !startEl.value) startEl.value = new Date().toISOString().split('T')[0];
+}
+
+async function startSemester() {
+  const course      = v('sem-course');
+  const semester    = v('sem-number');
+  const batch_year  = v('sem-batch-year').trim();
+  const start_date  = v('sem-start-date');
+  const academic_deadline = v('sem-academic-deadline');
+  const hostel_deadline   = v('sem-hostel-deadline') || academic_deadline;
+  const fee_regular = parseFloat(v('sem-fee-regular')) || 0;
+  const fee_repeat  = parseFloat(v('sem-fee-repeat')) || fee_regular;
+  const window_days = v('sem-window-days') || '10';
+
+  if (!course || !semester || !batch_year || !start_date || !academic_deadline) {
+    showAlert('sem-alert', 'Please fill Course, Semester, Batch Year, Start Date and Academic Deadline.'); return;
+  }
+  if (batch_year.length !== 4 || isNaN(batch_year)) {
+    showAlert('sem-alert', 'Enter valid 4-digit batch year.'); return;
+  }
+
+  if (!confirm(`Activate Semester ${semester} for Batch ${batch_year}?\nCourse: ${course === 'ALL' ? 'All Courses' : course}\n\nStudents can now generate their own fee demands.\nAcademic Deadline: ${academic_deadline}\nHostel Deadline: ${hostel_deadline || academic_deadline}\nDefault Fee (Regular): ₹${fmt(fee_regular)}\nDefault Fee (Repeat): ₹${fmt(fee_repeat)}\n\nThis cannot be undone.`)) return;
+
+  setSpinner('sem-spinner', true);
+  const res = await api('POST', '/api/cashier/semester-config', {
+    course, semester, batch_year,
+    start_date, academic_deadline,
+    hostel_deadline: hostel_deadline || academic_deadline,
+    window_days: parseInt(window_days),
+    fee_regular, fee_repeat,
+  });
+  setSpinner('sem-spinner', false);
+  if (!res || !res.success) { showAlert('sem-alert', res?.error || 'Failed to activate semester.'); return; }
+  document.getElementById('sem-alert').classList.add('hidden');
+  alert(`✅ Semester ${semester} activated for Batch ${batch_year}!\n\nStudents can now generate their fee demands by logging in and selecting their semester.\n📅 Academic deadline: ${academic_deadline}\n📅 Hostel deadline: ${hostel_deadline || academic_deadline}`);
+  loadSemesterConfig();
+  loadCashierDashboard();
+}
+
+// ═══ NO DUES ═══════════════════════════════════════════════════
+async function searchStudentForNoDues() {
+  const roll = v('nd-search').trim().toUpperCase();
+  if (!roll) { alert('Enter a Roll No.'); return; }
+  const res = await api('GET', `/api/cashier/no-dues/check?roll_no=${encodeURIComponent(roll)}`, null);
+  const el = document.getElementById('nd-result');
+  el.classList.remove('hidden');
+  if (!res || !res.found) {
+    el.innerHTML = '<div class="alert alert-danger">Student not found.</div>'; return;
+  }
+  const { student: s, academic_pending, hostel_pending, eligible, already_issued } = res;
+  if (already_issued) {
+    el.innerHTML = `<div class="alert alert-success">✅ No Dues already issued to <strong>${s.name}</strong> on ${fmtDate(s.no_dues_issued_at)}.</div>`;
+    return;
+  }
+  const pendingHtml = academic_pending.length > 0
+    ? `<div class="alert alert-danger" style="margin-top:12px">
+        ❌ <strong>${academic_pending.length} pending academic due(s):</strong><br/>
+        ${academic_pending.map(d => `• ${d.fee_type_name} — ₹${fmt(d.amount)}`).join('<br/>')}
+       </div>`
+    : '<div class="alert alert-success" style="margin-top:12px">✅ All academic dues cleared</div>';
+
+  const hostelHtml = hostel_pending.length > 0
+    ? `<div class="alert alert-warning" style="margin-top:8px">⚠️ ${hostel_pending.length} hostel due(s) pending — verify physical hostel no dues</div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="card" style="margin-top:12px">
+      <div class="info-grid">
+        <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
+        <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
+        <div class="info-item"><div class="key">Course</div><div class="val">${shortCourse(s.course)}</div></div>
+        <div class="info-item"><div class="key">Type</div><div class="val">${s.student_type}</div></div>
+        <div class="info-item"><div class="key">Enrollment</div><div class="val"><span class="badge ${s.enrollment_type==='Repeat'?'badge-overdue':'badge-paid'}">${s.enrollment_type||'Regular'}</span></div></div>
+      </div>
+      ${pendingHtml}
+      ${hostelHtml}
+      ${eligible ? `
+        <div class="field" style="margin-top:16px">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer">
+            <input type="checkbox" id="nd-hostel-seen" ${s.student_type !== 'Hosteller' ? 'disabled checked' : ''}/>
+            <span>Physical Hostel No Dues verified ${s.student_type !== 'Hosteller' ? '(N/A — Non-Hosteller)' : ''}</span>
+          </label>
+        </div>
+        <div class="field">
+          <label>Remarks (optional)</label>
+          <input type="text" id="nd-remarks" placeholder="Any remarks"/>
+        </div>
+        <button class="btn btn-success" onclick="issueNoDues('${s.roll_no}')">
+          <span id="nd-spinner" class="spinner hidden"></span>
+          📄 Issue No Dues Certificate
+        </button>` : ''}
+    </div>`;
+}
+
+async function issueNoDues(rollNo) {
+  if (!confirm('Issue No Dues certificate to this student? This cannot be revoked.')) return;
+  setSpinner('nd-spinner', true);
+  const res = await api('POST', '/api/cashier/no-dues', {
+    roll_no: rollNo,
+    hostel_no_dues_seen: document.getElementById('nd-hostel-seen')?.checked,
+    remarks: v('nd-remarks')
+  });
+  setSpinner('nd-spinner', false);
+  if (!res || !res.success) { alert(res?.message || 'Failed to issue No Dues.'); return; }
+  alert('✅ No Dues certificate issued successfully!');
+  searchStudentForNoDues();
+  loadNoDuesList();
+}
+
+async function loadNoDuesList() {
+  const el = document.getElementById('nd-issued-list');
+  if (!el) return;
+  const data = await api('GET', '/api/cashier/no-dues', null);
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No certificates issued yet.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Roll No.</th><th>Issued At</th><th>Academic</th><th>Hostel ND Seen</th><th>Remarks</th><th>Print</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td>${r.roll_no}</td>
+      <td>${fmtDate(r.issued_at)}</td>
+      <td><span class="badge badge-paid">✅</span></td>
+      <td>${r.hostel_no_dues_seen ? '<span class="badge badge-paid">✅</span>' : '<span class="badge badge-pending">—</span>'}</td>
+      <td>${r.remarks || '—'}</td>
+      <td><button class="btn btn-sm btn-gold" onclick="printNoDues('${r.roll_no}')">🖨️</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function printNoDues(rollNo) {
+  const { data: stuArr } = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`, null) || {};
+  // Try fetching from no_dues_log
+  const res = await api('GET', '/api/cashier/no-dues', null);
+  const log = (res || []).find(r => r.roll_no === rollNo);
+  const stuRes = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`, null);
+  const s = stuRes?.student;
+  if (!s) { alert('Student not found'); return; }
+  const w = window.open('','_blank','width=800,height=600');
+  w.document.write(`<!DOCTYPE html><html><head>
+    <style>
+      body{font-family:Arial,sans-serif;margin:0;padding:30px;font-size:13px}
+      .header{text-align:center;border-bottom:2px solid #0f2744;padding-bottom:16px;margin-bottom:20px}
+      .inst-name{font-size:18px;font-weight:700;color:#0f2744}
+      .inst-addr{font-size:11px;color:#666;margin-top:4px}
+      .cert-title{font-size:16px;font-weight:700;text-align:center;margin:20px 0;text-transform:uppercase;letter-spacing:2px;color:#0f2744;text-decoration:underline}
+      .info-row{display:flex;margin-bottom:10px;font-size:13px}
+      .info-key{width:180px;font-weight:600;color:#444}
+      .info-val{flex:1}
+      .sig-area{display:flex;justify-content:space-between;margin-top:60px;font-size:12px}
+      .stamp{border:2px dashed #ccc;width:120px;height:80px;text-align:center;line-height:80px;color:#ccc;font-size:11px}
+      .valid-box{background:#eaf5ef;border:1px solid #1a6b3c;border-radius:6px;padding:12px;text-align:center;margin:20px 0;color:#1a6b3c;font-weight:600}
+    </style></head><body>
+    <div class="header">
+      <div class="inst-name">Government Polytechnic, Munger</div>
+      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
+      <div style="font-size:11px;color:#c8973a;font-weight:600;margin-top:4px">ACCOUNTS SECTION</div>
+    </div>
+    <div class="cert-title">No Dues Certificate</div>
+    <div class="valid-box">✅ This student has no pending dues in the Accounts Section</div>
+    <div class="info-row"><div class="info-key">Student Name:</div><div class="info-val">${s.name}</div></div>
+    <div class="info-row"><div class="info-key">Roll No.:</div><div class="info-val">${s.roll_no}</div></div>
+    <div class="info-row"><div class="info-key">Course:</div><div class="info-val">${s.course}</div></div>
+    <div class="info-row"><div class="info-key">Semester:</div><div class="info-val">${s.year}</div></div>
+    <div class="info-row"><div class="info-key">Category:</div><div class="info-val">${s.category}</div></div>
+    <div class="info-row"><div class="info-key">Student Type:</div><div class="info-val">${s.student_type}</div></div>
+    <div class="info-row"><div class="info-key">Date of Issue:</div><div class="info-val">${log ? fmtDate(log.issued_at) : new Date().toLocaleDateString('en-IN')}</div></div>
+    <div class="info-row"><div class="info-key">Hostel No Dues:</div><div class="info-val">${log?.hostel_no_dues_seen ? 'Verified (Physical)' : s.student_type === 'Hosteller' ? 'Not Verified' : 'N/A (Non-Hosteller)'}</div></div>
+    <p style="font-size:12px;color:#666;margin-top:20px">
+      This certificate is issued based on the records available in the Accounts Section of Government Polytechnic, Munger.
+      This does not include dues from Hostel, Library, or other departments.
+    </p>
+    <div class="sig-area">
+      <div><div class="stamp">Official Stamp</div></div>
+      <div style="text-align:right">
+        <div style="margin-bottom:40px"></div>
+        <div style="border-top:1px solid #000;padding-top:6px;width:180px">
+          Cashier / Accounts Officer<br/>Govt. Polytechnic, Munger
+        </div>
+      </div>
+    </div>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+// ═══ OFFICE ORDER FINES ════════════════════════════════════════
+function toggleFineTarget() {
+  const val = v('fine-apply-to');
+  document.getElementById('fine-specific-field').classList.toggle('hidden', val !== 'specific');
+  document.getElementById('fine-course-field').classList.toggle('hidden', val !== 'course');
+}
+
+async function applyOfficeFine() {
+  const order_no = v('fine-order-no').trim();
+  const amount = parseFloat(v('fine-amount'));
+  const reason = v('fine-reason').trim();
+  const apply_to = v('fine-apply-to');
+  const fine_type = document.querySelector('input[name="fine-type"]:checked')?.value || 'Academic';
+
+  if (!order_no || isNaN(amount) || !reason || !apply_to) {
+    showAlert('fine-alert', 'Fill all required fields.'); return;
+  }
+
+  let roll_nos = [];
+  let course = '';
+  if (apply_to === 'specific') {
+    roll_nos = v('fine-roll-nos').trim().split('\n')
+      .map(r => r.trim().toUpperCase()).filter(Boolean);
+    if (roll_nos.length === 0) { showAlert('fine-alert', 'Enter at least one Roll No.'); return; }
+  }
+  if (apply_to === 'course') {
+    course = v('fine-course-select');
+  }
+
+  if (!confirm(`Apply ₹${fmt(amount)} fine to ${apply_to === 'all' ? 'ALL students' : apply_to === 'course' ? course : roll_nos.length + ' students'}?\nOffice Order: ${order_no}`)) return;
+
+  setSpinner('fine-spinner', true);
+  const res = await api('POST', '/api/cashier/office-fines', {
+    order_no, amount, reason, apply_to, course, fine_type, roll_nos
+  });
+  setSpinner('fine-spinner', false);
+  if (!res || !res.success) { showAlert('fine-alert', res?.error || 'Failed.'); return; }
+  document.getElementById('fine-alert').classList.add('hidden');
+  alert(`✅ Fine applied!\n📋 Demands created: ${res.demands_created}`);
+  // Clear form
+  document.getElementById('fine-order-no').value = '';
+  document.getElementById('fine-amount').value = '';
+  document.getElementById('fine-reason').value = '';
+  document.getElementById('fine-roll-nos').value = '';
+  loadFinesList();
+}
+
+async function loadFinesList() {
+  const el = document.getElementById('ca-fines-list');
+  if (!el) return;
+  const data = await api('GET', '/api/cashier/office-fines', null);
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-info">No fines applied yet.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Order No.</th><th>Amount</th><th>Reason</th><th>Applied To</th><th>Type</th><th>Demands</th><th>Date</th></tr></thead>
+    <tbody>${data.map(f => `<tr>
+      <td><code>${f.order_no}</code></td>
+      <td>₹${fmt(f.amount)}</td>
+      <td>${f.reason}</td>
+      <td>${f.apply_to === 'specific' ? f.roll_nos?.join(', ') || '—' : f.apply_to === 'course' ? f.course : 'All Students'}</td>
+      <td><span class="badge ${f.fine_type==='Hostel'?'':'badge-paid'}" style="${f.fine_type==='Hostel'?'background:#e8f4fd;color:#1a3a7c':''}">${f.fine_type}</span></td>
+      <td>${f.demands_created}</td>
+      <td>${fmtDate(f.created_at)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ═══ STUDENT TYPE UPDATE (Cashier) ════════════════════════════
+async function updateStudentType(rollNo, newType) {
+  if (!confirm(`Change student type to ${newType}?`)) return;
+  const res = await api('PATCH', `/api/cashier/students/${encodeURIComponent(rollNo)}/type`,
+    { student_type: newType });
+  if (!res || !res.success) { alert('Failed to update.'); return; }
+  alert('✅ Student type updated.');
+  _allStudentsCache = [];
+  loadCashierStudents();
+}
+
+
 // ═══ UTILITIES ════════════════════════════════════════════
 function v(id) {
   const el = document.getElementById(id);
@@ -2088,6 +3096,33 @@ function shortCourse(c) {
     'Diploma in Mechanical Engineering': 'ME'
   };
   return map[c] || c;
+}
+
+
+async function submitHostelAmount(demandId, refCode) {
+  const amtEl = document.getElementById('hostel-amt-' + demandId);
+  const amount = parseFloat(amtEl?.value);
+  if (isNaN(amount) || amount <= 0) { alert('Enter a valid amount from your hostel demand notice.'); return; }
+  const res = await api('POST', '/api/student/hostel-fee', { demand_id: demandId, amount });
+  if (!res || !res.success) { alert('Error: ' + (res?.error || 'Failed')); return; }
+  alert('✅ Amount set. You can now scan the QR to pay.');
+  await loadStudentData();
+  stu_tab('dashboard');
+}
+
+
+
+function updateLateralHint() {
+  const val = v('reg-lateral-entry');
+  const hint = document.getElementById('lateral-hint');
+  if (!hint) return;
+  if (val === 'Lateral') {
+    hint.textContent = 'Lateral entry — admitted directly in 3rd Semester. Semesters 1 & 2 not required.';
+    hint.style.color = 'var(--info)';
+  } else {
+    hint.textContent = 'Regular admission from 1st semester';
+    hint.style.color = 'var(--gray-400)';
+  }
 }
 
 function togglePass(id, btn) {
