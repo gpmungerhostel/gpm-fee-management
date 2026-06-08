@@ -1254,25 +1254,38 @@ const INSTITUTE_UPI_ID   = 'gpmmunger@pnb';
 const INSTITUTE_UPI_NAME = 'Govt Polytechnic Munger';
 
 // ═══════════════════════════════════════════════════════════
-const SQL_SCHEMA = `-- GPM Fee Management System — Supabase Schema
--- Run this in Supabase SQL Editor
+const SQL_SCHEMA = `-- ═══════════════════════════════════════════════════════
+--  GPM Fee Management System — Complete Supabase Schema
+--  Run once in Supabase SQL Editor (safe to re-run)
+-- ═══════════════════════════════════════════════════════
+
+-- ── CORE TABLES ─────────────────────────────────────────
 
 create table if not exists students (
-  id            uuid primary key default gen_random_uuid(),
-  roll_no       text unique not null,
-  name          text not null,
-  gender        text,
-  category      text,
-  pwd           text default 'No',
-  course        text,
-  year          text,
-  mobile        text,
-  email         text,
-  father_name   text,
-  mother_name   text,
-  address       text,
-  password_hash text not null,
-  created_at    timestamptz default now()
+  id                      uuid primary key default gen_random_uuid(),
+  roll_no                 text unique not null,
+  name                    text not null,
+  gender                  text,
+  category                text,
+  pwd                     text default 'No',
+  course                  text,
+  year                    text,
+  mobile                  text,
+  email                   text,
+  father_name             text,
+  mother_name             text,
+  address                 text,
+  password_hash           text not null,
+  password_salt           text not null,
+  student_type            text default 'Non-Hosteller',
+  enrollment_type         text default 'Regular',
+  lateral_entry           boolean default false,
+  admission_year          text,
+  batch_year              text,
+  no_dues                 boolean default false,
+  no_dues_issued_at       timestamptz,
+  hostel_no_dues_confirmed boolean default false,
+  created_at              timestamptz default now()
 );
 
 create table if not exists fee_types (
@@ -1287,16 +1300,20 @@ create table if not exists fee_types (
 );
 
 create table if not exists fee_demands (
-  id           uuid primary key default gen_random_uuid(),
-  roll_no      text references students(roll_no),
-  fee_type_id  uuid references fee_types(id),
+  id            uuid primary key default gen_random_uuid(),
+  roll_no       text references students(roll_no),
+  fee_type_id   uuid references fee_types(id),
   fee_type_name text,
-  amount       numeric(10,2) not null,
-  ref_code     text unique not null,
-  upi_link     text,
-  remarks      text,
-  status       text default 'pending',
-  created_at   timestamptz default now()
+  amount        numeric(10,2) not null,
+  ref_code      text unique not null,
+  upi_link      text,
+  remarks       text,
+  status        text default 'pending',
+  fee_category  text default 'Academic',
+  due_date      date,
+  breakdown     jsonb,
+  updated_at    timestamptz,
+  created_at    timestamptz default now()
 );
 
 create table if not exists payments (
@@ -1322,26 +1339,117 @@ create table if not exists receipts (
   issued_at     timestamptz default now()
 );
 
--- Enable Row Level Security (open for demo; tighten in production)
-alter table students enable row level security;
-alter table fee_types enable row level security;
-alter table fee_demands enable row level security;
-alter table payments enable row level security;
-alter table receipts enable row level security;
+-- ── SEMESTER & FINE TABLES ───────────────────────────────
 
-create policy "public read fee_types" on fee_types for select using (true);
-create policy "public read demands" on fee_demands for select using (true);
-create policy "public read payments" on payments for select using (true);
-create policy "public read receipts" on receipts for select using (true);
-create policy "public read students" on students for select using (true);
-create policy "insert students" on students for insert with check (true);
-create policy "insert demands" on fee_demands for insert with check (true);
-create policy "insert payments" on payments for insert with check (true);
-create policy "insert receipts" on receipts for insert with check (true);
-create policy "insert fee_types" on fee_types for insert with check (true);
-create policy "update demands" on fee_demands for update using (true);
-create policy "update fee_types" on fee_types for update using (true);
-create policy "delete fee_types" on fee_types for delete using (true);`;
+create table if not exists semester_config (
+  id                  uuid primary key default gen_random_uuid(),
+  course              text not null,
+  semester            text not null,
+  batch_year          text,
+  start_date          date not null,
+  academic_deadline   date,
+  hostel_deadline     date,
+  window_days         int default 10,
+  fee_regular         numeric(10,2) default 0,
+  fee_repeat          numeric(10,2) default 0,
+  status              text default 'active',
+  created_at          timestamptz default now()
+);
+
+create table if not exists office_order_fines (
+  id              uuid primary key default gen_random_uuid(),
+  order_no        text not null,
+  amount          numeric(10,2) not null,
+  reason          text not null,
+  apply_to        text not null,
+  course          text,
+  fine_type       text default 'Academic',
+  roll_nos        text[],
+  demands_created int default 0,
+  created_at      timestamptz default now()
+);
+
+create table if not exists no_dues_log (
+  id                    uuid primary key default gen_random_uuid(),
+  roll_no               text references students(roll_no),
+  issued_by             text default 'cashier',
+  academic_dues_cleared boolean default true,
+  hostel_no_dues_seen   boolean default false,
+  remarks               text,
+  issued_at             timestamptz default now()
+);
+
+create table if not exists pre_paid_semesters (
+  id          uuid primary key default gen_random_uuid(),
+  roll_no     text references students(roll_no),
+  semester    text not null,
+  remark      text default 'Fee paid before system implementation',
+  marked_by   text default 'cashier',
+  created_at  timestamptz default now(),
+  unique(roll_no, semester)
+);
+
+create table if not exists audit_logs (
+  id         uuid primary key default gen_random_uuid(),
+  action     text,
+  role       text,
+  identifier text,
+  ip         text,
+  details    jsonb,
+  created_at timestamptz default now()
+);
+
+-- ── INDEXES ──────────────────────────────────────────────
+
+create index if not exists idx_students_roll        on students(roll_no);
+create index if not exists idx_students_enrollment  on students(batch_year, enrollment_type, course);
+create index if not exists idx_demands_roll         on fee_demands(roll_no);
+create index if not exists idx_demands_status       on fee_demands(status);
+create index if not exists idx_demands_ref_code     on fee_demands(ref_code);
+create index if not exists idx_demands_fee_category on fee_demands(fee_category);
+create index if not exists idx_demands_due_date     on fee_demands(due_date);
+create index if not exists idx_payments_demand      on payments(demand_id);
+create index if not exists idx_receipts_roll        on receipts(roll_no);
+create index if not exists idx_receipts_no          on receipts(receipt_no);
+create index if not exists idx_no_dues_roll         on no_dues_log(roll_no);
+create index if not exists idx_pre_paid_roll        on pre_paid_semesters(roll_no);
+create index if not exists idx_semester_config      on semester_config(course, semester);
+create index if not exists idx_audit_created        on audit_logs(created_at desc);
+
+-- ── ROW LEVEL SECURITY (deny-all; Worker uses service_role) ──
+
+alter table students          enable row level security;
+alter table fee_types         enable row level security;
+alter table fee_demands       enable row level security;
+alter table payments          enable row level security;
+alter table receipts          enable row level security;
+alter table semester_config   enable row level security;
+alter table office_order_fines enable row level security;
+alter table no_dues_log       enable row level security;
+alter table pre_paid_semesters enable row level security;
+alter table audit_logs        enable row level security;
+
+-- Drop old open policies if re-running
+do $$ declare r record;
+begin
+  for r in select policyname, tablename from pg_policies
+    where schemaname = 'public'
+  loop
+    execute format('drop policy if exists %I on %I', r.policyname, r.tablename);
+  end loop;
+end $$;
+
+-- Single deny-all policy per table (Worker bypasses via service_role)
+create policy "deny all students"          on students          for all using (false);
+create policy "deny all fee_types"         on fee_types         for all using (false);
+create policy "deny all fee_demands"       on fee_demands       for all using (false);
+create policy "deny all payments"          on payments          for all using (false);
+create policy "deny all receipts"          on receipts          for all using (false);
+create policy "deny all semester_config"   on semester_config   for all using (false);
+create policy "deny all office_fines"      on office_order_fines for all using (false);
+create policy "deny all no_dues_log"       on no_dues_log       for all using (false);
+create policy "deny all pre_paid"          on pre_paid_semesters for all using (false);
+create policy "deny all audit_logs"        on audit_logs        for all using (false);`;
 
 // ═══ GLOBAL STATE ══════════════════════════════════════════
 let currentStudent = null;
@@ -1561,15 +1669,6 @@ function renderStudentDashboard() {
     return;
   }
   el.innerHTML = pending.map(d => demandCard(d, true)).join('');
-}
-
-function calcLateFine(d) {
-  if (!d.due_date) return 0;
-  const today = new Date();
-  const due = new Date(d.due_date);
-  if (today <= due) return 0;
-  const days = Math.floor((today - due) / (1000 * 60 * 60 * 24));
-  return Math.min(days * 50, 500);
 }
 
 function calcLateFine(d) {
@@ -1930,78 +2029,6 @@ async function deleteFeeType(id) {
   await loadFeeStructure();
   await loadFeeTypes();
 }
-
-// ═══ DEMAND MANAGEMENT ════════════════════════════════════
-async function lookupStudentForDemand() {
-  const roll = getRollFull('dm-roll-no','dm-roll-branch','dm-roll-year');
-  if (!roll || roll.startsWith('/') || roll.endsWith('/')) { setText('dm-student-preview', ''); return; }
-  const data = await api('GET', `/api/cashier/student-lookup?roll_no=${encodeURIComponent(roll)}`, null, cashierHeaders());
-  if (data && data.name) {
-    document.getElementById('dm-student-preview').textContent =
-      `✅ ${data.name} | ${shortCourse(data.course)} | ${data.year}${ordinal(data.year)} Year | ${data.category}`;
-    document.getElementById('dm-student-preview').style.color = 'var(--success)';
-  } else {
-    document.getElementById('dm-student-preview').textContent = '❌ Student not found';
-    document.getElementById('dm-student-preview').style.color = 'var(--danger)';
-  }
-}
-
-async function autofillAmount() {
-  const ftId = v('dm-fee-type');
-  if (!ftId) return;
-  const ft = allFeeTypes.find(f => f.id === ftId);
-  if (ft) document.getElementById('dm-amount').value = ft.amount;
-}
-
-async function issueDemand() {
-  const roll = getRollFull('dm-roll-no','dm-roll-branch','dm-roll-year');
-  const ftId = v('dm-fee-type');
-  const amount = parseFloat(v('dm-amount'));
-  const remarks = v('dm-remarks').trim();
-  const curYear = new Date().getFullYear();
-
-  if (!roll || !ftId || isNaN(amount) || amount <= 0) {
-    showAlert('demand-alert', 'Fill all required fields.'); return;
-  }
-
-  const stuData = await api('GET', `/api/cashier/student-lookup?roll_no=${encodeURIComponent(roll)}`, null, cashierHeaders());
-  if (!stuData || !stuData.name) { showAlert('demand-alert', 'Student not found.'); return; }
-
-  const ft = allFeeTypes.find(f => f.id === ftId);
-  const ftName = ft ? ft.name : 'FEE';
-
-  // Generate reference code: 25CSE2026-TUITIONFEE-2026
-  const rollClean = roll.replace(/\//g, '');
-  const ftSlug = ftName.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,12);
-  const refCode = `${rollClean}-${ftSlug}-${curYear}`;
-
-  const upiLink = buildUPILink(refCode, amount);
-
-  setSpinner('dm-spinner', true);
-  const res = await api('POST', '/api/cashier/demands', {
-    roll_no: roll, fee_type_id: ftId, fee_type_name: ftName,
-    amount, ref_code: refCode,
-    upi_link: upiLink, remarks, status: 'pending'
-  }, cashierHeaders());
-  setSpinner('dm-spinner', false);
-  if (!res || !res.success) { showAlert('demand-alert', res?.message || 'Error creating demand.'); return; }
-
-  // Show QR
-  document.getElementById('dm-ref-display').textContent = refCode;
-  document.getElementById('dm-upi-display').textContent = `UPI: ${INSTITUTE_UPI_ID} | ₹${fmt(amount)}`;
-  document.getElementById('dm-result-info').innerHTML = `
-    <div class="info-item"><div class="key">Student</div><div class="val">${stuData.name}</div></div>
-    <div class="info-item"><div class="key">Roll No.</div><div class="val">${roll}</div></div>
-    <div class="info-item"><div class="key">Fee Type</div><div class="val">${ftName}</div></div>
-    <div class="info-item"><div class="key">Amount</div><div class="val">₹${fmt(amount)}</div></div>`;
-  document.getElementById('dm-qr-result').classList.remove('hidden');
-  document.getElementById('demand-alert').classList.add('hidden');
-  setTimeout(() => {
-    QRCode.toCanvas(document.getElementById('dm-qr-canvas'), upiLink, { width: 220, margin: 2 });
-  }, 100);
-}
-
-function printDemandQR() { window.print(); }
 
 // ═══ PAYMENT VERIFICATION ════════════════════════════════
 async function lookupByRef() {
@@ -2551,7 +2578,7 @@ async function markPrePaid() {
   if (semesters.length === 0) { showAlert('pp-alert', 'Select at least one semester.'); return; }
   if (!confirm(`Mark Semesters ${semesters.join(', ')} as Pre-Paid for ${roll}?\n\nRemark: ${remark}\n\nThis cannot be undone.`)) return;
   setSpinner('pp-spinner', true);
-  const res = await api('POST', '/api/cashier/pre-paid', { roll_no: roll, semesters, remark });
+  const res = await api('POST', '/api/cashier/pre-paid', { roll_no: roll, semesters, remark }, cashierHeaders());
   setSpinner('pp-spinner', false);
   if (!res || !res.success) { showAlert('pp-alert', res?.message || 'Failed.'); return; }
   document.getElementById('pp-alert').classList.add('hidden');
@@ -2580,156 +2607,11 @@ async function searchPrePaid() {
   </table></div>`;
 }
 
-// ═══ PASS-OUT VERIFICATION ════════════════════════════════════
-async function verifyPassOut() {
-  const roll = v('po-roll').trim().toUpperCase();
-  if (!roll) { alert('Enter Roll No.'); return; }
-  const res = await api('GET', `/api/cashier/pass-out/check?roll_no=${encodeURIComponent(roll)}`, null);
-  const el = document.getElementById('po-result');
-  el.classList.remove('hidden');
-  if (!res || !res.found) {
-    el.innerHTML = '<div class="alert alert-danger">Student not found.</div>'; return;
-  }
-  const { student: s, sem_status, unpaid_fines, pass_out_type, eligible, already_issued } = res;
-
-  if (already_issued) {
-    el.innerHTML = `<div class="alert alert-success">✅ Pass-Out already recorded for <strong>${s.name}</strong> as <strong>${res.pass_out_type}</strong>.</div>`;
-    return;
-  }
-
-  const semRows = Object.entries(sem_status).map(([sem, status]) =>
-    `<tr><td>Semester ${sem}</td><td><span class="badge ${status.paid ? 'badge-paid' : 'badge-overdue'}">${status.paid ? '✅ Paid' : status.pre_paid ? '✅ Pre-Paid' : status.skip ? '⏭️ N/A (Lateral)' : '❌ Unpaid'}</span></td><td>${status.amount ? '₹' + fmt(status.amount) : '—'}</td></tr>`
-  ).join('');
-
-  const fineRows = unpaid_fines.length > 0
-    ? `<div class="alert alert-danger" style="margin-top:8px">❌ ${unpaid_fines.length} unpaid fine(s): ${unpaid_fines.map(f => f.fee_type_name + ' ₹' + fmt(f.amount)).join(', ')}</div>`
-    : '<div class="alert alert-success" style="margin-top:8px">✅ No unpaid fines</div>';
-
-  const admYear = s.batch_year || s.admission_year || '—';
-  const expectedYear = admYear !== '—' ? parseInt(admYear) + 3 : '—';
-
-  el.innerHTML = `
-    <div class="card">
-      <div class="info-grid">
-        <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
-        <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
-        <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
-        <div class="info-item"><div class="key">Admission Year</div><div class="val">${admYear}</div></div>
-        <div class="info-item"><div class="key">Expected Pass-Out</div><div class="val">${expectedYear}</div></div>
-        <div class="info-item"><div class="key">Pass-Out Type</div><div class="val"><span class="badge ${pass_out_type === 'Regular' ? 'badge-paid' : 'badge-pending'}">${pass_out_type}</span></div></div>
-      </div>
-      <div style="margin-top:12px">
-        <div style="font-weight:600;font-size:13px;margin-bottom:8px">Semester Fee Status:</div>
-        <div class="table-wrap"><table class="data-table">
-          <thead><tr><th>Semester</th><th>Status</th><th>Amount</th></tr></thead>
-          <tbody>${semRows}</tbody>
-        </table></div>
-      </div>
-      ${fineRows}
-      ${eligible ? `
-        <div style="margin-top:16px">
-          <button class="btn btn-success" onclick="issuePassOut('${s.roll_no}', '${pass_out_type}')">
-            🎓 Issue Pass-Out Certificate (${pass_out_type})
-          </button>
-          <button class="btn btn-gold" style="margin-left:8px" onclick="printPassOut('${s.roll_no}')">
-            🖨️ Print Pass-Out Certificate
-          </button>
-        </div>` : `
-        <div class="alert alert-danger" style="margin-top:12px">
-          ❌ Cannot issue Pass-Out — clear all dues first.
-        </div>`}
-    </div>`;
-}
-
-async function issuePassOut(rollNo, passOutType) {
-  if (!confirm(`Issue Pass-Out Certificate as "${passOutType}" for this student?`)) return;
-  const res = await api('POST', '/api/cashier/pass-out', { roll_no: rollNo, pass_out_type: passOutType });
-  if (!res || !res.success) { alert(res?.message || 'Failed.'); return; }
-  alert('✅ Pass-Out recorded successfully!');
-  verifyPassOut();
-  loadPassOutList();
-}
-
-async function loadPassOutList() {
-  const el = document.getElementById('ca-passout-list');
-  if (!el) return;
-  const data = await api('GET', '/api/cashier/pass-out', null);
-  if (!data || data.length === 0) {
-    el.innerHTML = '<div class="alert alert-info">No pass-out records yet.</div>'; return;
-  }
-  el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Roll No.</th><th>Name</th><th>Type</th><th>Admission</th><th>Completion</th><th>Date</th><th>Print</th></tr></thead>
-    <tbody>${data.map(r => `<tr>
-      <td>${r.roll_no}</td>
-      <td>${r.student_name || '—'}</td>
-      <td><span class="badge ${r.pass_out_type === 'Regular' ? 'badge-paid' : 'badge-pending'}">${r.pass_out_type}</span></td>
-      <td>${r.admission_year || '—'}</td>
-      <td>${r.completion_year || '—'}</td>
-      <td>${fmtDate(r.created_at)}</td>
-      <td><button class="btn btn-sm btn-gold" onclick="printPassOut('${r.roll_no}')">🖨️</button></td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
-}
-
-async function printPassOut(rollNo) {
-  const res = await api('GET', `/api/cashier/pass-out/check?roll_no=${encodeURIComponent(rollNo)}`, null);
-  if (!res || !res.found) { alert('Student not found'); return; }
-  const s = res.student;
-  const admYear = s.batch_year || s.admission_year || '—';
-  const expectedYear = admYear !== '—' ? parseInt(admYear) + 3 : '—';
-  const actualYear = res.completion_year || new Date().getFullYear();
-  const w = window.open('','_blank','width=800,height=600');
-  w.document.write(`<!DOCTYPE html><html><head>
-    <style>
-      body{font-family:Arial,sans-serif;margin:0;padding:30px;font-size:13px}
-      .header{text-align:center;border-bottom:2px solid #0f2744;padding-bottom:16px;margin-bottom:20px}
-      .inst-name{font-size:18px;font-weight:700;color:#0f2744}
-      .inst-addr{font-size:11px;color:#666;margin-top:4px}
-      .cert-title{font-size:16px;font-weight:700;text-align:center;margin:20px 0;text-transform:uppercase;letter-spacing:2px;color:#0f2744;text-decoration:underline}
-      .info-row{display:flex;margin-bottom:10px}
-      .info-key{width:200px;font-weight:600;color:#444}
-      .valid-box{background:#eaf5ef;border:1px solid #1a6b3c;border-radius:6px;padding:12px;text-align:center;margin:20px 0;color:#1a6b3c;font-weight:600}
-      .sig-area{display:flex;justify-content:space-between;margin-top:60px;font-size:12px}
-    </style></head><body>
-    <div class="header">
-      <div class="inst-name">Government Polytechnic, Munger</div>
-      <div class="inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
-      <div style="font-size:11px;color:#c8973a;font-weight:600;margin-top:4px">ACCOUNTS SECTION</div>
-    </div>
-    <div class="cert-title">Pass-Out Certificate</div>
-    <div class="valid-box">✅ ${res.pass_out_type} Pass-Out — All dues cleared</div>
-    <div class="info-row"><div class="info-key">Student Name:</div><div>${s.name}</div></div>
-    <div class="info-row"><div class="info-key">Roll No.:</div><div>${s.roll_no}</div></div>
-    <div class="info-row"><div class="info-key">Course:</div><div>${s.course}</div></div>
-    <div class="info-row"><div class="info-key">Category:</div><div>${s.category}</div></div>
-    <div class="info-row"><div class="info-key">Admission Year:</div><div>${admYear}</div></div>
-    <div class="info-row"><div class="info-key">Expected Completion:</div><div>${expectedYear}</div></div>
-    <div class="info-row"><div class="info-key">Actual Completion:</div><div>${actualYear}</div></div>
-    <div class="info-row"><div class="info-key">Pass-Out Type:</div><div>${res.pass_out_type}</div></div>
-    <div class="info-row"><div class="info-key">Date of Issue:</div><div>${new Date().toLocaleDateString('en-IN')}</div></div>
-    <p style="font-size:12px;color:#666;margin-top:20px">
-      This certificate confirms that the above-named student has completed the course at Government Polytechnic, Munger
-      and has cleared all financial dues with the Accounts Section.
-    </p>
-    <div class="sig-area">
-      <div style="border:2px dashed #ccc;width:120px;height:80px;text-align:center;line-height:80px;color:#ccc;font-size:11px">Official Stamp</div>
-      <div style="text-align:right">
-        <div style="margin-bottom:40px"></div>
-        <div style="border-top:1px solid #000;padding-top:6px;width:180px">
-          Cashier / Accounts Officer<br/>Govt. Polytechnic, Munger
-        </div>
-      </div>
-    </div>
-  </body></html>`);
-  w.document.close();
-  setTimeout(() => w.print(), 500);
-}
-
 // ═══ SEMESTER MANAGEMENT ══════════════════════════════════════
 async function loadSemesterConfig() {
   const el = document.getElementById('active-sem-info');
   if (!el) return;
-  const data = await api('GET', '/api/cashier/semester-config', null);
+  const data = await api('GET', '/api/cashier/semester-config', null, cashierHeaders());
   if (!data || data.length === 0) {
     el.innerHTML = '<div class="alert alert-info">No semester configured yet.</div>';
     return;
@@ -2780,7 +2662,7 @@ async function startSemester() {
     window_days: 10,
     fee_regular: 0,
     fee_repeat: 0,
-  });
+  }, cashierHeaders());
   setSpinner('sem-spinner', false);
   if (!res || !res.success) { showAlert('sem-alert', res?.error || 'Failed to activate semester.'); return; }
   document.getElementById('sem-alert').classList.add('hidden');
@@ -2851,7 +2733,7 @@ async function issueNoDues(rollNo) {
     roll_no: rollNo,
     hostel_no_dues_seen: document.getElementById('nd-hostel-seen')?.checked,
     remarks: v('nd-remarks')
-  });
+  }, cashierHeaders());
   setSpinner('nd-spinner', false);
   if (!res || !res.success) { alert(res?.message || 'Failed to issue No Dues.'); return; }
   alert('✅ No Dues certificate issued successfully!');
@@ -2862,7 +2744,7 @@ async function issueNoDues(rollNo) {
 async function loadNoDuesList() {
   const el = document.getElementById('nd-issued-list');
   if (!el) return;
-  const data = await api('GET', '/api/cashier/no-dues', null);
+  const data = await api('GET', '/api/cashier/no-dues', null, cashierHeaders());
   if (!data || data.length === 0) {
     el.innerHTML = '<div class="alert alert-info">No certificates issued yet.</div>'; return;
   }
@@ -2880,13 +2762,13 @@ async function loadNoDuesList() {
 }
 
 async function printNoDues(rollNo) {
-  const { data: stuArr } = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`, null) || {};
-  // Try fetching from no_dues_log
-  const res = await api('GET', '/api/cashier/no-dues', null);
-  const log = (res || []).find(r => r.roll_no === rollNo);
-  const stuRes = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`, null);
+  const [stuRes, noDuesList] = await Promise.all([
+    api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`, null, cashierHeaders()),
+    api('GET', '/api/cashier/no-dues', null, cashierHeaders())
+  ]);
   const s = stuRes?.student;
   if (!s) { alert('Student not found'); return; }
+  const log = (noDuesList || []).find(r => r.roll_no === rollNo);
   const w = window.open('','_blank','width=800,height=600');
   w.document.write(`<!DOCTYPE html><html><head>
     <style>
@@ -2969,7 +2851,7 @@ async function applyOfficeFine() {
   setSpinner('fine-spinner', true);
   const res = await api('POST', '/api/cashier/office-fines', {
     order_no, amount, reason, apply_to, course, fine_type, roll_nos
-  });
+  }, cashierHeaders());
   setSpinner('fine-spinner', false);
   if (!res || !res.success) { showAlert('fine-alert', res?.error || 'Failed.'); return; }
   document.getElementById('fine-alert').classList.add('hidden');
@@ -2985,7 +2867,7 @@ async function applyOfficeFine() {
 async function loadFinesList() {
   const el = document.getElementById('ca-fines-list');
   if (!el) return;
-  const data = await api('GET', '/api/cashier/office-fines', null);
+  const data = await api('GET', '/api/cashier/office-fines', null, cashierHeaders());
   if (!data || data.length === 0) {
     el.innerHTML = '<div class="alert alert-info">No fines applied yet.</div>'; return;
   }
@@ -3007,7 +2889,7 @@ async function loadFinesList() {
 async function updateStudentType(rollNo, newType) {
   if (!confirm(`Change student type to ${newType}?`)) return;
   const res = await api('PATCH', `/api/cashier/students/${encodeURIComponent(rollNo)}/type`,
-    { student_type: newType });
+    { student_type: newType }, cashierHeaders());
   if (!res || !res.success) { alert('Failed to update.'); return; }
   alert('✅ Student type updated.');
   _allStudentsCache = [];
