@@ -1874,18 +1874,20 @@ function renderStudentList(students) {
   const el = document.getElementById('ca-students-list');
   if (students.length === 0) { el.innerHTML = '<div class="alert alert-info">No students found.</div>'; return; }
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Batch</th><th>Type</th><th>Category</th><th>Admission</th><th>Mobile</th><th>Action</th></tr></thead>
-    <tbody>${students.map(s => `<tr>
+    <thead><tr><th>Roll No.</th><th>Name</th><th>Course</th><th>Batch</th><th>Type</th><th>Category</th><th>Enrollment</th><th>Mobile</th><th>Action</th></tr></thead>
+    <tbody>${students.map(s => {
+      const batch = s.batch_year || s.admission_year || s.roll_no?.split('/')?.[2] || '—';
+      return `<tr>
       <td><code>${s.roll_no}</code></td>
       <td>${s.name}</td>
       <td>${shortCourse(s.course)}</td>
-      <td>${s.batch_year || s.admission_year || '—'}</td>
+      <td>${batch}</td>
       <td><span class="badge" style="background:${s.student_type==='Hosteller'?'#e8f4fd':'#eaf5ef'};color:${s.student_type==='Hosteller'?'#1a3a7c':'#1a6b3c'}">${s.student_type||'Non-Hosteller'}</span></td>
       <td>${s.category}</td>
-      <td><span class="badge ${s.lateral_entry?'badge-pending':'badge-paid'}">${s.lateral_entry?'Lateral':'Regular'}</span></td>
+      <td><span class="badge ${s.enrollment_type==='Repeat'?'badge-pending':'badge-paid'}">${s.enrollment_type||'Regular'}</span></td>
       <td>${s.mobile}</td>
       <td><button class="btn btn-sm btn-secondary" onclick="viewStudent('${s.roll_no}')">View</button></td>
-    </tr>`).join('')}</tbody>
+    </tr>`;}).join('')}</tbody>
   </table></div>`;
 }
 
