@@ -1285,6 +1285,7 @@ create table if not exists students (
   no_dues                 boolean default false,
   no_dues_issued_at       timestamptz,
   hostel_no_dues_confirmed boolean default false,
+  is_active               boolean default true,
   created_at              timestamptz default now()
 );
 
