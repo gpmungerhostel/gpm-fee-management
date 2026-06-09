@@ -850,20 +850,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <!-- ═══ SEMESTER MANAGEMENT TAB ═══ -->
     <div id="ca-tab-semester" class="hidden">
       <div class="card">
-        <div class="card-title">Semester Management</div>
-        <div class="card-subtitle">Start a new semester — auto-generates fee demands for all eligible students.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="card-title" style="margin:0">Semester Management</div>
+          <button class="btn btn-secondary btn-sm" onclick="loadSemesterConfig()">↻ Refresh</button>
+        </div>
+        <div id="active-sem-info" style="margin-bottom:14px"><div class="alert alert-info" style="margin:0">No semester configured yet.</div></div>
+
         <div id="sem-alert" class="alert alert-danger hidden"></div>
 
-        <!-- Active Semester Config -->
-        <div class="card" style="background:var(--gold-pale);border-color:var(--gold);margin-bottom:16px">
-          <div style="font-weight:600;color:var(--navy);margin-bottom:12px">⚙️ Active Semester Configuration</div>
-          <div id="active-sem-info"><div class="alert alert-info">No active semester. Configure below.</div></div>
-        </div>
-
-        <div class="form-row-3">
-          <div class="field">
-            <label>Course <span class="req">*</span></label>
-            <select id="sem-course">
+        <!-- Compact form — all in two rows -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="flex:2;min-width:140px">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Course <span class="req">*</span></div>
+            <select id="sem-course" style="width:100%">
               <option value="ALL">All Courses</option>
               <option>Diploma in Civil Engineering</option>
               <option>Diploma in Computer Science &amp; Engineering</option>
@@ -873,50 +872,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
               <option>Diploma in Mechanical Engineering</option>
             </select>
           </div>
-          <div class="field">
-            <label>Semester <span class="req">*</span></label>
-            <select id="sem-number">
-              <option value="1">1st Semester</option>
-              <option value="2">2nd Semester</option>
-              <option value="3">3rd Semester</option>
-              <option value="4">4th Semester</option>
-              <option value="5">5th Semester</option>
-              <option value="6">6th Semester</option>
+          <div style="flex:1;min-width:100px">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Semester <span class="req">*</span></div>
+            <select id="sem-number" style="width:100%">
+              <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+              <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+              <option value="5">5th Sem</option><option value="6">6th Sem</option>
             </select>
           </div>
-          <div class="field">
-            <label>Batch Year <span class="req">*</span></label>
-            <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2024"/>
-            <div class="hint">Admission year of target batch</div>
+          <div style="flex:1;min-width:80px">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Batch Year <span class="req">*</span></div>
+            <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2024" style="width:100%"/>
           </div>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Semester Start Date <span class="req">*</span></label>
-            <input type="date" id="sem-start-date"/>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Start Date <span class="req">*</span></div>
+            <input type="date" id="sem-start-date" style="width:100%"/>
           </div>
-          <div class="field">
-            <label>Academic Fee Deadline <span class="req">*</span></label>
-            <input type="date" id="sem-academic-deadline"/>
-            <div class="hint">Late fine starts after this date</div>
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Academic Deadline <span class="req">*</span></div>
+            <input type="date" id="sem-academic-deadline" style="width:100%"/>
+          </div>
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Hostel Deadline</div>
+            <input type="date" id="sem-hostel-deadline" style="width:100%"/>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn btn-gold" onclick="startSemester()" style="white-space:nowrap;height:38px">
+              <span id="sem-spinner" class="spinner hidden"></span>🎓 Activate
+            </button>
           </div>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Hostel Fee Deadline</label>
-            <input type="date" id="sem-hostel-deadline"/>
-            <div class="hint">Leave blank if same as academic deadline</div>
-          </div>
-        </div>
-        <div class="alert alert-info" style="font-size:12px;margin-top:4px">
-          💡 Fee amounts are taken automatically from the <strong>Fee Structure</strong> tab. Define them there before activating a semester.
-        </div>
-        <div class="alert alert-warning" style="margin-top:12px">
-          ⚠️ Once activated, students of the selected course and batch will be able to log in and generate their own fee demands for this semester. Fee amounts are pulled from the Fee Structure tab. This action cannot be undone.
-        </div>
-        <div class="btn-row">
-          <button class="btn btn-secondary" onclick="loadSemesterConfig()">↻ Refresh Status</button>
-          <button class="btn btn-gold" onclick="startSemester()"><span id="sem-spinner" class="spinner hidden"></span>🎓 Activate Semester &amp; Generate Demands</button>
+        <div style="font-size:11px;color:var(--gray-500)">
+          💡 Fee amounts are from the <strong>Fee Structure</strong> tab. Hostel deadline defaults to academic deadline if blank. Once activated, this cannot be undone.
         </div>
       </div>
 
