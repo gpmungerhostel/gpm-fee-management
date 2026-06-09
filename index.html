@@ -548,8 +548,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
     <!-- Payments Tab -->
     <div id="stu-tab-payments" class="hidden">
+
+      <!-- Important instruction banner -->
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:linear-gradient(135deg,#fff8e8,#fdf3d8);border:1.5px solid var(--gold);border-radius:10px;margin-bottom:16px">
+        <div style="font-size:22px;flex-shrink:0;margin-top:1px">📋</div>
+        <div>
+          <div style="font-weight:700;font-size:13px;color:var(--navy);margin-bottom:3px">Important Notice for Students</div>
+          <div style="font-size:12.5px;color:#5a4010;line-height:1.65">
+            Students must <strong>print the fee payment receipt</strong> and obtain the <strong>signature and official seal/stamp of the Cashier</strong> on the receipt for future reference and verification. The physically signed receipt is required for academic records, hostel admission, and any institutional formalities.
+          </div>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="card-title">Payment History & Receipts</div>
+        <div class="card-title">Payment History &amp; Receipts</div>
         <div class="card-subtitle">All verified payments. Download or print your receipt at any time.</div>
         <div id="stu-payments-list"><div class="alert alert-info">Loading…</div></div>
       </div>
@@ -913,29 +925,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <!-- ═══ SEMESTER MANAGEMENT TAB ═══ -->
     <div id="ca-tab-semester" class="hidden">
 
-      <!-- Active semesters overview -->
-      <div id="active-sem-info" style="margin-bottom:16px"></div>
-
-      <!-- Activation key card -->
-      <div class="card" style="border:2px solid var(--gold);background:linear-gradient(135deg,#fffdf5 0%,#fff8e8 100%);padding:0;overflow:hidden">
-        <!-- Header band -->
-        <div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);padding:18px 24px;display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎓</div>
-          <div>
-            <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);font-weight:700;letter-spacing:.3px">Activate New Semester</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">Once activated, students can generate their fee demands</div>
+      <!-- ─── SECTION 1: Active Semesters ─── -->
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+        <div style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:16px">📅</span>
+            <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);font-weight:700">Active Semesters</div>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="loadSemesterConfig()" style="margin-left:auto;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff">↻ Refresh</button>
+          <button class="btn btn-sm" onclick="loadSemesterConfig()" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff;font-size:12px">↻ Refresh</button>
         </div>
+        <div id="active-sem-info" style="padding:16px">
+          <div class="alert alert-info" style="margin:0">Loading…</div>
+        </div>
+      </div>
 
-        <div style="padding:22px 24px">
+      <!-- ─── SECTION 2: Activate New Semester (centre) ─── -->
+      <div class="card" style="border:2px solid var(--gold);background:linear-gradient(135deg,#fffdf5 0%,#fff8e8 100%);padding:0;overflow:hidden;margin-bottom:16px">
+        <div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);padding:16px 22px;display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎓</div>
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);font-weight:700">Activate New Semester</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:1px">Once activated, students can generate their fee demands</div>
+          </div>
+        </div>
+        <div style="padding:20px 22px">
           <div id="sem-alert" class="alert alert-danger hidden"></div>
 
           <!-- Row 1: Course / Semester / Batch Year -->
-          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:12px">
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Course <span style="color:#c0392b">*</span></div>
-              <select id="sem-course" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:500;color:var(--navy);background:#fff">
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Course <span style="color:#c0392b">*</span></div>
+              <select id="sem-course" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:500;color:var(--navy);background:#fff">
                 <option value="ALL">All Courses</option>
                 <option>Diploma in Civil Engineering</option>
                 <option>Diploma in Computer Science &amp; Engineering</option>
@@ -946,63 +966,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
               </select>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Semester <span style="color:#c0392b">*</span></div>
-              <select id="sem-number" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:500;color:var(--navy);background:#fff">
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Semester <span style="color:#c0392b">*</span></div>
+              <select id="sem-number" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:500;color:var(--navy);background:#fff">
                 <option value="1">1st Sem</option><option value="2">2nd Sem</option>
                 <option value="3">3rd Sem</option><option value="4">4th Sem</option>
                 <option value="5">5th Sem</option><option value="6">6th Sem</option>
               </select>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Batch Year <span style="color:#c0392b">*</span></div>
-              <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2024" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);background:#fff;text-align:center"/>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Batch Year <span style="color:#c0392b">*</span></div>
+              <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2026" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);background:#fff;text-align:center"/>
             </div>
           </div>
 
           <!-- Row 2: Dates -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Start Date <span style="color:#c0392b">*</span></div>
-              <input type="date" id="sem-start-date" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Start Date <span style="color:#c0392b">*</span></div>
+              <input type="date" id="sem-start-date" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Academic Deadline <span style="color:#c0392b">*</span></div>
-              <input type="date" id="sem-academic-deadline" style="width:100%;padding:9px 12px;border:1.5px solid var(--gold);border-radius:8px;font-size:13px;color:var(--navy);background:#fffef8"/>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Academic Deadline <span style="color:#c0392b">*</span></div>
+              <input type="date" id="sem-academic-deadline" style="width:100%;padding:8px 11px;border:1.5px solid var(--gold);border-radius:8px;font-size:13px;color:var(--navy);background:#fffef8"/>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Hostel Deadline</div>
-              <input type="date" id="sem-hostel-deadline" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Hostel Deadline</div>
+              <input type="date" id="sem-hostel-deadline" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
             </div>
           </div>
 
-          <!-- Activation footer -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(200,151,58,.08);border:1.5px dashed rgba(200,151,58,.4);border-radius:10px">
-            <div style="font-size:12px;color:var(--gray-600);max-width:480px;line-height:1.6">
-              💡 Fee amounts come from the <strong>Fee Structure</strong> tab. Hostel deadline defaults to academic deadline if blank.
-              <span style="color:var(--danger);font-weight:600">Once activated, this cannot be undone.</span>
+          <!-- Activate footer -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 16px;background:rgba(200,151,58,.08);border:1.5px dashed rgba(200,151,58,.4);border-radius:10px;flex-wrap:wrap">
+            <div style="font-size:12px;color:var(--gray-600);flex:1;min-width:200px;line-height:1.65">
+              💡 Fee amounts are built from the <strong>Fee Structure</strong> tab (all applicable per-semester, annual &amp; one-time fees are included automatically). Hostel deadline defaults to academic deadline if blank.
+              <span style="color:var(--danger);font-weight:600"> Once activated, this cannot be undone.</span>
             </div>
-            <button class="btn btn-gold" onclick="startSemester()" style="white-space:nowrap;padding:11px 28px;font-size:14px;font-weight:700;border-radius:10px;box-shadow:0 4px 14px rgba(200,151,58,.4);flex-shrink:0;margin-left:16px">
+            <button class="btn btn-gold" onclick="startSemester()" style="white-space:nowrap;padding:11px 26px;font-size:14px;font-weight:700;border-radius:10px;box-shadow:0 4px 14px rgba(200,151,58,.4);flex-shrink:0">
               <span id="sem-spinner" class="spinner hidden"></span>🎓 Activate Semester
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Late Fine Config -->
-      <div class="card" style="margin-top:16px">
-        <div class="card-title">Late Fine Policy</div>
-        <div class="card-subtitle">Automatically applied after payment window closes.</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:120px;background:var(--gray-50);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--gray-100)">
-            <div style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Playfair Display',serif">₹50</div>
-            <div style="font-size:11px;color:var(--gray-600);margin-top:3px">Per day after deadline</div>
+      <!-- ─── SECTION 3: Late Fine Policy ─── -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px">⏰</span>
+          <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);font-weight:700">Late Fine Policy</div>
+          <span style="font-size:12px;color:rgba(255,255,255,.5);margin-left:4px">— automatically applied after deadline</span>
+        </div>
+        <div style="padding:18px 20px;display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+          <div style="flex:1;min-width:110px;background:var(--navy);color:#fff;border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--gold)">₹50</div>
+            <div style="font-size:11px;opacity:.75;margin-top:3px;letter-spacing:.3px">Per day after deadline</div>
           </div>
-          <div style="flex:1;min-width:120px;background:var(--gray-50);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--gray-100)">
-            <div style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Playfair Display',serif">₹500</div>
-            <div style="font-size:11px;color:var(--gray-600);margin-top:3px">Maximum fine cap</div>
+          <div style="flex:1;min-width:110px;background:var(--navy);color:#fff;border-radius:10px;padding:14px;text-align:center">
+            <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--gold)">₹500</div>
+            <div style="font-size:11px;opacity:.75;margin-top:3px;letter-spacing:.3px">Maximum fine cap</div>
           </div>
-          <div style="flex:3;min-width:200px;display:flex;align-items:center">
-            <div class="alert alert-warning" style="margin:0;width:100%">Fine is fixed as per institute policy and cannot be changed here.</div>
+          <div class="alert alert-warning" style="flex:3;min-width:200px;margin:0;font-size:12.5px">
+            Fine is fixed as per institute policy and cannot be changed here. Late fine is calculated daily and capped at ₹500. It is automatically included when a student generates their demand after the deadline.
           </div>
         </div>
       </div>
@@ -1121,7 +1144,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <div id="ft-alert" class="alert alert-danger hidden"></div>
     <div class="field">
       <label>Fee Type Name <span class="req">*</span></label>
-      <input type="text" id="ft-name" placeholder="e.g. Tuition Fee, Hostel Fee, Fine"/>
+      <input type="text" id="ft-name" placeholder="e.g. Tuition Fee, Development Fee, Admission Fee"/>
     </div>
     <div class="form-row">
       <div class="field">
@@ -1137,7 +1160,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         </select>
       </div>
       <div class="field">
-        <label>Semester <span class="req">*</span></label>
+        <label>Category</label>
+        <select id="ft-category">
+          <option value="ALL">All Categories</option>
+          <option>General</option><option>BC</option><option>EBC</option><option>SC</option><option>ST</option><option>EWS</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Billing Frequency <span class="req">*</span> <span style="font-size:10px;font-weight:400;color:var(--gray-500)">— when is this charged?</span></label>
+        <select id="ft-frequency" onchange="updateYearField()">
+          <option value="per_semester">Per Semester — charged every semester</option>
+          <option value="annual">Annual — charged once per year (odd semesters)</option>
+          <option value="one_time">One-Time — charged only in 1st semester at admission</option>
+        </select>
+      </div>
+      <div class="field" id="ft-year-field">
+        <label>Applicable Semester</label>
         <select id="ft-year">
           <option value="ALL">All Semesters</option>
           <option value="1">1st Semester</option>
@@ -1149,18 +1189,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="field">
-        <label>Category</label>
-        <select id="ft-category">
-          <option value="ALL">All Categories</option>
-          <option>General</option><option>BC</option><option>EBC</option><option>SC</option><option>ST</option><option>EWS</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Amount (₹) <span class="req">*</span></label>
-        <input type="number" id="ft-amount" placeholder="0"/>
-      </div>
+    <div class="field">
+      <label>Amount (₹) <span class="req">*</span></label>
+      <input type="number" id="ft-amount" placeholder="0"/>
+    </div>
+    <!-- Frequency explanation hint -->
+    <div id="ft-freq-hint" class="alert alert-info" style="font-size:12px;padding:10px 14px;margin-bottom:14px">
+      💡 <strong>Per Semester:</strong> Included in every semester demand (e.g. Tuition Fee ₹120/year = ₹10/month × 12).
     </div>
     <input type="hidden" id="ft-edit-id"/>
     <div class="btn-row">
@@ -1339,9 +1374,12 @@ create table if not exists fee_types (
   year        text default 'ALL',
   category    text default 'ALL',
   amount      numeric(10,2) not null,
+  frequency   text default 'per_semester',
   is_active   boolean default true,
   created_at  timestamptz default now()
 );
+-- Migration: add frequency to existing databases (safe to run multiple times)
+alter table fee_types add column if not exists frequency text default 'per_semester';
 
 create table if not exists fee_demands (
   id            uuid primary key default gen_random_uuid(),
@@ -1816,14 +1854,15 @@ async function loadStudentPayments() {
   if (!data || data.length === 0) {
     el.innerHTML = '<div class="alert alert-info">No payment records found. Once cashier verifies your UTR, receipts will appear here.</div>'; return;
   }
+  window._stuReceiptCache = data; // cache for download
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Receipt No.</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Download</th></tr></thead>
+    <thead><tr><th>Receipt No.</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Print / Download</th></tr></thead>
     <tbody>${data.map(r => `<tr>
       <td><code>${r.receipt_no}</code></td>
       <td>${r.fee_type_name}</td>
       <td><strong>₹${fmt(r.amount)}</strong></td>
       <td>${fmtDate(r.issued_at)}</td>
-      <td><button class="btn btn-sm btn-gold" onclick="downloadStudentReceipt('${r.receipt_no}','${(r.student_name||'').replace(/'/g,'')}')" title="Download Receipt">⬇️ Download</button></td>
+      <td><button class="btn btn-sm btn-gold" onclick="downloadStudentReceipt('${r.receipt_no}')" title="Print / Download Receipt">⬇️ Print / Download</button></td>
     </tr>`).join('')}</tbody>
   </table></div>`;
 
@@ -1846,31 +1885,22 @@ async function loadStudentPayments() {
     </div>`).join('');
 }
 
-async function downloadStudentReceipt(rcptNo, studentName) {
-  const r = await api('GET', `/api/student/receipts`);
-  // Get the specific receipt data from the cached list or re-fetch
-  // We'll use public verify endpoint for receipt data
-  const data = await fetch(`${WORKER_URL}/api/verify?receipt_no=${encodeURIComponent(rcptNo)}`);
-  const json = await data.json();
-  if (!json?.found) { alert('Receipt not found.'); return; }
-  const rcpt = json.receipt;
-  const receiptData = {
-    receiptNo: rcpt.receipt_no,
-    rollNo: rcpt.roll_no,
-    studentName: rcpt.student_name,
-    feeType: rcpt.fee_type_name,
-    amount: rcpt.amount,
-    utr: rcpt.payments?.utr || '',
-    paymentDate: rcpt.payments?.payment_date || fmtDate(rcpt.issued_at),
-    refCode: rcptNo,
+function downloadStudentReceipt(rcptNo) {
+  const cache = window._stuReceiptCache || [];
+  const r = cache.find(x => x.receipt_no === rcptNo);
+  if (!r) { alert('Receipt data not found. Please refresh the page.'); return; }
+  currentReceiptData = {
+    receiptNo: r.receipt_no,
+    rollNo: r.roll_no,
+    studentName: r.student_name,
+    feeType: r.fee_type_name,
+    amount: r.amount,
+    utr: r.payments?.utr || '',
+    paymentDate: r.payments?.payment_date || '',
+    refCode: r._ref_code || r.payments?.fee_demands?.ref_code || '',
     course: currentStudent?.course || '',
-    category: currentStudent?.category || '',
   };
-  currentReceiptData = receiptData;
-  // Show in modal with download option
-  document.getElementById('modal-receipt-content').innerHTML = buildReceiptHTML([receiptData]);
-  document.getElementById('modal-receipt-print-btn').style.display = '';
-  openModal('modal-receipt');
+  _openReceiptPrintWindow();
 }
 
 // ─── STUDENT UTR SUBMISSION ─────────────────────────────
@@ -2172,20 +2202,44 @@ async function loadFeeStructure() {
   if (allFeeTypes.length === 0) {
     el.innerHTML = '<div class="alert alert-info">No fee types defined yet. Click "Add Fee Type" to begin.</div>'; return;
   }
+  const freqLabel = f => ({ per_semester:'Per Semester', annual:'Annual', one_time:'One-Time' }[f] || f || 'Per Semester');
+  const freqColor = f => ({ per_semester:'#1a3a7c', annual:'#1a6b3c', one_time:'#7a5c00' }[f] || '#1a3a7c');
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Fee Type</th><th>Course</th><th>Year</th><th>Category</th><th>Amount</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Fee Type</th><th>Course</th><th>Category</th><th>Frequency</th><th>Amount</th><th>Actions</th></tr></thead>
     <tbody>${allFeeTypes.map(ft => `<tr>
       <td><strong>${ft.name}</strong></td>
       <td>${ft.course === 'ALL' ? 'All Courses' : shortCourse(ft.course)}</td>
-      <td>${ft.year === 'ALL' ? 'All Years' : ft.year + ordinal(ft.year) + ' Year'}</td>
       <td>${ft.category === 'ALL' ? 'All' : ft.category}</td>
+      <td><span style="font-size:11px;font-weight:600;color:${freqColor(ft.frequency)};background:${freqColor(ft.frequency)}18;padding:2px 8px;border-radius:20px;border:1px solid ${freqColor(ft.frequency)}44">${freqLabel(ft.frequency)}</span></td>
       <td><strong>₹${fmt(ft.amount)}</strong></td>
       <td>
         <button class="btn btn-sm btn-secondary" onclick="editFeeType('${ft.id}')">Edit</button>
         <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteFeeType('${ft.id}')">Delete</button>
       </td>
     </tr>`).join('')}</tbody>
-  </table></div>`;
+  </table></div>
+  <div class="alert alert-info" style="margin-top:12px;font-size:12px">
+    💡 <strong>Per Semester:</strong> included every semester. <strong>Annual:</strong> charged in odd semesters (1,3,5) only. <strong>One-Time:</strong> charged only for 1st semester (new admission).
+  </div>`;
+}
+
+function updateYearField() {
+  const freq = v('ft-frequency');
+  const yearWrap = document.getElementById('ft-year-field');
+  const hint = document.getElementById('ft-freq-hint');
+  const hints = {
+    per_semester: '💡 <strong>Per Semester:</strong> This fee is charged every semester. Example: Tuition Fee ₹120/year → charged each semester.',
+    annual: '💡 <strong>Annual:</strong> Charged once per academic year — only in odd semesters (1, 3, 5). Example: Development Fee ₹500/year.',
+    one_time: '💡 <strong>One-Time:</strong> Charged only at the time of admission (1st semester only). Example: Admission Fee, Caution Money.'
+  };
+  hint.innerHTML = hints[freq] || hints.per_semester;
+  // For one_time, hide semester selector (always 1st sem); for annual, show for reference
+  if (freq === 'one_time') {
+    yearWrap.style.display = 'none';
+    document.getElementById('ft-year').value = '1';
+  } else {
+    yearWrap.style.display = '';
+  }
 }
 
 function openAddFeeType() {
@@ -2195,8 +2249,10 @@ function openAddFeeType() {
   document.getElementById('ft-year').value = 'ALL';
   document.getElementById('ft-category').value = 'ALL';
   document.getElementById('ft-amount').value = '';
+  document.getElementById('ft-frequency').value = 'per_semester';
   document.getElementById('ft-edit-id').value = '';
   document.getElementById('ft-alert').classList.add('hidden');
+  updateYearField();
   openModal('modal-feetype');
 }
 
@@ -2209,20 +2265,23 @@ function editFeeType(id) {
   document.getElementById('ft-year').value = ft.year;
   document.getElementById('ft-category').value = ft.category;
   document.getElementById('ft-amount').value = ft.amount;
+  document.getElementById('ft-frequency').value = ft.frequency || 'per_semester';
   document.getElementById('ft-edit-id').value = ft.id;
   document.getElementById('ft-alert').classList.add('hidden');
+  updateYearField();
   openModal('modal-feetype');
 }
 
 async function saveFeeType() {
   const name = v('ft-name').trim();
   const amount = parseFloat(v('ft-amount'));
+  const frequency = v('ft-frequency') || 'per_semester';
   if (!name || isNaN(amount) || amount <= 0) {
     showAlert('ft-alert', 'Name and valid Amount are required.'); return;
   }
   const payload = {
     name, course: v('ft-course'), year: v('ft-year'),
-    category: v('ft-category'), amount
+    category: v('ft-category'), amount, frequency
   };
   setSpinner('ft-spinner', true);
   const editId = v('ft-edit-id');
@@ -2364,6 +2423,8 @@ async function reprintReceipt(rcptNo) {
     studentName: r.student_name, feeType: r.fee_type_name,
     amount: r.amount, utr: r.payments?.utr,
     paymentDate: r.payments?.payment_date,
+    refCode: r._ref_code || '',
+    course: r.course || '',
   };
   document.getElementById('modal-receipt-content').innerHTML = buildReceiptHTML([currentReceiptData]);
   openModal('modal-receipt');
@@ -2428,97 +2489,255 @@ async function loadReport() {
 
 // ═══ RECEIPT BUILDER ══════════════════════════════════════
 function buildReceiptHTML(receipts) {
-  // A4 = 2 stubs: 1 student copy + 1 office copy
   const r = receipts[0];
-  if (!r) return '<div class="receipt-stub" style="min-height:240px;opacity:0"></div>';
+  if (!r) return '';
   const copies = ['STUDENT COPY', 'OFFICE COPY'];
-  const stubs = copies.map((copy, i) => {
-    const verifyURL = `${window.location.href.split('?')[0]}?verify=${encodeURIComponent(r.receiptNo)}`;
-    const qrId = 'rcpt-qr-' + i + '-' + Date.now();
-    return `<div class="receipt-stub">
-      <div class="receipt-header">
-        <div style="flex:1">
-          <div class="receipt-inst-name">Government Polytechnic, Munger</div>
-          <div class="receipt-inst-addr">Ramankabad, Haveli Kharagpur, Munger-811213, Bihar</div>
-          <div class="receipt-title">Fee Receipt — ${copy}</div>
+  const stubs = copies.map((copy, idx) => {
+    const verifyURL = `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(r.receiptNo)}`;
+    const qrId = `rcpt-qr-${idx}-${Date.now()}`;
+    const isStudent = copy === 'STUDENT COPY';
+    return `
+    <div class="rcpt-stub ${isStudent ? 'rcpt-student' : 'rcpt-office'}">
+      <!-- HEADER -->
+      <div class="rcpt-head">
+        <div class="rcpt-logo-wrap">
+          <img src="logo.png" alt="GPM Logo" class="rcpt-logo" onerror="this.style.display='none'"/>
         </div>
-        <div style="margin-left:12px;text-align:center">
-          <canvas id="${qrId}" width="54" height="54" style="border-radius:3px;display:block"></canvas>
-          <div style="font-size:8px;color:#666;margin-top:2px">Scan to Verify</div>
+        <div class="rcpt-inst-block">
+          <div class="rcpt-inst-name">Government Polytechnic, Munger</div>
+          <div class="rcpt-inst-addr">Ramankabad, Haveli Kharagpur, Munger–811213, Bihar</div>
+          <div class="rcpt-copy-tag">${copy === 'STUDENT COPY' ? 'Fee Receipt — Student Copy' : 'Fee Receipt — Office Copy'}</div>
         </div>
-        <div style="margin-left:12px;text-align:right">
-          <div style="font-size:11px;color:#666">Receipt No.</div>
-          <div style="font-weight:700;font-size:12px;color:var(--navy)">${r.receiptNo}</div>
-          <div style="font-size:10px;color:#666;margin-top:2px">${fmtDate(new Date().toISOString())}</div>
-        </div>
-      </div>
-      <div class="receipt-grid">
-        <div class="receipt-row"><span class="receipt-key">Roll No.:</span><span class="receipt-val">${r.rollNo}</span></div>
-        <div class="receipt-row"><span class="receipt-key">Name:</span><span class="receipt-val">${r.studentName}</span></div>
-        <div class="receipt-row"><span class="receipt-key">Fee Type:</span><span class="receipt-val">${r.feeType}</span></div>
-        <div class="receipt-row"><span class="receipt-key">Year:</span><span class="receipt-val">${new Date().getFullYear()}</span></div>
-        <div class="receipt-row"><span class="receipt-key">Payment Date:</span><span class="receipt-val">${r.paymentDate || fmtDate(new Date().toISOString())}</span></div>
-        <div class="receipt-row"><span class="receipt-key">UTR No.:</span><span class="receipt-val">${r.utr || '—'}</span></div>
-      </div>
-      <div class="receipt-row" style="font-size:11px"><span class="receipt-key">Ref. Code:</span><span class="receipt-val" style="font-family:monospace">${r.refCode || '—'}</span></div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
-        <div class="receipt-amount-box" style="flex:1">
-          <div class="ra-label">Amount Received</div>
-          <div class="ra-val">₹${fmt(r.amount)}</div>
-        </div>
-        <div style="font-size:9px;color:#888;max-width:130px;line-height:1.4">
-          ✅ Verify at:<br/><span style="font-family:monospace;color:var(--navy);word-break:break-all">${window.location.hostname}</span>
+        <div class="rcpt-meta-block">
+          <div class="rcpt-meta-label">Receipt No.</div>
+          <div class="rcpt-meta-no">${r.receiptNo}</div>
+          <div class="rcpt-meta-date">${fmtDate ? fmtDate(new Date().toISOString()) : new Date().toLocaleDateString('en-IN')}</div>
         </div>
       </div>
-      <div class="receipt-sig">
-        <div>Student Signature: _______________</div>
-        <div>Cashier Signature &amp; Seal: _______________</div>
+      <div class="rcpt-divider"></div>
+
+      <!-- BODY GRID -->
+      <div class="rcpt-body">
+        <div class="rcpt-fields-grid">
+          <div class="rcpt-field"><span class="rcpt-fl">Roll No.</span><span class="rcpt-fv">${r.rollNo || '—'}</span></div>
+          <div class="rcpt-field"><span class="rcpt-fl">Name</span><span class="rcpt-fv rcpt-fv-lg">${r.studentName || '—'}</span></div>
+          <div class="rcpt-field"><span class="rcpt-fl">Fee Type</span><span class="rcpt-fv">${r.feeType || '—'}</span></div>
+          <div class="rcpt-field"><span class="rcpt-fl">Course</span><span class="rcpt-fv">${r.course || '—'}</span></div>
+          <div class="rcpt-field"><span class="rcpt-fl">Payment Date</span><span class="rcpt-fv">${r.paymentDate || '—'}</span></div>
+          <div class="rcpt-field"><span class="rcpt-fl">UTR No.</span><span class="rcpt-fv rcpt-mono">${r.utr || '—'}</span></div>
+          <div class="rcpt-field rcpt-field-full"><span class="rcpt-fl">Ref. Code</span><span class="rcpt-fv rcpt-mono">${r.refCode || '—'}</span></div>
+        </div>
+
+        <!-- AMOUNT + QR row -->
+        <div class="rcpt-amount-row">
+          <div class="rcpt-amount-box">
+            <div class="rcpt-amt-label">Amount Received</div>
+            <div class="rcpt-amt-val">₹${typeof fmt === 'function' ? fmt(r.amount) : Number(r.amount).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>
+            <div class="rcpt-amt-words">${amountInWords(r.amount)}</div>
+          </div>
+          <div class="rcpt-qr-wrap">
+            <canvas id="${qrId}" width="80" height="80" class="rcpt-qr-canvas"></canvas>
+            <div class="rcpt-qr-label">Scan to Verify</div>
+          </div>
+        </div>
       </div>
+
+      <!-- SIGNATURES -->
+      <div class="rcpt-divider rcpt-divider-dashed"></div>
+      <div class="rcpt-sigs">
+        <div class="rcpt-sig-block">
+          <div class="rcpt-sig-line"></div>
+          <div class="rcpt-sig-label">Student Signature</div>
+        </div>
+        <div class="rcpt-sig-block">
+          <div class="rcpt-sig-line"></div>
+          <div class="rcpt-sig-label">Cashier Signature &amp; Official Seal</div>
+        </div>
+      </div>
+
       <script>
         (function(){
-          var el=document.getElementById('${qrId}');
-          if(el&&typeof QRCode!=='undefined'){
-            el.innerHTML='';
-            new QRCode(el,{text:'${verifyURL}',width:54,height:54,colorDark:'#0f2744',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+          var el = document.getElementById('${qrId}');
+          function tryQR() {
+            if (el && typeof QRCode !== 'undefined') {
+              try {
+                new QRCode(el, {
+                  text: '${verifyURL.replace(/'/g, "\\'")}',
+                  width: 80, height: 80,
+                  colorDark: '#0f2744', colorLight: '#ffffff',
+                  correctLevel: QRCode.CorrectLevel.M
+                });
+              } catch(e) {}
+            } else {
+              setTimeout(tryQR, 200);
+            }
           }
+          tryQR();
         })();
       <\/script>
     </div>`;
   });
-  return `<div class="receipt-sheet">${stubs.join('')}</div>`;
+
+  return `<div class="rcpt-sheet">${stubs.join('<div class="rcpt-cut-line">✂ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─</div>')}</div>`;
 }
 
+function amountInWords(amount) {
+  const n = Math.round(parseFloat(amount) || 0);
+  if (n === 0) return 'Zero Rupees Only';
+  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function h(n) {
+    if (n === 0) return '';
+    if (n < 20) return ones[n] + ' ';
+    if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '') + ' ';
+    return ones[Math.floor(n/100)] + ' Hundred ' + h(n%100);
+  }
+  let w = '', rem = n;
+  if (rem >= 100000) { w += h(Math.floor(rem/100000)) + 'Lakh '; rem %= 100000; }
+  if (rem >= 1000)   { w += h(Math.floor(rem/1000)) + 'Thousand '; rem %= 1000; }
+  w += h(rem);
+  return w.trim() + ' Rupees Only';
+}
+
+const RECEIPT_CSS = `
+  @page { size: A4; margin: 12mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 13px; background: #fff; color: #111; }
+  .rcpt-sheet { width: 100%; display: flex; flex-direction: column; }
+
+  /* Each stub takes exactly half an A4 page */
+  .rcpt-stub {
+    width: 100%;
+    padding: 18px 22px 14px;
+    border: 1.5px solid #b0b8c8;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    page-break-inside: avoid;
+    min-height: 128mm;
+  }
+  .rcpt-student { border-color: #0f2744; }
+  .rcpt-office  { border-color: #888; }
+
+  /* CUT LINE */
+  .rcpt-cut-line {
+    text-align: center;
+    font-size: 10px;
+    color: #aaa;
+    letter-spacing: 1px;
+    padding: 5px 0;
+    border: none;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* HEADER */
+  .rcpt-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .rcpt-logo-wrap { flex-shrink: 0; }
+  .rcpt-logo { width: 54px; height: 54px; object-fit: contain; }
+  .rcpt-inst-block { flex: 1; }
+  .rcpt-inst-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f2744;
+    line-height: 1.2;
+  }
+  .rcpt-inst-addr { font-size: 10px; color: #666; margin-top: 2px; }
+  .rcpt-copy-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #c8973a;
+    margin-top: 5px;
+  }
+  .rcpt-meta-block { text-align: right; flex-shrink: 0; }
+  .rcpt-meta-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .4px; }
+  .rcpt-meta-no { font-size: 14px; font-weight: 700; color: #0f2744; font-family: 'Playfair Display', serif; }
+  .rcpt-meta-date { font-size: 10px; color: #666; margin-top: 3px; }
+
+  .rcpt-divider { height: 1.5px; background: #0f2744; margin: 8px 0; }
+  .rcpt-divider-dashed { height: 0; border-top: 1px dashed #bbb; margin: 12px 0 10px; background: none; }
+
+  /* BODY */
+  .rcpt-body { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .rcpt-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 20px;
+  }
+  .rcpt-field { display: flex; gap: 6px; align-items: baseline; font-size: 12px; }
+  .rcpt-field-full { grid-column: 1 / -1; }
+  .rcpt-fl { color: #666; min-width: 88px; flex-shrink: 0; font-size: 11px; }
+  .rcpt-fv { font-weight: 600; color: #111; }
+  .rcpt-fv-lg { font-size: 13px; font-weight: 700; }
+  .rcpt-mono { font-family: 'Courier New', monospace; font-size: 12px; letter-spacing: .5px; }
+
+  /* AMOUNT + QR ROW */
+  .rcpt-amount-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 6px;
+  }
+  .rcpt-amount-box {
+    flex: 1;
+    background: #0f2744;
+    color: #fff;
+    border-radius: 6px;
+    padding: 12px 18px;
+    text-align: center;
+  }
+  .rcpt-amt-label { font-size: 9px; text-transform: uppercase; letter-spacing: .8px; opacity: .75; margin-bottom: 3px; }
+  .rcpt-amt-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; line-height: 1; }
+  .rcpt-amt-words { font-size: 9px; opacity: .7; margin-top: 4px; font-style: italic; }
+  .rcpt-qr-wrap { text-align: center; flex-shrink: 0; }
+  .rcpt-qr-canvas { display: block; border-radius: 4px; }
+  .rcpt-qr-label { font-size: 9px; color: #555; margin-top: 3px; text-align: center; }
+
+  /* SIGNATURES */
+  .rcpt-sigs { display: flex; justify-content: space-between; gap: 40px; }
+  .rcpt-sig-block { flex: 1; }
+  .rcpt-sig-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 22px; }
+  .rcpt-sig-label { font-size: 10px; color: #555; text-align: center; }
+
+  @media print {
+    body { margin: 0; padding: 0; }
+    .rcpt-sheet { width: 100%; }
+    .rcpt-stub { border: 1.5px solid #333; }
+  }
+`;
+
 function printReceipts() {
-  const el = document.getElementById('modal-receipt');
-  if (!el.classList.contains('hidden')) {
-    window.print(); return;
+  // For the in-page modal
+  const modal = document.getElementById('modal-receipt');
+  if (modal && !modal.classList.contains('hidden')) {
+    _openReceiptPrintWindow();
+    return;
   }
-  // From verify result
-  if (currentReceiptData) {
-    const w = window.open('','_blank','width=800,height=900');
-    w.document.write(`<!DOCTYPE html><html><head>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-      <style>
-        :root{--navy:#0f2744;--gold:#c8973a;--gold-pale:#fdf4e3}
-        body{font-family:'DM Sans',sans-serif;margin:0;padding:10mm;font-size:13px}
-        .receipt-stub{border:1px solid #ccc;padding:14px 16px}
-        .receipt-stub+.receipt-stub{border-top:none}
-        .receipt-header{display:flex;align-items:flex-start;border-bottom:1.5px solid #0f2744;padding-bottom:8px;margin-bottom:10px}
-        .receipt-inst-name{font-family:'Playfair Display',serif;font-size:13px;color:#0f2744;font-weight:700}
-        .receipt-inst-addr{font-size:9px;color:#666}
-        .receipt-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c8973a;margin-top:2px}
-        .receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:8px}
-        .receipt-row{display:flex;gap:6px;font-size:11px;margin-bottom:3px}
-        .receipt-key{color:#666;min-width:90px;flex-shrink:0}
-        .receipt-val{font-weight:600;color:#111}
-        .receipt-amount-box{background:#0f2744;color:#fff;padding:6px 12px;border-radius:4px;text-align:center;margin-top:8px}
-        .ra-label{font-size:9px;opacity:.7;text-transform:uppercase}
-        .ra-val{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
-        .receipt-sig{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px dashed #ccc;font-size:10px;color:#666}
-      </style></head><body>${buildReceiptHTML([currentReceiptData])}</body></html>`);
-    w.document.close();
-    w.print();
-  }
+  if (currentReceiptData) _openReceiptPrintWindow();
+}
+
+function _openReceiptPrintWindow() {
+  const w = window.open('', '_blank', 'width=860,height=980');
+  if (!w) { alert('Please allow popups to print the receipt.'); return; }
+  w.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"/>
+    <title>Fee Receipt — ${currentReceiptData?.receiptNo || ''}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+    <style>${RECEIPT_CSS}<\/style>
+  <\/head><body>
+    ${buildReceiptHTML([currentReceiptData])}
+    <script>window.onload=function(){setTimeout(function(){window.print();},800);};<\/script>
+  <\/body><\/html>`);
+  w.document.close();
 }
 
 // ═══ MANAGE DEMANDS ═══════════════════════════════════════
@@ -2829,31 +3048,29 @@ async function loadSemesterConfig() {
   const el = document.getElementById('active-sem-info');
   if (!el) return;
   const data = await api('GET', '/api/cashier/semester-config', null, cashierHeaders());
-  if (!data || data.length === 0) {
-    el.innerHTML = '<div class="alert alert-info">No semester configured yet.</div>';
+  // Only show active semesters
+  const active = (data || []).filter(cfg => cfg.status === 'active');
+  if (active.length === 0) {
+    el.innerHTML = '<div class="alert alert-info" style="margin:0">No active semesters. Activate one below.</div>';
     const startEl = document.getElementById('sem-start-date');
     if (startEl && !startEl.value) startEl.value = new Date().toISOString().split('T')[0];
     return;
   }
   const today = new Date();
-  el.innerHTML = `<div class="table-wrap"><table class="data-table" style="font-size:12px">
+  el.innerHTML = `<div class="table-wrap" style="margin:0"><table class="data-table" style="font-size:12px">
     <thead><tr><th>Course</th><th>Sem</th><th>Batch</th><th>Academic Deadline</th><th>Hostel Deadline</th><th>Status</th><th>Action</th></tr></thead>
-    <tbody>${data.map(cfg => {
-      const isActive = cfg.status === 'active';
+    <tbody>${active.map(cfg => {
       const pastDeadline = cfg.academic_deadline && today > new Date(cfg.academic_deadline);
-      const statusLabel = !isActive ? '🔴 Inactive' : pastDeadline ? '⏰ Late Fine' : '✅ Active';
-      const statusClass = !isActive ? 'badge-overdue' : pastDeadline ? 'badge-pending' : 'badge-paid';
+      const statusLabel = pastDeadline ? '⏰ Late Fine Active' : '✅ Active';
+      const statusClass = pastDeadline ? 'badge-pending' : 'badge-paid';
       return `<tr>
-        <td>${cfg.course === 'ALL' ? 'All' : shortCourse(cfg.course)}</td>
-        <td style="text-align:center">${cfg.semester}</td>
+        <td>${cfg.course === 'ALL' ? 'All Courses' : shortCourse(cfg.course)}</td>
+        <td style="text-align:center;font-weight:700">${cfg.semester}</td>
         <td style="text-align:center">${cfg.batch_year || '—'}</td>
         <td>${fmtDate(cfg.academic_deadline) || '—'}</td>
         <td>${fmtDate(cfg.hostel_deadline) || '—'}</td>
         <td><span class="badge ${statusClass}" style="font-size:11px">${statusLabel}</span></td>
-        <td>${isActive
-          ? `<button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;font-size:11px;padding:3px 8px" onclick="deactivateSemester('${cfg.id}')">Deactivate</button>`
-          : `<span style="font-size:11px;color:var(--gray-400)">—</span>`}
-        </td>
+        <td><button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;font-size:11px;padding:3px 8px;border:none" onclick="deactivateSemester('${cfg.id}')">Deactivate</button></td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
