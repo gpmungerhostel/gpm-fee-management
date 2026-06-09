@@ -563,6 +563,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <div class="card">
         <div class="card-title">Payment History &amp; Receipts</div>
         <div class="card-subtitle">All verified payments. Download or print your receipt at any time.</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#fff8e1;border:1.5px solid #e8c76d;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+          <span style="font-size:18px;flex-shrink:0">📋</span>
+          <div style="font-size:12px;color:#7a5c00;line-height:1.6">
+            <strong>Important:</strong> Students must print the fee payment receipt and obtain the
+            <strong>signature and official seal/stamp of the Cashier</strong> on the receipt for
+            future reference and verification. Unsigned receipts will not be accepted as proof of payment.
+          </div>
+        </div>
         <div id="stu-payments-list"><div class="alert alert-info">Loading…</div></div>
       </div>
       <!-- UTR Status Section -->
@@ -1890,15 +1898,15 @@ function downloadStudentReceipt(rcptNo) {
   const r = cache.find(x => x.receipt_no === rcptNo);
   if (!r) { alert('Receipt data not found. Please refresh the page.'); return; }
   currentReceiptData = {
-    receiptNo: r.receipt_no,
-    rollNo: r.roll_no,
+    receiptNo:   r.receipt_no,
+    rollNo:      r.roll_no,
     studentName: r.student_name,
-    feeType: r.fee_type_name,
-    amount: r.amount,
-    utr: r.payments?.utr || '',
-    paymentDate: r.payments?.payment_date || '',
-    refCode: r._ref_code || r.payments?.fee_demands?.ref_code || '',
-    course: currentStudent?.course || '',
+    feeType:     r.fee_type_name,
+    amount:      r.amount,
+    utr:         r._utr || r.payments?.utr || '',
+    paymentDate: r._payment_date || r.payments?.payment_date || '',
+    refCode:     r._ref_code || r.payments?.fee_demands?.ref_code || '',
+    course:      currentStudent?.course || '',
   };
   _openReceiptPrintWindow();
 }
@@ -2488,33 +2496,69 @@ async function loadReport() {
 }
 
 // ═══ RECEIPT BUILDER ══════════════════════════════════════
-function buildReceiptHTML(receipts) {
+
+// GPM logo as inline SVG (works in popup, no external file needed)
+const GPM_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="54" height="54">
+  <circle cx="50" cy="50" r="48" fill="#0f2744" stroke="#c8973a" stroke-width="3"/>
+  <text x="50" y="38" text-anchor="middle" font-family="serif" font-size="11" fill="#c8973a" font-weight="bold">GOVT.</text>
+  <text x="50" y="52" text-anchor="middle" font-family="serif" font-size="9" fill="#fff">POLYTECHNIC</text>
+  <text x="50" y="64" text-anchor="middle" font-family="serif" font-size="9" fill="#fff">MUNGER</text>
+  <text x="50" y="76" text-anchor="middle" font-family="serif" font-size="7" fill="#c8973a">BIHAR</text>
+</svg>`;
+
+function generateQRDataURL(text, cb) {
+  const container = document.createElement('div');
+  container.style.cssText = 'position:absolute;left:-9999px;top:-9999px';
+  document.body.appendChild(container);
+  try {
+    const qr = new QRCode(container, {
+      text, width: 90, height: 90,
+      colorDark: '#0f2744', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    setTimeout(() => {
+      const img = container.querySelector('img') || container.querySelector('canvas');
+      let src = '';
+      if (img && img.tagName === 'IMG') src = img.src;
+      else if (img && img.tagName === 'CANVAS') src = img.toDataURL();
+      document.body.removeChild(container);
+      cb(src);
+    }, 150);
+  } catch(e) {
+    if (container.parentNode) document.body.removeChild(container);
+    cb('');
+  }
+}
+
+function buildReceiptHTML(receipts, qrDataURL) {
   const r = receipts[0];
   if (!r) return '';
   const copies = ['STUDENT COPY', 'OFFICE COPY'];
-  const stubs = copies.map((copy, idx) => {
-    const verifyURL = `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(r.receiptNo)}`;
-    const qrId = `rcpt-qr-${idx}-${Date.now()}`;
+  const dateStr = r.paymentDate
+    ? new Date(r.paymentDate).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})
+    : new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+
+  const stubs = copies.map((copy) => {
     const isStudent = copy === 'STUDENT COPY';
+    const tagColor = isStudent ? '#0f2744' : '#555';
+    const borderColor = isStudent ? '#0f2744' : '#888';
     return `
-    <div class="rcpt-stub ${isStudent ? 'rcpt-student' : 'rcpt-office'}">
+    <div class="rcpt-stub" style="border-color:${borderColor}">
       <!-- HEADER -->
       <div class="rcpt-head">
-        <div class="rcpt-logo-wrap">
-          <img src="logo.png" alt="GPM Logo" class="rcpt-logo" onerror="this.style.display='none'"/>
-        </div>
+        <div class="rcpt-logo-wrap">${GPM_LOGO_SVG}</div>
         <div class="rcpt-inst-block">
           <div class="rcpt-inst-name">Government Polytechnic, Munger</div>
           <div class="rcpt-inst-addr">Ramankabad, Haveli Kharagpur, Munger–811213, Bihar</div>
-          <div class="rcpt-copy-tag">${copy === 'STUDENT COPY' ? 'Fee Receipt — Student Copy' : 'Fee Receipt — Office Copy'}</div>
+          <div class="rcpt-copy-tag" style="color:${isStudent?'#c8973a':'#666'}">FEE RECEIPT — ${copy}</div>
         </div>
         <div class="rcpt-meta-block">
           <div class="rcpt-meta-label">Receipt No.</div>
           <div class="rcpt-meta-no">${r.receiptNo}</div>
-          <div class="rcpt-meta-date">${fmtDate ? fmtDate(new Date().toISOString()) : new Date().toLocaleDateString('en-IN')}</div>
+          <div class="rcpt-meta-date">${dateStr}</div>
         </div>
       </div>
-      <div class="rcpt-divider"></div>
+      <div class="rcpt-divider" style="background:${tagColor}"></div>
 
       <!-- BODY GRID -->
       <div class="rcpt-body">
@@ -2528,15 +2572,17 @@ function buildReceiptHTML(receipts) {
           <div class="rcpt-field rcpt-field-full"><span class="rcpt-fl">Ref. Code</span><span class="rcpt-fv rcpt-mono">${r.refCode || '—'}</span></div>
         </div>
 
-        <!-- AMOUNT + QR row -->
+        <!-- AMOUNT + QR -->
         <div class="rcpt-amount-row">
           <div class="rcpt-amount-box">
             <div class="rcpt-amt-label">Amount Received</div>
-            <div class="rcpt-amt-val">₹${typeof fmt === 'function' ? fmt(r.amount) : Number(r.amount).toLocaleString('en-IN', {minimumFractionDigits:2})}</div>
+            <div class="rcpt-amt-val">₹${typeof fmt === 'function' ? fmt(r.amount) : Number(r.amount).toLocaleString('en-IN',{minimumFractionDigits:2})}</div>
             <div class="rcpt-amt-words">${amountInWords(r.amount)}</div>
           </div>
           <div class="rcpt-qr-wrap">
-            <canvas id="${qrId}" width="80" height="80" class="rcpt-qr-canvas"></canvas>
+            ${qrDataURL
+              ? `<img src="${qrDataURL}" width="90" height="90" style="border-radius:4px;display:block"/>`
+              : `<div style="width:90px;height:90px;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;text-align:center">QR<br/>unavailable</div>`}
             <div class="rcpt-qr-label">Scan to Verify</div>
           </div>
         </div>
@@ -2554,27 +2600,6 @@ function buildReceiptHTML(receipts) {
           <div class="rcpt-sig-label">Cashier Signature &amp; Official Seal</div>
         </div>
       </div>
-
-      <script>
-        (function(){
-          var el = document.getElementById('${qrId}');
-          function tryQR() {
-            if (el && typeof QRCode !== 'undefined') {
-              try {
-                new QRCode(el, {
-                  text: '${verifyURL.replace(/'/g, "\\'")}',
-                  width: 80, height: 80,
-                  colorDark: '#0f2744', colorLight: '#ffffff',
-                  correctLevel: QRCode.CorrectLevel.M
-                });
-              } catch(e) {}
-            } else {
-              setTimeout(tryQR, 200);
-            }
-          }
-          tryQR();
-        })();
-      <\/script>
     </div>`;
   });
 
@@ -2725,19 +2750,22 @@ function printReceipts() {
 }
 
 function _openReceiptPrintWindow() {
-  const w = window.open('', '_blank', 'width=860,height=980');
-  if (!w) { alert('Please allow popups to print the receipt.'); return; }
-  w.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"/>
-    <title>Fee Receipt — ${currentReceiptData?.receiptNo || ''}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-    <style>${RECEIPT_CSS}<\/style>
-  <\/head><body>
-    ${buildReceiptHTML([currentReceiptData])}
-    <script>window.onload=function(){setTimeout(function(){window.print();},800);};<\/script>
-  <\/body><\/html>`);
-  w.document.close();
+  if (!currentReceiptData) return;
+  const verifyURL = `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(currentReceiptData.receiptNo)}`;
+  generateQRDataURL(verifyURL, function(qrDataURL) {
+    const w = window.open('', '_blank', 'width=860,height=980');
+    if (!w) { alert('Please allow popups to print the receipt.'); return; }
+    w.document.write(`<!DOCTYPE html><html><head>
+      <meta charset="UTF-8"/>
+      <title>Fee Receipt — ${currentReceiptData.receiptNo}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+      <style>${RECEIPT_CSS}<\/style>
+    <\/head><body>
+      ${buildReceiptHTML([currentReceiptData], qrDataURL)}
+      <script>window.onload=function(){setTimeout(function(){window.print();},400);};<\/script>
+    <\/body><\/html>`);
+    w.document.close();
+  });
 }
 
 // ═══ MANAGE DEMANDS ═══════════════════════════════════════
