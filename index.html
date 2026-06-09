@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>GPM Fee Management System</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   --navy:#0f2744;--navy-light:#1a3a5c;--navy-mid:#2a4d73;
@@ -470,33 +470,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div id="stu-demands-list"><div class="alert alert-info">Loading fee demands…</div></div>
       </div>
 
-      <!-- Hostel Fee Self-Entry — compact inline -->
-      <div class="card" id="stu-hostel-card" style="border-left:3px solid #1a3a7c;padding:14px">
-        <div style="font-weight:700;font-size:14px;color:#1a3a7c;margin-bottom:8px">🏠 Generate Hostel Fee QR</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <div style="flex:1;min-width:110px">
-            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">Semester</div>
-            <select id="stu-hostel-semester">
-              <option value="">Select</option>
+      <!-- Hostel Fee Self-Entry — styled same as semester demand card -->
+      <div class="card" id="stu-hostel-card" style="border-left:3px solid #1a3a7c;background:#eef3ff;padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:14px;color:#1a3a7c;white-space:nowrap">🏠 Generate Hostel Fee QR</div>
+          <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">
+            <select id="stu-hostel-semester" style="flex:1;min-width:100px">
+              <option value="">Select Sem</option>
               <option value="1">1st Sem</option><option value="2">2nd Sem</option>
               <option value="3">3rd Sem</option><option value="4">4th Sem</option>
               <option value="5">5th Sem</option><option value="6">6th Sem</option>
             </select>
+            <input type="number" id="stu-hostel-amount" placeholder="Amount (₹)" style="flex:1;min-width:110px"/>
+            <input type="text" id="stu-hostel-desc" placeholder="Description" style="flex:1;min-width:100px"/>
+            <button class="btn" style="background:#1a3a7c;color:#fff;white-space:nowrap" onclick="generateHostelDemand()">
+              <span id="hostel-pay-spinner" class="spinner hidden"></span>Generate QR
+            </button>
           </div>
-          <div style="flex:1;min-width:120px">
-            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">Amount from Demand Notice (₹)</div>
-            <input type="number" id="stu-hostel-amount" placeholder="e.g. 4500"/>
-          </div>
-          <div style="flex:1;min-width:100px">
-            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">Description</div>
-            <input type="text" id="stu-hostel-desc" placeholder="e.g. Hostel + Mess"/>
-          </div>
-          <button class="btn btn-primary" style="white-space:nowrap" onclick="generateHostelDemand()">
-            <span id="hostel-pay-spinner" class="spinner hidden"></span>Generate QR
-          </button>
         </div>
         <div id="hostel-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
-        <div style="font-size:11px;color:var(--gray-500);margin-top:6px">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
+        <div style="font-size:11px;color:#1a3a7c;margin-top:6px;opacity:.7">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
       </div>
     </div>
 
@@ -1109,15 +1102,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
 <!-- QR View Modal (for student) -->
 <div id="modal-qr" class="modal-overlay hidden">
-  <div class="modal" style="max-width:340px;text-align:center">
+  <div class="modal" style="max-width:300px;text-align:center">
     <button class="modal-close" onclick="closeModal('modal-qr')">✕</button>
     <div class="modal-title" id="qr-modal-title">Scan to Pay</div>
-    <div style="margin-top:14px;padding:16px;background:var(--gray-50);border-radius:10px;border:1px solid var(--gray-100)">
-      <img id="modal-qr-img" src="" alt="QR Code" style="width:220px;height:220px;display:block;margin:0 auto;border-radius:6px"/>
+    <div style="margin-top:14px;padding:16px;background:#fff;border-radius:10px;border:1px solid var(--gray-100)">
+      <div id="modal-qr-container" style="display:inline-block;line-height:0"></div>
       <div id="modal-qr-ref" style="margin-top:10px;font-size:12px;font-weight:700;word-break:break-all;background:var(--navy);color:#fff;padding:6px 10px;border-radius:6px;display:inline-block"></div>
       <div style="font-size:11px;color:var(--gray-500);margin-top:8px">Scan with Google Pay, PhonePe, Paytm or any UPI app</div>
     </div>
-    <div style="margin-top:10px;font-size:13px;color:var(--gray-600)" id="modal-qr-info"></div>
+    <div style="margin-top:10px;font-size:12px;color:var(--gray-600)" id="modal-qr-info"></div>
     <div class="alert alert-warning" style="margin-top:10px;text-align:left;font-size:12px">
       ⚠️ Do <strong>not</strong> edit the pre-filled remark/note. It is your unique reference code.
     </div>
@@ -1772,17 +1765,19 @@ function loadStudentProfile() {
     ${s.address ? `<div class="info-item"><div class="key">Address</div><div class="val" style="margin-top:4px">${s.address}</div></div>` : ''}`;
 }
 
+let _qrInstance = null;
 function showQRModal(refCode, amount, feeType, upiLink) {
   document.getElementById('qr-modal-title').textContent = 'Pay: ' + feeType;
   document.getElementById('modal-qr-info').textContent = `Amount: ₹${fmt(amount)} | Ref: ${refCode}`;
   document.getElementById('modal-qr-ref').textContent = refCode;
-  const img = document.getElementById('modal-qr-img');
-  img.src = '';
-  const link = upiLink || buildUPILink(refCode, amount);
   openModal('modal-qr');
-  QRCode.toDataURL(link, { width: 220, margin: 2, color: { dark: '#0f2744', light: '#ffffff' } }, (err, url) => {
-    if (!err) img.src = url;
-    else console.error('QR error', err);
+  const container = document.getElementById('modal-qr-container');
+  container.innerHTML = '';
+  const link = upiLink || buildUPILink(refCode, amount);
+  _qrInstance = new QRCode(container, {
+    text: link, width: 220, height: 220,
+    colorDark: '#0f2744', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
   });
 }
 
@@ -2234,7 +2229,8 @@ function buildReceiptHTML(receipts) {
         (function(){
           var el=document.getElementById('${qrId}');
           if(el&&typeof QRCode!=='undefined'){
-            QRCode.toCanvas(el,'${verifyURL}',{width:54,margin:1,color:{dark:'#0f2744',light:'#ffffff'}},function(){});
+            el.innerHTML='';
+            new QRCode(el,{text:'${verifyURL}',width:54,height:54,colorDark:'#0f2744',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
           }
         })();
       <\/script>
