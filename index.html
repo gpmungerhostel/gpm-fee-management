@@ -1109,15 +1109,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
 <!-- QR View Modal (for student) -->
 <div id="modal-qr" class="modal-overlay hidden">
-  <div class="modal" style="max-width:360px;text-align:center">
+  <div class="modal" style="max-width:340px;text-align:center">
     <button class="modal-close" onclick="closeModal('modal-qr')">✕</button>
     <div class="modal-title" id="qr-modal-title">Scan to Pay</div>
-    <div class="qr-box" style="margin-top:16px">
-      <canvas id="modal-qr-canvas" width="220" height="220" style="display:block;margin:0 auto;border-radius:8px;border:4px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,.12)"></canvas>
-      <div class="ref-code" id="modal-qr-ref" style="margin-top:10px;font-size:13px;word-break:break-all"></div>
-      <div style="font-size:12px;color:var(--gray-600);margin-top:6px">Scan with Google Pay, PhonePe, Paytm or any UPI app</div>
+    <div style="margin-top:14px;padding:16px;background:var(--gray-50);border-radius:10px;border:1px solid var(--gray-100)">
+      <img id="modal-qr-img" src="" alt="QR Code" style="width:220px;height:220px;display:block;margin:0 auto;border-radius:6px"/>
+      <div id="modal-qr-ref" style="margin-top:10px;font-size:12px;font-weight:700;word-break:break-all;background:var(--navy);color:#fff;padding:6px 10px;border-radius:6px;display:inline-block"></div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:8px">Scan with Google Pay, PhonePe, Paytm or any UPI app</div>
     </div>
-    <div style="margin-top:12px;font-size:13px;color:var(--gray-600)" id="modal-qr-info"></div>
+    <div style="margin-top:10px;font-size:13px;color:var(--gray-600)" id="modal-qr-info"></div>
     <div class="alert alert-warning" style="margin-top:10px;text-align:left;font-size:12px">
       ⚠️ Do <strong>not</strong> edit the pre-filled remark/note. It is your unique reference code.
     </div>
@@ -1674,56 +1674,38 @@ function demandCard(d, showQR) {
   const isHostel = isHostelDemand(d);
   const hasAmount = parseFloat(d.amount) > 0;
   const totalAmount = parseFloat(d.amount) + fine;
+  const catBadge = isHostel
+    ? `<span class="badge" style="background:#e8f4fd;color:#1a3a7c;font-size:11px">🏠 Hostel</span>`
+    : `<span class="badge" style="background:#eaf5ef;color:#1a6b3c;font-size:11px">📚 Academic</span>`;
 
-  const fineHtml = fine > 0 ? `<div class="alert alert-warning" style="padding:6px 10px;font-size:12px;margin-top:6px">
-    ⚠️ Late fine: ₹${fmt(fine)} | Total payable: ₹${fmt(totalAmount)}
-  </div>` : '';
-
-  const dueDateHtml = d.due_date ? `<div class="demand-meta">Due: ${fmtDate(d.due_date)}</div>` : '';
-
-  const categoryBadge = isHostel
-    ? `<span class="badge" style="background:#e8f4fd;color:#1a3a7c">🏠 Hostel</span>`
-    : `<span class="badge" style="background:#eaf5ef;color:#1a6b3c">📚 Academic</span>`;
-
-  // Hostel fee — student enters amount
+  // Hostel — no amount yet
   if (isHostel && !hasAmount) {
-    return `<div class="demand-card pending" style="border-left-color:#1a3a7c">
-      <div class="demand-header">
-        <div class="demand-fee-type">${d.fee_type_name}</div>
-        ${categoryBadge}
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid #1a3a7c;border-radius:8px;margin-bottom:8px;flex-wrap:wrap">
+      <div style="flex:1;min-width:140px">
+        <div style="font-weight:600;font-size:13px">${d.fee_type_name}</div>
+        <div style="font-size:11px;color:var(--gray-500)">Ref: ${d.ref_code}${d.due_date ? ' · Due: '+fmtDate(d.due_date) : ''}</div>
       </div>
-      <div class="alert alert-info" style="font-size:12px;margin:8px 0">
-        📋 Enter amount from your <strong>Hostel Demand Notice</strong>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input type="number" id="hostel-amt-${d.id}" placeholder="Enter amount from demand notice"
-          style="flex:1;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:14px"/>
-        <button class="btn btn-primary btn-sm" onclick="submitHostelAmount('${d.id}', '${d.ref_code}')">
-          Set Amount
-        </button>
-      </div>
-      <div class="demand-meta" style="margin-top:6px">Ref: <code>${d.ref_code}</code></div>
-      ${dueDateHtml}
+      ${catBadge}
+      <span class="badge badge-pending" style="font-size:11px">Pending</span>
+      <input type="number" id="hostel-amt-${d.id}" placeholder="Enter amount" style="width:120px;padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:13px"/>
+      <button class="btn btn-primary btn-sm" onclick="submitHostelAmount('${d.id}','${d.ref_code}')">Set Amount</button>
     </div>`;
   }
 
-  return `<div class="demand-card pending" style="${isHostel?'border-left-color:#1a3a7c':''}">
-    <div class="demand-header">
-      <div class="demand-fee-type">${d.fee_type_name}</div>
-      <div style="display:flex;gap:6px;align-items:center">${categoryBadge}<span class="badge badge-pending">Pending</span></div>
+  const fineTag = fine > 0 ? `<span style="font-size:11px;color:#b45309;margin-left:4px">+₹${fmt(fine)} late fine</span>` : '';
+  const qrBtn = showQR && hasAmount
+    ? `<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="showQRModal('${d.ref_code}','${fine>0?totalAmount:d.amount}','${d.fee_type_name}','${d.upi_link||''}')">📱 View QR</button>`
+    : '';
+
+  return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${isHostel?'#1a3a7c':'var(--gold)'};border-radius:8px;margin-bottom:8px;flex-wrap:wrap">
+    <div style="flex:1;min-width:160px">
+      <div style="font-weight:600;font-size:13px">${d.fee_type_name}</div>
+      <div style="font-size:11px;color:var(--gray-500)">Ref: <code style="font-size:11px">${d.ref_code}</code>${d.due_date ? ' · Due: '+fmtDate(d.due_date) : ''}</div>
     </div>
-    <div class="demand-amount">₹${fmt(d.amount)}</div>
-    ${dueDateHtml}
-    <div class="demand-meta">Ref: <code>${d.ref_code}</code></div>
-    ${d.remarks ? `<div class="demand-meta" style="margin-top:3px">Note: ${d.remarks}</div>` : ''}
-    ${fineHtml}
-    ${isHostel ? `<div class="alert alert-info" style="font-size:11px;margin-top:6px;padding:6px 10px">
-      🏠 Hostel fee — receipt issued after cashier verification</div>` : ''}
-    ${showQR && hasAmount ? `<div style="margin-top:10px">
-      <button class="btn btn-primary btn-sm" onclick="showQRModal('${d.ref_code}','${fine>0?totalAmount:d.amount}','${d.fee_type_name}','${d.upi_link||''}')">
-        📱 View QR / Pay
-      </button>
-    </div>` : ''}
+    <div style="font-weight:700;font-size:15px;color:var(--navy);white-space:nowrap">₹${fmt(fine>0?totalAmount:d.amount)}${fineTag}</div>
+    ${catBadge}
+    <span class="badge badge-pending" style="font-size:11px">Pending</span>
+    ${qrBtn}
   </div>`;
 }
 
@@ -1794,18 +1776,14 @@ function showQRModal(refCode, amount, feeType, upiLink) {
   document.getElementById('qr-modal-title').textContent = 'Pay: ' + feeType;
   document.getElementById('modal-qr-info').textContent = `Amount: ₹${fmt(amount)} | Ref: ${refCode}`;
   document.getElementById('modal-qr-ref').textContent = refCode;
-  // Clear previous QR
-  const canvas = document.getElementById('modal-qr-canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const img = document.getElementById('modal-qr-img');
+  img.src = '';
   const link = upiLink || buildUPILink(refCode, amount);
   openModal('modal-qr');
-  // Wait for modal to be visible before rendering QR
-  requestAnimationFrame(() => setTimeout(() => {
-    QRCode.toCanvas(canvas, link, { width: 220, margin: 2 }, err => {
-      if (err) console.error('QR error', err);
-    });
-  }, 80));
+  QRCode.toDataURL(link, { width: 220, margin: 2, color: { dark: '#0f2744', light: '#ffffff' } }, (err, url) => {
+    if (!err) img.src = url;
+    else console.error('QR error', err);
+  });
 }
 
 function buildUPILink(refCode, amount) {
