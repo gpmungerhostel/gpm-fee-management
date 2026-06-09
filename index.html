@@ -437,84 +437,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏳</div><div><div class="val" id="sd-pending-count">0</div><div class="lbl">Pending</div></div></div>
         <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">🧾</div><div><div class="val" id="sd-receipt-count">0</div><div class="lbl">Receipts</div></div></div>
       </div>
+
       <!-- Pay New Semester Fee -->
-      <div class="card" style="border-left:3px solid var(--gold);background:var(--gold-pale)">
-        <div class="card-title" style="font-size:16px">💰 Pay Semester Fee</div>
-        <div class="card-subtitle">Select your semester and enrollment type to generate a fee demand.</div>
-        <div id="sem-pay-alert" class="alert alert-danger hidden"></div>
-        <div class="form-row">
-          <div class="field">
-            <label>Semester <span class="req">*</span></label>
-            <select id="stu-pay-semester">
+      <div class="card" style="border-left:3px solid var(--gold);background:var(--gold-pale);padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:14px;color:var(--navy)">💰 Generate Semester Fee Demand</div>
+          <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">
+            <select id="stu-pay-semester" style="flex:1;min-width:120px">
               <option value="">Select Semester</option>
-              <option value="1">1st Semester</option>
-              <option value="2">2nd Semester</option>
-              <option value="3">3rd Semester</option>
-              <option value="4">4th Semester</option>
-              <option value="5">5th Semester</option>
-              <option value="6">6th Semester</option>
+              <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+              <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+              <option value="5">5th Sem</option><option value="6">6th Sem</option>
             </select>
-          </div>
-          <div class="field">
-            <label>Enrollment Type <span class="req">*</span></label>
-            <select id="stu-pay-enrollment">
+            <select id="stu-pay-enrollment" style="flex:1;min-width:110px">
               <option value="Regular">Regular</option>
-              <option value="Repeat">Repeat / Ex-Student</option>
+              <option value="Repeat">Repeat</option>
             </select>
+            <button class="btn btn-gold" style="white-space:nowrap" onclick="generateSemesterDemand()">
+              <span id="sem-pay-spinner" class="spinner hidden"></span>Generate
+            </button>
           </div>
         </div>
-        <div class="btn-row" style="margin-top:8px">
-          <div></div>
-          <button class="btn btn-gold" onclick="generateSemesterDemand()">
-            <span id="sem-pay-spinner" class="spinner hidden"></span>
-            Generate Fee Demand
-          </button>
-        </div>
+        <div id="sem-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
       </div>
 
-      <div class="card">
-        <div class="card-title">All Pending Dues</div>
-        <div class="card-subtitle">Scan the QR code with any UPI app to pay. Your reference code is pre-filled.</div>
+      <!-- Pending Dues -->
+      <div class="card" style="padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="card-title" style="margin:0">All Pending Dues</div>
+          <div style="font-size:11px;color:var(--gray-500)">Scan QR with any UPI app</div>
+        </div>
         <div id="stu-demands-list"><div class="alert alert-info">Loading fee demands…</div></div>
       </div>
 
-      <!-- Hostel Fee Self-Entry -->
-      <div class="card" style="border-left:3px solid #1a3a7c;margin-top:14px">
-        <div class="card-title" style="font-size:16px">🏠 Pay Hostel Fee</div>
-        <div class="card-subtitle">Enter amount from your Hostel Demand Notice and pay.</div>
-        <div id="hostel-pay-alert" class="alert alert-danger hidden"></div>
-        <div class="field">
-          <label>Semester <span class="req">*</span></label>
-          <select id="stu-hostel-semester">
-            <option value="">Select Semester</option>
-            <option value="1">1st Semester</option>
-            <option value="2">2nd Semester</option>
-            <option value="3">3rd Semester</option>
-            <option value="4">4th Semester</option>
-            <option value="5">5th Semester</option>
-            <option value="6">6th Semester</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Total Amount from Demand Notice (₹) <span class="req">*</span></label>
-            <input type="number" id="stu-hostel-amount" placeholder="Enter exact amount from notice"/>
+      <!-- Hostel Fee Self-Entry — compact inline -->
+      <div class="card" id="stu-hostel-card" style="border-left:3px solid #1a3a7c;padding:14px">
+        <div style="font-weight:700;font-size:14px;color:#1a3a7c;margin-bottom:8px">🏠 Generate Hostel Fee QR</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:110px">
+            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">Semester</div>
+            <select id="stu-hostel-semester">
+              <option value="">Select</option>
+              <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+              <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+              <option value="5">5th Sem</option><option value="6">6th Sem</option>
+            </select>
           </div>
-          <div class="field">
-            <label>Description</label>
-            <input type="text" id="stu-hostel-desc" placeholder="e.g. Hostel Rent + Mess charges"/>
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">Amount from Demand Notice (₹)</div>
+            <input type="number" id="stu-hostel-amount" placeholder="e.g. 4500"/>
           </div>
-        </div>
-        <div class="alert alert-info" style="font-size:12px;margin-bottom:10px">
-          ℹ️ Hostel fee receipt is issued by cashier after verifying payment in bank statement.
-        </div>
-        <div class="btn-row" style="margin-top:8px">
-          <div></div>
-          <button class="btn btn-primary" onclick="generateHostelDemand()">
-            <span id="hostel-pay-spinner" class="spinner hidden"></span>
-            Generate Hostel QR
+          <div style="flex:1;min-width:100px">
+            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">Description</div>
+            <input type="text" id="stu-hostel-desc" placeholder="e.g. Hostel + Mess"/>
+          </div>
+          <button class="btn btn-primary" style="white-space:nowrap" onclick="generateHostelDemand()">
+            <span id="hostel-pay-spinner" class="spinner hidden"></span>Generate QR
           </button>
         </div>
+        <div id="hostel-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:6px">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
       </div>
     </div>
 
@@ -1127,18 +1109,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
 <!-- QR View Modal (for student) -->
 <div id="modal-qr" class="modal-overlay hidden">
-  <div class="modal" style="max-width:380px;text-align:center">
+  <div class="modal" style="max-width:360px;text-align:center">
     <button class="modal-close" onclick="closeModal('modal-qr')">✕</button>
     <div class="modal-title" id="qr-modal-title">Scan to Pay</div>
     <div class="qr-box" style="margin-top:16px">
-      <canvas id="modal-qr-canvas"></canvas>
-      <div class="ref-code" id="modal-qr-ref"></div>
-      <div style="font-size:12px;color:var(--gray-600);margin-top:8px">
-        Scan with Google Pay, PhonePe, Paytm or any UPI app
-      </div>
+      <canvas id="modal-qr-canvas" width="220" height="220" style="display:block;margin:0 auto;border-radius:8px;border:4px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,.12)"></canvas>
+      <div class="ref-code" id="modal-qr-ref" style="margin-top:10px;font-size:13px;word-break:break-all"></div>
+      <div style="font-size:12px;color:var(--gray-600);margin-top:6px">Scan with Google Pay, PhonePe, Paytm or any UPI app</div>
     </div>
-    <div style="margin-top:16px;font-size:13px;color:var(--gray-600)" id="modal-qr-info"></div>
-    <div class="alert alert-warning" style="margin-top:12px;text-align:left;font-size:12px">
+    <div style="margin-top:12px;font-size:13px;color:var(--gray-600)" id="modal-qr-info"></div>
+    <div class="alert alert-warning" style="margin-top:10px;text-align:left;font-size:12px">
       ⚠️ Do <strong>not</strong> edit the pre-filled remark/note. It is your unique reference code.
     </div>
   </div>
@@ -1664,6 +1644,10 @@ function renderStudentDashboard() {
   setText('sd-pending-count', pending.length);
   setText('sd-receipt-count', paid.length);
 
+  // Show hostel card only for Hosteller students
+  const hostelCard = document.getElementById('stu-hostel-card');
+  if (hostelCard) hostelCard.classList.toggle('hidden', currentStudent?.student_type !== 'Hosteller');
+
   const el = document.getElementById('stu-demands-list');
   if (pending.length === 0) {
     el.innerHTML = '<div class="alert alert-success">🎉 No pending fee demands. You are all clear!</div>';
@@ -1810,11 +1794,18 @@ function showQRModal(refCode, amount, feeType, upiLink) {
   document.getElementById('qr-modal-title').textContent = 'Pay: ' + feeType;
   document.getElementById('modal-qr-info').textContent = `Amount: ₹${fmt(amount)} | Ref: ${refCode}`;
   document.getElementById('modal-qr-ref').textContent = refCode;
+  // Clear previous QR
+  const canvas = document.getElementById('modal-qr-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   const link = upiLink || buildUPILink(refCode, amount);
   openModal('modal-qr');
-  setTimeout(() => {
-    QRCode.toCanvas(document.getElementById('modal-qr-canvas'), link, { width: 200, margin: 2 });
-  }, 100);
+  // Wait for modal to be visible before rendering QR
+  requestAnimationFrame(() => setTimeout(() => {
+    QRCode.toCanvas(canvas, link, { width: 220, margin: 2 }, err => {
+      if (err) console.error('QR error', err);
+    });
+  }, 80));
 }
 
 function buildUPILink(refCode, amount) {
@@ -2622,23 +2613,36 @@ async function loadSemesterConfig() {
     return;
   }
   const today = new Date();
-  el.innerHTML = data.map(cfg => {
-    const deadline = cfg.academic_deadline;
-    const isActive = deadline ? today <= new Date(deadline) : true;
-    return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
-      <div class="info-grid" style="margin-bottom:6px">
-        <div class="info-item"><div class="key">Course</div><div class="val">${cfg.course === 'ALL' ? 'All Courses' : cfg.course}</div></div>
-        <div class="info-item"><div class="key">Semester</div><div class="val">${cfg.semester}</div></div>
-        <div class="info-item"><div class="key">Batch</div><div class="val">${cfg.batch_year || '—'}</div></div>
-        <div class="info-item"><div class="key">Start Date</div><div class="val">${fmtDate(cfg.start_date)}</div></div>
-        <div class="info-item"><div class="key">Academic Deadline</div><div class="val">${fmtDate(cfg.academic_deadline) || '—'}</div></div>
-        <div class="info-item"><div class="key">Hostel Deadline</div><div class="val">${fmtDate(cfg.hostel_deadline) || '—'}</div></div>
-      </div>
-      <span class="badge ${isActive ? 'badge-paid' : 'badge-overdue'}">${isActive ? '✅ Active' : '⏰ Window Closed — Late Fine Applying'}</span>
-    </div>`;
-  }).join('');
+  el.innerHTML = `<div class="table-wrap"><table class="data-table" style="font-size:12px">
+    <thead><tr><th>Course</th><th>Sem</th><th>Batch</th><th>Academic Deadline</th><th>Hostel Deadline</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>${data.map(cfg => {
+      const isActive = cfg.status === 'active';
+      const pastDeadline = cfg.academic_deadline && today > new Date(cfg.academic_deadline);
+      const statusLabel = !isActive ? '🔴 Inactive' : pastDeadline ? '⏰ Late Fine' : '✅ Active';
+      const statusClass = !isActive ? 'badge-overdue' : pastDeadline ? 'badge-pending' : 'badge-paid';
+      return `<tr>
+        <td>${cfg.course === 'ALL' ? 'All' : shortCourse(cfg.course)}</td>
+        <td style="text-align:center">${cfg.semester}</td>
+        <td style="text-align:center">${cfg.batch_year || '—'}</td>
+        <td>${fmtDate(cfg.academic_deadline) || '—'}</td>
+        <td>${fmtDate(cfg.hostel_deadline) || '—'}</td>
+        <td><span class="badge ${statusClass}" style="font-size:11px">${statusLabel}</span></td>
+        <td>${isActive
+          ? `<button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;font-size:11px;padding:3px 8px" onclick="deactivateSemester('${cfg.id}')">Deactivate</button>`
+          : `<span style="font-size:11px;color:var(--gray-400)">—</span>`}
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
   const startEl = document.getElementById('sem-start-date');
   if (startEl && !startEl.value) startEl.value = new Date().toISOString().split('T')[0];
+}
+
+async function deactivateSemester(id) {
+  if (!confirm('Deactivate this semester? Students will no longer be able to generate fee demands for it.')) return;
+  const res = await api('PATCH', `/api/cashier/semester-config/${id}`, { status: 'inactive' }, cashierHeaders());
+  if (!res || !res.success) { alert(res?.error || 'Failed to deactivate.'); return; }
+  loadSemesterConfig();
 }
 
 async function startSemester() {
