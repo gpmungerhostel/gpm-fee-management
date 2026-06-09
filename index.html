@@ -443,17 +443,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <div style="font-weight:700;font-size:14px;color:var(--navy)">💰 Generate Semester Fee Demand</div>
           <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">
-            <select id="stu-pay-semester" style="flex:1;min-width:120px">
+            <select id="stu-pay-semester" style="flex:1;min-width:110px;height:38px;padding:0 10px;border:1.5px solid #e0c97a;border-radius:8px;font-size:13px;background:#fff;color:var(--navy);font-weight:600">
               <option value="">Select Semester</option>
               <option value="1">1st Sem</option><option value="2">2nd Sem</option>
               <option value="3">3rd Sem</option><option value="4">4th Sem</option>
               <option value="5">5th Sem</option><option value="6">6th Sem</option>
             </select>
-            <select id="stu-pay-enrollment" style="flex:1;min-width:110px">
+            <select id="stu-pay-enrollment" style="flex:1;min-width:100px;height:38px;padding:0 10px;border:1.5px solid #e0c97a;border-radius:8px;font-size:13px;background:#fff;color:var(--navy);font-weight:600">
               <option value="Regular">Regular</option>
               <option value="Repeat">Repeat</option>
             </select>
-            <button class="btn btn-gold" style="white-space:nowrap" onclick="generateSemesterDemand()">
+            <button class="btn btn-gold" style="height:38px;padding:0 18px;white-space:nowrap;font-size:13px;font-weight:600;border-radius:8px" onclick="generateSemesterDemand()">
               <span id="sem-pay-spinner" class="spinner hidden"></span>Generate
             </button>
           </div>
@@ -472,21 +472,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
       <!-- Hostel Fee Self-Entry — styled same as semester demand card -->
       <div class="card" id="stu-hostel-card" style="border-left:3px solid #1a3a7c;background:#eef3ff;padding:14px">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <div style="font-weight:700;font-size:14px;color:#1a3a7c;white-space:nowrap">🏠 Generate Hostel Fee QR</div>
-          <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">
-            <select id="stu-hostel-semester" style="flex:1;min-width:100px">
-              <option value="">Select Sem</option>
-              <option value="1">1st Sem</option><option value="2">2nd Sem</option>
-              <option value="3">3rd Sem</option><option value="4">4th Sem</option>
-              <option value="5">5th Sem</option><option value="6">6th Sem</option>
-            </select>
-            <input type="number" id="stu-hostel-amount" placeholder="Amount (₹)" style="flex:1;min-width:110px"/>
-            <input type="text" id="stu-hostel-desc" placeholder="Description" style="flex:1;min-width:100px"/>
-            <button class="btn" style="background:#1a3a7c;color:#fff;white-space:nowrap" onclick="generateHostelDemand()">
-              <span id="hostel-pay-spinner" class="spinner hidden"></span>Generate QR
-            </button>
-          </div>
+          <select id="stu-hostel-semester" style="flex:1;min-width:100px;height:38px;padding:0 10px;border:1.5px solid #c7d7f0;border-radius:8px;font-size:13px;background:#fff;color:#1a3a7c;font-weight:600">
+            <option value="">Select Sem</option>
+            <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+            <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+            <option value="5">5th Sem</option><option value="6">6th Sem</option>
+          </select>
+          <input type="number" id="stu-hostel-amount" placeholder="Amount (₹)"
+            style="flex:1;min-width:110px;height:38px;padding:0 12px;border:1.5px solid #c7d7f0;border-radius:8px;font-size:13px;background:#fff;color:var(--navy)"/>
+          <input type="text" id="stu-hostel-desc" placeholder="Description (optional)"
+            style="flex:1.5;min-width:130px;height:38px;padding:0 12px;border:1.5px solid #c7d7f0;border-radius:8px;font-size:13px;background:#fff;color:var(--navy)"/>
+          <button class="btn" style="height:38px;background:#1a3a7c;color:#fff;white-space:nowrap;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600" onclick="generateHostelDemand()">
+            <span id="hostel-pay-spinner" class="spinner hidden"></span>Generate QR
+          </button>
         </div>
         <div id="hostel-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
         <div style="font-size:11px;color:#1a3a7c;margin-top:6px;opacity:.7">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
