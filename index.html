@@ -491,6 +491,45 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div id="hostel-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
         <div style="font-size:11px;color:#1a3a7c;margin-top:6px;opacity:.7">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
       </div>
+
+      <!-- ══ SUBMIT UTR AFTER PAYMENT ══ -->
+      <div class="card" style="border:2px solid var(--success);background:linear-gradient(135deg,#f0faf4,#eaf5ef);padding:0;overflow:hidden">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1a6b3c,#2a8a52);padding:14px 18px;display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">✅</div>
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:16px;color:#fff;font-weight:700">I've Paid — Submit UTR Number</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:1px">After making UPI payment, enter your UTR to notify the cashier</div>
+          </div>
+        </div>
+        <div style="padding:18px">
+          <div id="utr-submit-alert" class="alert alert-danger hidden"></div>
+          <div id="utr-submit-success" class="alert alert-success hidden"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);letter-spacing:.3px;text-transform:uppercase;margin-bottom:5px">Reference Code <span style="color:#c0392b">*</span></div>
+              <input type="text" id="stu-utr-ref" placeholder="e.g. 25CSE2026-SEM1FEE-2026" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:monospace;font-size:12px;color:var(--navy)"/>
+              <div style="font-size:11px;color:var(--gray-500);margin-top:3px">Copy from the fee demand above</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);letter-spacing:.3px;text-transform:uppercase;margin-bottom:5px">UTR Number <span style="color:#c0392b">*</span></div>
+              <input type="text" id="stu-utr-number" placeholder="12-digit UTR from UPI app" maxlength="22" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:monospace;font-size:13px;letter-spacing:.5px;color:var(--navy)"/>
+              <div style="font-size:11px;color:var(--gray-500);margin-top:3px">Check Google Pay / PhonePe / Paytm transaction history</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div class="alert alert-warning" style="margin:0;flex:1;min-width:200px;font-size:12px;padding:10px 14px">
+              ⚠️ Only submit after payment is <strong>successful</strong>. Verify from your UPI app before submitting.
+            </div>
+            <button class="btn btn-success" onclick="submitStudentUTR()" style="white-space:nowrap;flex-shrink:0">
+              <span id="utr-submit-spinner" class="spinner hidden"></span>Submit UTR →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- UTR status tracker -->
+      <div id="stu-utr-status-area" style="margin-top:0"></div>
     </div>
 
     <!-- Dues Tab -->
@@ -510,9 +549,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <!-- Payments Tab -->
     <div id="stu-tab-payments" class="hidden">
       <div class="card">
-        <div class="card-title">Payment History</div>
-        <div class="card-subtitle">All verified payments and issued receipts.</div>
+        <div class="card-title">Payment History & Receipts</div>
+        <div class="card-subtitle">All verified payments. Download or print your receipt at any time.</div>
         <div id="stu-payments-list"><div class="alert alert-info">Loading…</div></div>
+      </div>
+      <!-- UTR Status Section -->
+      <div class="card" style="margin-top:16px;border-left:3px solid var(--gold)">
+        <div class="card-title">Pending UTR Submissions</div>
+        <div class="card-subtitle">UTRs you have submitted that are awaiting cashier verification.</div>
+        <div id="stu-utr-track-list"><div class="alert alert-info">Loading…</div></div>
       </div>
     </div>
 
@@ -668,69 +713,87 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
     <!-- Verify Payment -->
     <div id="ca-tab-verify" class="hidden">
-      <div class="card">
-        <div class="card-title">Verify Payment & Issue Receipt</div>
-        <div class="card-subtitle">Enter UTR number from bank statement to verify and mark payment as received.</div>
-        <div id="verify-alert" class="alert alert-danger hidden"></div>
-        <div class="form-row">
-          <div class="field">
-            <label>Reference Code <span class="req">*</span></label>
-            <input type="text" id="vfy-ref" placeholder="e.g. 25CSE2026-TUITIONFEE-2026" oninput="lookupByRef()"/>
-            <div class="hint" id="vfy-ref-preview"></div>
+
+      <!-- Pending UTR submissions from students -->
+      <div class="card" style="border-left:4px solid var(--gold);background:linear-gradient(135deg,#fffdf5,#fff8e8)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div>
+            <div class="card-title" style="color:var(--navy)">⏳ Pending UTR Verifications</div>
+            <div class="card-subtitle" style="margin-bottom:0">Students who have paid and submitted their UTR — awaiting your confirmation.</div>
           </div>
-          <div class="field">
-            <label>UTR Number <span class="req">*</span></label>
-            <input type="text" id="vfy-utr" placeholder="12-digit UTR from bank statement" maxlength="22"/>
-          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadPendingUTRs()">↻ Refresh</button>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Amount Received (₹) <span class="req">*</span></label>
-            <input type="number" id="vfy-amount" placeholder="Enter exact amount received"/>
-          </div>
-          <div class="field">
-            <label>Payment Date <span class="req">*</span></label>
-            <input type="date" id="vfy-date"/>
-          </div>
-        </div>
+        <div id="pending-utrs-list" style="margin-top:14px"><div class="alert alert-info" style="margin:0">Click Refresh to load pending submissions.</div></div>
+      </div>
+
+      <!-- UTR-only bulk verify (cashier side) -->
+      <div class="card" style="margin-top:16px;border-left:4px solid var(--success)">
+        <div class="card-title">🏦 Bulk Verify from Bank Statement</div>
+        <div class="card-subtitle">Paste UTR numbers directly from your bank statement. The system matches each UTR to the student who submitted it — no reference codes needed.</div>
+        <div id="bulk-utr-alert" class="alert alert-danger hidden"></div>
         <div class="field">
-          <label>Bank / UPI Remarks</label>
-          <input type="text" id="vfy-remarks" placeholder="Remarks from bank statement (optional)"/>
+          <label style="font-size:12px;font-weight:700;color:var(--gray-600);letter-spacing:.3px;text-transform:uppercase">UTR Numbers <span class="req">*</span> — one per line</label>
+          <textarea id="bulk-utr-only" rows="7" style="font-family:monospace;font-size:13px;letter-spacing:.5px;line-height:1.7" placeholder="123456789012&#10;234567890123&#10;345678901234"></textarea>
+          <div class="hint">Each UTR must be 10–22 digits. The system verifies only UTRs that students have already submitted via their portal.</div>
         </div>
-        <div class="btn-row">
-          <div></div>
-          <button class="btn btn-success" onclick="verifyPayment()"><span id="vfy-spinner" class="spinner hidden"></span>Verify &amp; Mark Paid</button>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px">
+          <button class="btn btn-primary" onclick="bulkVerifyUTRsOnly()"><span id="bulk-utr-spinner" class="spinner hidden"></span>🏦 Verify All UTRs</button>
+        </div>
+        <div id="bulk-utr-result" class="hidden" style="margin-top:14px"></div>
+      </div>
+
+      <!-- Manual single verify (fallback — cashier manually enters ref + UTR) -->
+      <div class="card" style="margin-top:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer" onclick="toggleManualVerify()">
+          <div class="card-title" style="margin:0">🔧 Manual Verify (Fallback)</div>
+          <span style="font-size:12px;color:var(--gray-500);flex:1">For cases where student has NOT submitted UTR themselves</span>
+          <span id="manual-toggle-icon" style="font-size:16px;color:var(--gray-400);transition:.2s">▼</span>
+        </div>
+        <div id="manual-verify-body" class="hidden">
+          <div class="card-subtitle" style="margin-top:-8px">Enter UTR number from bank statement to verify and mark payment as received.</div>
+          <div id="verify-alert" class="alert alert-danger hidden"></div>
+          <div class="form-row">
+            <div class="field">
+              <label>Reference Code <span class="req">*</span></label>
+              <input type="text" id="vfy-ref" placeholder="e.g. 25CSE2026-TUITIONFEE-2026" oninput="lookupByRef()" style="font-family:monospace;font-size:13px"/>
+              <div class="hint" id="vfy-ref-preview"></div>
+            </div>
+            <div class="field">
+              <label>UTR Number <span class="req">*</span></label>
+              <input type="text" id="vfy-utr" placeholder="10–22 digit UTR from bank statement" maxlength="22" style="font-family:monospace;letter-spacing:.5px"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Amount Received (₹) <span class="req">*</span></label>
+              <input type="number" id="vfy-amount" placeholder="Enter exact amount received"/>
+            </div>
+            <div class="field">
+              <label>Payment Date <span class="req">*</span></label>
+              <input type="date" id="vfy-date"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Bank / UPI Remarks</label>
+            <input type="text" id="vfy-remarks" placeholder="Remarks from bank statement (optional)"/>
+          </div>
+          <div class="btn-row">
+            <div></div>
+            <button class="btn btn-success" onclick="verifyPayment()"><span id="vfy-spinner" class="spinner hidden"></span>Verify &amp; Mark Paid</button>
+          </div>
         </div>
       </div>
+
       <div id="vfy-receipt-result" class="hidden">
-        <div class="card">
+        <div class="card" style="border-left:4px solid var(--success)">
           <div class="card-title">Payment Verified ✅</div>
-          <div class="card-subtitle">Receipt issued. Print below for student and office copy.</div>
+          <div class="card-subtitle">Receipt issued. Print for student and office copy.</div>
           <div id="vfy-receipt-preview"></div>
           <div class="btn-row no-print">
             <button class="btn btn-secondary" onclick="document.getElementById('vfy-receipt-result').classList.add('hidden')">Verify Another</button>
             <button class="btn btn-gold" onclick="printReceipts()">🖨️ Print Receipts (A4)</button>
           </div>
         </div>
-      </div>
-
-      <!-- Bulk verify section -->
-      <div class="card" style="margin-top:16px">
-        <div class="card-title">Bulk Verify from Bank Statement</div>
-        <div class="card-subtitle">Paste UTR numbers (one per line) from bank statement to batch verify.</div>
-        <div class="field">
-          <label>UTR Numbers (one per line)</label>
-          <textarea id="bulk-utr" rows="5" placeholder="123456789012&#10;234567890123&#10;345678901234"></textarea>
-        </div>
-        <div class="field">
-          <label>Reference Codes (same order as UTR)</label>
-          <textarea id="bulk-ref" rows="5" placeholder="25CSE2026-TUITIONFEE-2026&#10;26EE2025-HOSTELFEE-2026"></textarea>
-        </div>
-        <div class="btn-row">
-          <div></div>
-          <button class="btn btn-primary" onclick="bulkVerify()">Bulk Verify All</button>
-        </div>
-        <div id="bulk-result" class="hidden" style="margin-top:12px"></div>
       </div>
     </div>
 
@@ -849,81 +912,99 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 
     <!-- ═══ SEMESTER MANAGEMENT TAB ═══ -->
     <div id="ca-tab-semester" class="hidden">
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div class="card-title" style="margin:0">Semester Management</div>
-          <button class="btn btn-secondary btn-sm" onclick="loadSemesterConfig()">↻ Refresh</button>
-        </div>
-        <div id="active-sem-info" style="margin-bottom:14px"><div class="alert alert-info" style="margin:0">No semester configured yet.</div></div>
 
-        <div id="sem-alert" class="alert alert-danger hidden"></div>
+      <!-- Active semesters overview -->
+      <div id="active-sem-info" style="margin-bottom:16px"></div>
 
-        <!-- Compact form — all in two rows -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-          <div style="flex:2;min-width:140px">
-            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Course <span class="req">*</span></div>
-            <select id="sem-course" style="width:100%">
-              <option value="ALL">All Courses</option>
-              <option>Diploma in Civil Engineering</option>
-              <option>Diploma in Computer Science &amp; Engineering</option>
-              <option>Diploma in Electrical Engineering</option>
-              <option>Diploma in Electronics Engineering</option>
-              <option>Diploma in Fire Technology and Safety</option>
-              <option>Diploma in Mechanical Engineering</option>
-            </select>
+      <!-- Activation key card -->
+      <div class="card" style="border:2px solid var(--gold);background:linear-gradient(135deg,#fffdf5 0%,#fff8e8 100%);padding:0;overflow:hidden">
+        <!-- Header band -->
+        <div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);padding:18px 24px;display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎓</div>
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);font-weight:700;letter-spacing:.3px">Activate New Semester</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">Once activated, students can generate their fee demands</div>
           </div>
-          <div style="flex:1;min-width:100px">
-            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Semester <span class="req">*</span></div>
-            <select id="sem-number" style="width:100%">
-              <option value="1">1st Sem</option><option value="2">2nd Sem</option>
-              <option value="3">3rd Sem</option><option value="4">4th Sem</option>
-              <option value="5">5th Sem</option><option value="6">6th Sem</option>
-            </select>
-          </div>
-          <div style="flex:1;min-width:80px">
-            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Batch Year <span class="req">*</span></div>
-            <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2024" style="width:100%"/>
-          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadSemesterConfig()" style="margin-left:auto;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff">↻ Refresh</button>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-          <div style="flex:1;min-width:120px">
-            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Start Date <span class="req">*</span></div>
-            <input type="date" id="sem-start-date" style="width:100%"/>
+
+        <div style="padding:22px 24px">
+          <div id="sem-alert" class="alert alert-danger hidden"></div>
+
+          <!-- Row 1: Course / Semester / Batch Year -->
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Course <span style="color:#c0392b">*</span></div>
+              <select id="sem-course" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:500;color:var(--navy);background:#fff">
+                <option value="ALL">All Courses</option>
+                <option>Diploma in Civil Engineering</option>
+                <option>Diploma in Computer Science &amp; Engineering</option>
+                <option>Diploma in Electrical Engineering</option>
+                <option>Diploma in Electronics Engineering</option>
+                <option>Diploma in Fire Technology and Safety</option>
+                <option>Diploma in Mechanical Engineering</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Semester <span style="color:#c0392b">*</span></div>
+              <select id="sem-number" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:500;color:var(--navy);background:#fff">
+                <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+                <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+                <option value="5">5th Sem</option><option value="6">6th Sem</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Batch Year <span style="color:#c0392b">*</span></div>
+              <input type="text" id="sem-batch-year" maxlength="4" placeholder="e.g. 2024" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy);background:#fff;text-align:center"/>
+            </div>
           </div>
-          <div style="flex:1;min-width:120px">
-            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Academic Deadline <span class="req">*</span></div>
-            <input type="date" id="sem-academic-deadline" style="width:100%"/>
+
+          <!-- Row 2: Dates -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Start Date <span style="color:#c0392b">*</span></div>
+              <input type="date" id="sem-start-date" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Academic Deadline <span style="color:#c0392b">*</span></div>
+              <input type="date" id="sem-academic-deadline" style="width:100%;padding:9px 12px;border:1.5px solid var(--gold);border-radius:8px;font-size:13px;color:var(--navy);background:#fffef8"/>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase">Hostel Deadline</div>
+              <input type="date" id="sem-hostel-deadline" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
+            </div>
           </div>
-          <div style="flex:1;min-width:120px">
-            <div style="font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:3px">Hostel Deadline</div>
-            <input type="date" id="sem-hostel-deadline" style="width:100%"/>
-          </div>
-          <div style="display:flex;align-items:flex-end">
-            <button class="btn btn-gold" onclick="startSemester()" style="white-space:nowrap;height:38px">
-              <span id="sem-spinner" class="spinner hidden"></span>🎓 Activate
+
+          <!-- Activation footer -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(200,151,58,.08);border:1.5px dashed rgba(200,151,58,.4);border-radius:10px">
+            <div style="font-size:12px;color:var(--gray-600);max-width:480px;line-height:1.6">
+              💡 Fee amounts come from the <strong>Fee Structure</strong> tab. Hostel deadline defaults to academic deadline if blank.
+              <span style="color:var(--danger);font-weight:600">Once activated, this cannot be undone.</span>
+            </div>
+            <button class="btn btn-gold" onclick="startSemester()" style="white-space:nowrap;padding:11px 28px;font-size:14px;font-weight:700;border-radius:10px;box-shadow:0 4px 14px rgba(200,151,58,.4);flex-shrink:0;margin-left:16px">
+              <span id="sem-spinner" class="spinner hidden"></span>🎓 Activate Semester
             </button>
           </div>
-        </div>
-        <div style="font-size:11px;color:var(--gray-500)">
-          💡 Fee amounts are from the <strong>Fee Structure</strong> tab. Hostel deadline defaults to academic deadline if blank. Once activated, this cannot be undone.
         </div>
       </div>
 
       <!-- Late Fine Config -->
       <div class="card" style="margin-top:16px">
-        <div class="card-title">Late Fine Settings</div>
+        <div class="card-title">Late Fine Policy</div>
         <div class="card-subtitle">Automatically applied after payment window closes.</div>
-        <div class="form-row">
-          <div class="field">
-            <label>Fine per Day (₹)</label>
-            <input type="number" id="late-fine-per-day" value="50" disabled style="background:var(--gray-50)"/>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px;background:var(--gray-50);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--gray-100)">
+            <div style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Playfair Display',serif">₹50</div>
+            <div style="font-size:11px;color:var(--gray-600);margin-top:3px">Per day after deadline</div>
           </div>
-          <div class="field">
-            <label>Maximum Fine (₹)</label>
-            <input type="number" id="late-fine-max" value="500" disabled style="background:var(--gray-50)"/>
+          <div style="flex:1;min-width:120px;background:var(--gray-50);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--gray-100)">
+            <div style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Playfair Display',serif">₹500</div>
+            <div style="font-size:11px;color:var(--gray-600);margin-top:3px">Maximum fine cap</div>
+          </div>
+          <div style="flex:3;min-width:200px;display:flex;align-items:center">
+            <div class="alert alert-warning" style="margin:0;width:100%">Fine is fixed as per institute policy and cannot be changed here.</div>
           </div>
         </div>
-        <div class="hint" style="margin-top:4px">Fine: ₹50/day, maximum ₹500 (fixed as per institute policy)</div>
       </div>
     </div>
 
@@ -1113,7 +1194,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
     <div id="modal-receipt-content"></div>
     <div class="btn-row no-print" style="margin-top:16px">
       <div></div>
-      <button class="btn btn-gold" onclick="printReceipts()">🖨️ Print</button>
+      <button id="modal-receipt-print-btn" class="btn btn-gold" onclick="printReceipts()">🖨️ Print / Download</button>
     </div>
   </div>
 </div>
@@ -1614,6 +1695,7 @@ async function loadStudentData() {
   const data = await api('GET', '/api/student/demands', null, studentHeaders());
   allDemands = Array.isArray(data) ? data : [];
   renderStudentDashboard();
+  loadUTRStatusBanner();
 }
 
 function renderStudentDashboard() {
@@ -1679,6 +1761,18 @@ function demandCard(d, showQR) {
     ? `<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="showQRModal('${d.ref_code}','${fine>0?totalAmount:d.amount}','${d.fee_type_name}','${d.upi_link||''}')">📱 View QR</button>`
     : '';
 
+  if (d.status === 'utr_submitted') {
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--success);border-left:3px solid var(--success);border-radius:8px;margin-bottom:8px;background:#f0faf4;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div style="font-weight:600;font-size:13px">${d.fee_type_name}</div>
+        <div style="font-size:11px;color:var(--gray-500)">Ref: <code style="font-size:11px">${d.ref_code}</code></div>
+      </div>
+      <div style="font-weight:700;font-size:15px;color:var(--navy)">₹${fmt(d.amount)}</div>
+      ${catBadge}
+      <span class="badge" style="background:#d1f5e0;color:#1a6b3c;border:1px solid #a3e9c0">⏳ UTR Submitted</span>
+    </div>`;
+  }
+
   return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${isHostel?'#1a3a7c':'var(--gold)'};border-radius:8px;margin-bottom:8px;flex-wrap:wrap">
     <div style="flex:1;min-width:160px">
       <div style="font-weight:600;font-size:13px">${d.fee_type_name}</div>
@@ -1720,17 +1814,182 @@ async function loadStudentPayments() {
   const data = await api('GET', '/api/student/receipts', null, studentHeaders());
   const el = document.getElementById('stu-payments-list');
   if (!data || data.length === 0) {
-    el.innerHTML = '<div class="alert alert-info">No payment records found.</div>'; return;
+    el.innerHTML = '<div class="alert alert-info">No payment records found. Once cashier verifies your UTR, receipts will appear here.</div>'; return;
   }
   el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Receipt No.</th><th>Fee Type</th><th>Amount</th><th>Date</th></tr></thead>
+    <thead><tr><th>Receipt No.</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Download</th></tr></thead>
     <tbody>${data.map(r => `<tr>
       <td><code>${r.receipt_no}</code></td>
       <td>${r.fee_type_name}</td>
-      <td>₹${fmt(r.amount)}</td>
+      <td><strong>₹${fmt(r.amount)}</strong></td>
       <td>${fmtDate(r.issued_at)}</td>
+      <td><button class="btn btn-sm btn-gold" onclick="downloadStudentReceipt('${r.receipt_no}','${(r.student_name||'').replace(/'/g,'')}')" title="Download Receipt">⬇️ Download</button></td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+
+  // Also load UTR status
+  const statusData = await api('GET', '/api/student/utr-status');
+  const trackEl = document.getElementById('stu-utr-track-list');
+  if (!trackEl) return;
+  const pending = (statusData || []).filter(d => d.status === 'utr_submitted');
+  if (pending.length === 0) {
+    trackEl.innerHTML = '<div class="alert alert-success">✅ No pending UTR submissions.</div>'; return;
+  }
+  trackEl.innerHTML = pending.map(d => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gold);border-radius:8px;margin-bottom:8px;background:var(--gold-pale);flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div style="font-weight:600;font-size:13px;color:var(--navy)">${d.fee_type_name}</div>
+        <div style="font-size:11px;color:var(--gray-500)">Ref: <code>${d.ref_code}</code></div>
+      </div>
+      <div style="font-weight:700;color:var(--navy)">₹${fmt(d.amount)}</div>
+      <span class="badge" style="background:#fff8e1;color:#92640a;border:1px solid #e8c76d">⏳ UTR Submitted — Awaiting Cashier</span>
+    </div>`).join('');
+}
+
+async function downloadStudentReceipt(rcptNo, studentName) {
+  const r = await api('GET', `/api/student/receipts`);
+  // Get the specific receipt data from the cached list or re-fetch
+  // We'll use public verify endpoint for receipt data
+  const data = await fetch(`${WORKER_URL}/api/verify?receipt_no=${encodeURIComponent(rcptNo)}`);
+  const json = await data.json();
+  if (!json?.found) { alert('Receipt not found.'); return; }
+  const rcpt = json.receipt;
+  const receiptData = {
+    receiptNo: rcpt.receipt_no,
+    rollNo: rcpt.roll_no,
+    studentName: rcpt.student_name,
+    feeType: rcpt.fee_type_name,
+    amount: rcpt.amount,
+    utr: rcpt.payments?.utr || '',
+    paymentDate: rcpt.payments?.payment_date || fmtDate(rcpt.issued_at),
+    refCode: rcptNo,
+    course: currentStudent?.course || '',
+    category: currentStudent?.category || '',
+  };
+  currentReceiptData = receiptData;
+  // Show in modal with download option
+  document.getElementById('modal-receipt-content').innerHTML = buildReceiptHTML([receiptData]);
+  document.getElementById('modal-receipt-print-btn').style.display = '';
+  openModal('modal-receipt');
+}
+
+// ─── STUDENT UTR SUBMISSION ─────────────────────────────
+async function submitStudentUTR() {
+  const refCode = (document.getElementById('stu-utr-ref')?.value || '').trim().toUpperCase();
+  const utr = (document.getElementById('stu-utr-number')?.value || '').trim();
+  const alertEl = document.getElementById('utr-submit-alert');
+  const successEl = document.getElementById('utr-submit-success');
+  alertEl.classList.add('hidden');
+  successEl.classList.add('hidden');
+
+  if (!refCode) { alertEl.textContent = 'Enter your Reference Code.'; alertEl.classList.remove('hidden'); return; }
+  if (!utr || utr.length < 10 || !/^\d+$/.test(utr)) {
+    alertEl.textContent = 'UTR must be at least 10 digits (numbers only).'; alertEl.classList.remove('hidden'); return;
+  }
+  setSpinner('utr-submit-spinner', true);
+  const res = await api('POST', '/api/student/submit-utr', { ref_code: refCode, utr });
+  setSpinner('utr-submit-spinner', false);
+
+  if (!res || !res.success) {
+    alertEl.textContent = res?.message || 'Submission failed. Please try again.'; alertEl.classList.remove('hidden'); return;
+  }
+  successEl.textContent = '✅ ' + (res.message || 'UTR submitted successfully! The cashier will verify and issue your receipt shortly.');
+  successEl.classList.remove('hidden');
+  document.getElementById('stu-utr-ref').value = '';
+  document.getElementById('stu-utr-number').value = '';
+  // Refresh demands
+  await loadStudentData();
+  loadUTRStatusBanner();
+}
+
+async function loadUTRStatusBanner() {
+  const el = document.getElementById('stu-utr-status-area');
+  if (!el) return;
+  const data = await api('GET', '/api/student/utr-status');
+  const pending = (data || []).filter(d => d.status === 'utr_submitted');
+  if (pending.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="alert alert-warning" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    ⏳ <strong>${pending.length} UTR(s) submitted</strong> — awaiting cashier verification. 
+    <span style="font-size:12px;color:var(--gray-600)">You'll receive your receipt once verified.</span>
+  </div>`;
+}
+
+// ─── CASHIER: PENDING UTR LIST ──────────────────────────
+async function loadPendingUTRs() {
+  const el = document.getElementById('pending-utrs-list');
+  el.innerHTML = '<div class="alert alert-info">Loading…</div>';
+  const data = await api('GET', '/api/cashier/pending-utrs');
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="alert alert-success" style="margin:0">✅ No pending UTR submissions from students.</div>'; return;
+  }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>UTR Number</th><th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Ref Code</th><th>Action</th></tr></thead>
+    <tbody>${data.map(p => `<tr>
+      <td><code style="letter-spacing:.5px;font-size:12px">${p.utr}</code></td>
+      <td>${p.roll_no}</td>
+      <td>${p.name}</td>
+      <td>${p.fee_type_name}</td>
+      <td><strong>₹${fmt(p.amount)}</strong></td>
+      <td>${fmtDate(p.payment_date)}</td>
+      <td><code style="font-size:11px">${p.ref_code}</code></td>
+      <td><button class="btn btn-sm btn-success" onclick="verifySingleUTR('${p.utr}','${p.ref_code}','${p.roll_no}')">✅ Verify</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>
+  <div style="margin-top:10px;font-size:12px;color:var(--gray-500)">💡 Tip: Cross-check UTRs with your bank statement before verifying. Or use Bulk Verify below to process them all at once.</div>`;
+}
+
+async function verifySingleUTR(utr, refCode, rollNo) {
+  if (!confirm(`Verify payment for ${rollNo}?\nUTR: ${utr}\nRef: ${refCode}`)) return;
+  const res = await api('POST', '/api/cashier/verify-utrs-only', { utrs: [utr] });
+  const result = res?.results?.[0];
+  if (result?.status?.startsWith('✅')) {
+    alert('✅ Verified! Receipt: ' + (result.receipt_no || ''));
+    loadPendingUTRs();
+    loadCashierDashboard();
+  } else {
+    alert('⚠️ ' + (result?.status || 'Error'));
+  }
+}
+
+// ─── CASHIER: BULK UTR-ONLY VERIFY ─────────────────────
+async function bulkVerifyUTRsOnly() {
+  const raw = (document.getElementById('bulk-utr-only')?.value || '').trim();
+  const alertEl = document.getElementById('bulk-utr-alert');
+  alertEl.classList.add('hidden');
+  if (!raw) { alertEl.textContent = 'Paste at least one UTR number.'; alertEl.classList.remove('hidden'); return; }
+  const utrs = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (utrs.length === 0) { alertEl.textContent = 'No valid UTRs found.'; alertEl.classList.remove('hidden'); return; }
+  setSpinner('bulk-utr-spinner', true);
+  const res = await api('POST', '/api/cashier/verify-utrs-only', { utrs });
+  setSpinner('bulk-utr-spinner', false);
+  const results = res?.results || [];
+  const el = document.getElementById('bulk-utr-result');
+  el.classList.remove('hidden');
+  const successCount = results.filter(r => r.status?.startsWith('✅')).length;
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <div class="alert alert-success" style="margin:0;flex:1;min-width:120px;text-align:center">✅ <strong>${successCount}</strong> Verified</div>
+      <div class="alert alert-warning" style="margin:0;flex:1;min-width:120px;text-align:center">⚠️ <strong>${results.filter(r=>r.status?.startsWith('⚠️')).length}</strong> Already Paid / Duplicate</div>
+      <div class="alert alert-danger" style="margin:0;flex:1;min-width:120px;text-align:center">❌ <strong>${results.filter(r=>r.status?.startsWith('❌')).length}</strong> Not Found</div>
+    </div>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>UTR</th><th>Roll No.</th><th>Name</th><th>Receipt No.</th><th>Result</th></tr></thead>
+      <tbody>${results.map(r=>`<tr>
+        <td><code style="font-size:12px;letter-spacing:.5px">${r.utr}</code></td>
+        <td>${r.roll||'—'}</td>
+        <td>${r.student||'—'}</td>
+        <td>${r.receipt_no ? `<code>${r.receipt_no}</code>` : '—'}</td>
+        <td>${r.status}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  if (successCount > 0) { loadCashierDashboard(); loadPendingUTRs(); }
+}
+
+function toggleManualVerify() {
+  const body = document.getElementById('manual-verify-body');
+  const icon = document.getElementById('manual-toggle-icon');
+  const hidden = body.classList.toggle('hidden');
+  icon.textContent = hidden ? '▼' : '▲';
 }
 
 function loadStudentProfile() {
@@ -1783,6 +2042,7 @@ function ca_tab(t) {
   document.querySelectorAll('#screen-cashier .site-header .header-btn').forEach((b,i) => {
     b.classList.toggle('active', ['dashboard','students','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines'][i] === t);
   });
+  if (t === 'verify') { loadPendingUTRs(); document.getElementById('vfy-date') && (document.getElementById('vfy-date').value = new Date().toISOString().split('T')[0]); }
   if (t === 'students') loadCashierStudents();
   if (t === 'managedemands') loadManageDemands();
   if (t === 'receipts') loadCashierReceipts();
