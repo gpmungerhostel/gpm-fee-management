@@ -2617,25 +2617,26 @@ async function loadSemesterConfig() {
   const data = await api('GET', '/api/cashier/semester-config', null, cashierHeaders());
   if (!data || data.length === 0) {
     el.innerHTML = '<div class="alert alert-info">No semester configured yet.</div>';
+    const startEl = document.getElementById('sem-start-date');
+    if (startEl && !startEl.value) startEl.value = new Date().toISOString().split('T')[0];
     return;
   }
-  const latest = data[0];
   const today = new Date();
-  const end = new Date(latest.end_date);
-  const isActive = today <= end;
-  el.innerHTML = `
-    <div class="info-grid">
-      <div class="info-item"><div class="key">Course</div><div class="val">${latest.course}</div></div>
-      <div class="info-item"><div class="key">Semester</div><div class="val">${latest.semester}</div></div>
-      <div class="info-item"><div class="key">Start Date</div><div class="val">${fmtDate(latest.start_date)}</div></div>
-      <div class="info-item"><div class="key">Due Date</div><div class="val">${fmtDate(latest.end_date)}</div></div>
-      <div class="info-item"><div class="key">Non-Hosteller Fee</div><div class="val">₹${fmt(latest.non_hosteller_fee)}</div></div>
-      <div class="info-item"><div class="key">Hosteller Fee</div><div class="val">₹${fmt(latest.hosteller_fee)}</div></div>
-    </div>
-    <div style="margin-top:8px">
+  el.innerHTML = data.map(cfg => {
+    const deadline = cfg.academic_deadline;
+    const isActive = deadline ? today <= new Date(deadline) : true;
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div class="info-grid" style="margin-bottom:6px">
+        <div class="info-item"><div class="key">Course</div><div class="val">${cfg.course === 'ALL' ? 'All Courses' : cfg.course}</div></div>
+        <div class="info-item"><div class="key">Semester</div><div class="val">${cfg.semester}</div></div>
+        <div class="info-item"><div class="key">Batch</div><div class="val">${cfg.batch_year || '—'}</div></div>
+        <div class="info-item"><div class="key">Start Date</div><div class="val">${fmtDate(cfg.start_date)}</div></div>
+        <div class="info-item"><div class="key">Academic Deadline</div><div class="val">${fmtDate(cfg.academic_deadline) || '—'}</div></div>
+        <div class="info-item"><div class="key">Hostel Deadline</div><div class="val">${fmtDate(cfg.hostel_deadline) || '—'}</div></div>
+      </div>
       <span class="badge ${isActive ? 'badge-paid' : 'badge-overdue'}">${isActive ? '✅ Active' : '⏰ Window Closed — Late Fine Applying'}</span>
     </div>`;
-  // Set default start date to today
+  }).join('');
   const startEl = document.getElementById('sem-start-date');
   if (startEl && !startEl.value) startEl.value = new Date().toISOString().split('T')[0];
 }
