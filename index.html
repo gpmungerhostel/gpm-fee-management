@@ -1898,7 +1898,7 @@ function downloadStudentReceipt(rcptNo) {
     utr:         r._utr || r.payments?.utr || '',
     paymentDate: r._payment_date || r.payments?.payment_date || '',
     refCode:     r._ref_code || r.payments?.fee_demands?.ref_code || '',
-    course:      currentStudent?.course || '',
+    course:      r.course || currentStudent?.course || '',
     breakdown:   r._breakdown || r.payments?.fee_demands?.breakdown || [],
     feeCategory: r._fee_category || r.payments?.fee_demands?.fee_category || '',
   };
@@ -1950,7 +1950,7 @@ async function loadUTRStatusBanner() {
 async function loadPendingUTRs() {
   const el = document.getElementById('pending-utrs-list');
   el.innerHTML = '<div class="alert alert-info">Loading…</div>';
-  const data = await api('GET', '/api/cashier/pending-utrs');
+  const data = await api('GET', '/api/cashier/pending-utrs', null, cashierHeaders());
   if (!data || data.length === 0) {
     el.innerHTML = '<div class="alert alert-success" style="margin:0">✅ No pending UTR submissions from students.</div>'; return;
   }
@@ -2421,7 +2421,7 @@ function renderReceiptsList(list) {
 
 async function reprintReceipt(rcptNo) {
   const r = await api('GET', `/api/cashier/receipts/${encodeURIComponent(rcptNo)}`, null, cashierHeaders());
-  if (!r) return;
+  if (!r) { alert('Could not load receipt data. Please try again.'); return; }
   currentReceiptData = {
     receiptNo:    r.receipt_no,
     rollNo:       r.roll_no,
