@@ -3386,10 +3386,9 @@ async function printNoDues(rollNo) {
       <tr><td>Course</td><td>${s.course || '\u2014'}</td></tr>
       <tr><td>Current Year / Semester</td><td>${s.year || '\u2014'}</td></tr>
       <tr><td>Category</td><td>${s.category || '\u2014'}</td></tr>
-      <tr><td>Student Type</td><td>${s.student_type || '\u2014'}</td></tr>
       <tr><td>Enrollment Type</td><td>${s.enrollment_type || 'Regular'}</td></tr>
       <tr>
-        <td>Hostel No Dues</td>
+        <tr><td>Hostel No Dues</td>
         <td class="${hostelClass}">${hostelLine}</td>
       </tr>
       ${userRemarks ? `<tr><td>Remarks</td><td>${userRemarks}</td></tr>` : ''}
