@@ -1216,6 +1216,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <div style="font-size:11px;color:var(--gray-500);margin-top:8px">Scan with Google Pay, PhonePe, Paytm or any UPI app</div>
     </div>
     <div style="margin-top:10px;font-size:12px;color:var(--gray-600)" id="modal-qr-info"></div>
+    <div id="modal-qr-late-fine" style="display:none;margin-top:8px;padding:8px 10px;background:#fffbf0;border:1px solid #c8973a;border-radius:6px;text-align:left;font-size:11px;color:#7a5c00"></div>
     <div class="alert alert-warning" style="margin-top:10px;text-align:left;font-size:12px">
       ⚠️ Do <strong>not</strong> edit the pre-filled remark/note. It is your unique reference code.
     </div>
@@ -1796,7 +1797,7 @@ function demandCard(d, showQR) {
 
   const fineTag = fine > 0 ? `<span style="font-size:11px;color:#b45309;margin-left:4px">+₹${fmt(fine)} late fine</span>` : '';
   const qrBtn = showQR && hasAmount
-    ? `<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="showQRModal('${d.ref_code}','${fine>0?totalAmount:d.amount}','${d.fee_type_name}','${d.upi_link||''}')">📱 View QR</button>`
+    ? `<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="showQRModal('${d.ref_code}','${totalAmount}','${d.fee_type_name}','','${fine}','${fine>0?Math.floor((new Date()-new Date(d.due_date))/(1000*60*60*24)):0}')">📱 View QR</button>`
     : '';
 
   if (d.status === 'utr_submitted') {
@@ -2046,14 +2047,29 @@ function loadStudentProfile() {
 }
 
 let _qrInstance = null;
-function showQRModal(refCode, amount, feeType, upiLink) {
+function showQRModal(refCode, amount, feeType, upiLink, fine, daysLate) {
   document.getElementById('qr-modal-title').textContent = 'Pay: ' + feeType;
   document.getElementById('modal-qr-info').textContent = `Amount: ₹${fmt(amount)} | Ref: ${refCode}`;
   document.getElementById('modal-qr-ref').textContent = refCode;
+
+  // Show late fine breakdown if applicable
+  const lateFineEl = document.getElementById('modal-qr-late-fine');
+  if (fine > 0 && daysLate > 0) {
+    const baseAmount = parseFloat(amount) - fine;
+    lateFineEl.innerHTML = `<strong>🕐 Late Fine Breakdown</strong><br/>` +
+      `Base fee: ₹${fmt(baseAmount)}<br/>` +
+      `Late fine: ₹50 × ${daysLate} day${daysLate===1?'':'s'} = ₹${fmt(fine)}<br/>` +
+      `<strong>Total payable: ₹${fmt(amount)}</strong>`;
+    lateFineEl.style.display = 'block';
+  } else {
+    lateFineEl.style.display = 'none';
+  }
+
   openModal('modal-qr');
   const container = document.getElementById('modal-qr-container');
   container.innerHTML = '';
-  const link = upiLink || buildUPILink(refCode, amount);
+  // Always build a fresh UPI link with the correct total amount (never use stale stored link)
+  const link = buildUPILink(refCode, amount);
   _qrInstance = new QRCode(container, {
     text: link, width: 220, height: 220,
     colorDark: '#0f2744', colorLight: '#ffffff',
