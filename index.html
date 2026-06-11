@@ -1328,9 +1328,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
 // Replace with your deployed Cloudflare Worker URL
 const WORKER_URL = 'https://gpm-fee.gpmungerhostel-3df.workers.dev';
 
-// Institute UPI details — loaded from worker /api/config at startup (not stored in HTML)
-let INSTITUTE_UPI_ID   = '';
-let INSTITUTE_UPI_NAME = '';
 
 // ═══════════════════════════════════════════════════════════
 const SQL_SCHEMA = `-- ═══════════════════════════════════════════════════════
@@ -1542,7 +1539,7 @@ let allFeeTypes = [];
 let currentReceiptData = null;
 
 // ═══ INIT ══════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sql-schema-box').textContent = SQL_SCHEMA;
 
   // Check for public receipt verification URL param
@@ -1556,15 +1553,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Set today's date in verify form
   document.getElementById('vfy-date').value = new Date().toISOString().split('T')[0];
-
-  // Load UPI config from worker (keeps UPI ID out of HTML source)
-  try {
-    const cfg = await api('GET', '/api/config');
-    if (cfg && cfg.upi_id) {
-      INSTITUTE_UPI_ID   = cfg.upi_id;
-      INSTITUTE_UPI_NAME = cfg.upi_name || 'Govt Polytechnic Munger';
-    }
-  } catch(e) { /* non-blocking; buildUPILink will warn if empty */ }
 
   // If ?verify= param present, go straight to public verification
   if (rcptParam) {
@@ -1806,7 +1794,7 @@ function demandCard(d, showQR) {
 
   const fineTag = fine > 0 ? `<span style="font-size:11px;color:#b45309;margin-left:4px">+₹${fmt(fine)} late fine</span>` : '';
   const qrBtn = showQR && hasAmount
-    ? `<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="showQRModal('${d.ref_code}','${totalAmount}','${d.fee_type_name}','','${fine}','${fine>0?Math.floor((new Date()-new Date(d.due_date))/(1000*60*60*24)):0}')">📱 View QR</button>`
+    ? `<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="showQRModal('${d.ref_code}','${totalAmount}','${d.fee_type_name}','${d.upi_link || ''}','${fine}','${fine>0?Math.floor((new Date()-new Date(d.due_date))/(1000*60*60*24)):0}')">📱 View QR</button>`
     : '';
 
   if (d.status === 'utr_submitted') {
@@ -1834,18 +1822,12 @@ function demandCard(d, showQR) {
 }
 
 function paidCard(d) {
-  const breakdown = Array.isArray(d.breakdown) ? d.breakdown : [];
-  const lateFineItem = breakdown.find(b => b.label && b.label.toLowerCase().includes('late fine'));
-  const lateFineNote = lateFineItem
-    ? `<div style="font-size:11px;color:#b45309;margin-top:3px">Includes late fine: ₹${fmt(lateFineItem.amount)}</div>`
-    : '';
   return `<div class="demand-card paid">
     <div class="demand-header">
       <div class="demand-fee-type">${d.fee_type_name}</div>
       <span class="badge badge-paid">Paid</span>
     </div>
     <div class="demand-amount">₹${fmt(d.amount)}</div>
-    ${lateFineNote}
     <div class="demand-meta">Ref: <code>${d.ref_code}</code></div>
   </div>`;
 }
@@ -2083,8 +2065,8 @@ function showQRModal(refCode, amount, feeType, upiLink, fine, daysLate) {
   openModal('modal-qr');
   const container = document.getElementById('modal-qr-container');
   container.innerHTML = '';
-  // Always build a fresh UPI link with the correct total amount (never use stale stored link)
-  const link = buildUPILink(refCode, amount);
+  // Use the server-provided UPI link; fall back to a generic link without UPI ID
+  const link = upiLink || `upi://pay?pa=&pn=&am=${amount}&tn=${encodeURIComponent(refCode)}&cu=INR`;
   _qrInstance = new QRCode(container, {
     text: link, width: 220, height: 220,
     colorDark: '#0f2744', colorLight: '#ffffff',
@@ -2092,12 +2074,6 @@ function showQRModal(refCode, amount, feeType, upiLink, fine, daysLate) {
   });
 }
 
-function buildUPILink(refCode, amount) {
-  if (!INSTITUTE_UPI_ID) {
-    console.warn('GPM: UPI ID not loaded yet — QR may be invalid');
-  }
-  return `upi://pay?pa=${INSTITUTE_UPI_ID}&pn=${encodeURIComponent(INSTITUTE_UPI_NAME)}&am=${amount}&tn=${encodeURIComponent(refCode)}&cu=INR`;
-}
 
 // ═══ CASHIER PORTAL ════════════════════════════════════════
 function ca_tab(t) {
@@ -2927,10 +2903,8 @@ async function saveEditDemand() {
     showAlert('ed-alert', 'Enter a valid amount.'); return;
   }
   setSpinner('ed-spinner', true);
-  const d = _allDemandsCache.find(x => x.id === id);
-  const newUpiLink = buildUPILink(d.ref_code, amount);
   const res = await api('PATCH', `/api/cashier/demands/${id}`,
-    { amount, remarks, upi_link: newUpiLink }, cashierHeaders());
+    { amount, remarks }, cashierHeaders());
   setSpinner('ed-spinner', false);
   if (!res || res.error) { showAlert('ed-alert', 'Error saving changes.'); return; }
   closeModal('modal-editdemand');
