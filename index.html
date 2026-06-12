@@ -609,7 +609,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <button class="header-btn" onclick="ca_tab('nodues')">No Dues</button>
       <button class="header-btn" onclick="ca_tab('fines')">Fines</button>
       <button class="header-btn" onclick="ca_tab('caution')">Caution Money</button>
-      <button class="header-btn" onclick="ca_tab('passout')">Pass Out / TC</button>
     </div>
     <div class="user-chip">
       <div class="user-avatar" style="background:var(--gold)">C</div>
@@ -973,43 +972,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           <input type="text" id="pp-search" placeholder="Search by roll no." oninput="searchPrePaid()"/>
         </div>
         <div id="ca-prepaid-list"><div class="alert alert-info">Search above to view records.</div></div>
-      </div>
-    </div>
-
-    <!-- ═══ PASS-OUT / TC TAB ═══ -->
-    <div id="ca-tab-passout" class="hidden">
-      <div class="card">
-        <div class="card-title">Pass Out / TC Processing</div>
-        <div class="card-subtitle">Process student pass-out, TC, or cancelled admission. Verifies all dues are cleared before processing.</div>
-        <div id="po-alert" class="alert alert-danger hidden"></div>
-        <div class="form-row">
-          <div class="field">
-            <label>Student Roll No. <span class="req">*</span></label>
-            <input type="text" id="po-roll" placeholder="e.g. 25/CSE/2026"/>
-          </div>
-          <div class="field">
-            <label>Reason <span class="req">*</span></label>
-            <select id="po-reason">
-              <option value="Passed Out">Passed Out</option>
-              <option value="TC">Transfer Certificate (TC)</option>
-              <option value="Cancelled Admission">Cancelled Admission</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Remarks</label>
-          <input type="text" id="po-remarks" placeholder="Optional remarks"/>
-        </div>
-        <div class="btn-row">
-          <div></div>
-          <button class="btn btn-danger" onclick="processPassOut()"><span id="po-spinner" class="spinner hidden"></span>Process Pass Out</button>
-        </div>
-        <div id="po-result" class="hidden" style="margin-top:14px"></div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <div class="card-title">Pass Out Records</div>
-        <button class="btn btn-secondary btn-sm" onclick="loadPassOutList()" style="margin-bottom:12px">↻ Refresh</button>
-        <div id="po-list"><div class="alert alert-info">Click Refresh to load.</div></div>
       </div>
     </div>
 
@@ -2219,12 +2181,12 @@ function showQRModal(refCode, amount, feeType, upiLink, lateFine) {
 
 // ═══ CASHIER PORTAL ════════════════════════════════════════
 function ca_tab(t) {
-  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','caution','passout'].forEach(tab => {
+  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','caution'].forEach(tab => {
     const el = document.getElementById('ca-tab-' + tab);
     if (el) el.classList.toggle('hidden', tab !== t);
   });
   document.querySelectorAll('#screen-cashier .site-header .header-btn').forEach((b,i) => {
-    b.classList.toggle('active', ['dashboard','students','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','caution','passout'][i] === t);
+    b.classList.toggle('active', ['dashboard','students','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','caution'][i] === t);
   });
   if (t === 'verify') { loadPendingUTRs(); document.getElementById('vfy-date') && (document.getElementById('vfy-date').value = new Date().toISOString().split('T')[0]); document.getElementById('cash-date') && (document.getElementById('cash-date').value = new Date().toISOString().split('T')[0]); }
   if (t === 'students') loadCashierStudents();
@@ -2237,7 +2199,6 @@ function ca_tab(t) {
   if (t === 'nodues') loadNoDuesList();
   if (t === 'fines') loadFinesList();
   if (t === 'caution') loadCautionRefunds();
-  if (t === 'passout') loadPassOutList();
 }
 
 async function loadCashierDashboard() {
@@ -2809,7 +2770,7 @@ function buildReceiptHTML(receipts, qrDataURL) {
         <!-- AMOUNT + QR -->
         <div class="rcpt-amount-row">
           <div class="rcpt-amount-box">
-            ${Array.isArray(r.breakdown) && r.breakdown.length > 1 ? `
+            ${Array.isArray(r.breakdown) && r.breakdown.length > 0 ? `
             <div class="rcpt-breakdown">
               <div class="rcpt-breakdown-title">Fee Breakdown</div>
               <table class="rcpt-breakdown-table">
@@ -3970,43 +3931,6 @@ async function waiveFine(demandId, currentAmount) {
   loadManageDemands();
 }
 
-// ═══ GAP 6: PASS-OUT / TC ════════════════════════════════
-async function processPassOut() {
-  const roll_no = v('po-roll').trim().toUpperCase();
-  const reason = v('po-reason');
-  const remarks = v('po-remarks').trim();
-  if (!roll_no) { showAlert('po-alert', 'Enter Roll No.'); return; }
-  if (!confirm(`Process "${reason}" for ${roll_no}?\n\nThis will:\n• Verify all academic dues are cleared\n• Set student as inactive\n• Create pass-out record\n\nThis cannot be undone.`)) return;
-  setSpinner('po-spinner', true);
-  const res = await api('POST', '/api/cashier/pass-out', { roll_no, reason, remarks });
-  setSpinner('po-spinner', false);
-  if (!res?.success) { showAlert('po-alert', res?.message || 'Failed to process.'); return; }
-  const el = document.getElementById('po-result');
-  el.classList.remove('hidden');
-  el.innerHTML = `<div class="alert alert-success">✅ ${res.message}</div>
-    ${res.pass_out_record ? `<div class="info-grid" style="margin-top:12px">
-      <div class="info-item"><div class="key">Reason</div><div class="val">${res.pass_out_record.reason}</div></div>
-      <div class="info-item"><div class="key">Caution Refund</div><div class="val">${res.pass_out_record.caution_refund_status}</div></div>
-      <div class="info-item"><div class="key">No Dues Issued</div><div class="val">${res.pass_out_record.final_no_dues_issued ? '✅ Yes' : '❌ No'}</div></div>
-    </div>` : ''}`;
-  document.getElementById('po-roll').value = '';
-}
-
-async function loadPassOutList() {
-  const el = document.getElementById('po-list');
-  el.innerHTML = '<div class="alert alert-info">Loading…</div>';
-  const data = await api('GET', '/api/cashier/pass-out');
-  if (!data || data.length === 0) { el.innerHTML = '<div class="alert alert-info">No pass-out records yet.</div>'; return; }
-  el.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr><th>Roll No.</th><th>Reason</th><th>Caution Refund</th><th>No Dues</th><th>Processed At</th><th>Remarks</th></tr></thead>
-    <tbody>${data.map(r => `<tr>
-      <td>${r.roll_no}</td><td>${r.reason}</td>
-      <td><span class="badge ${r.caution_refund_status==='refunded'?'badge-paid':'badge-pending'}">${r.caution_refund_status}</span></td>
-      <td>${r.final_no_dues_issued ? '✅' : '❌'}</td>
-      <td>${fmtDate(r.processed_at)}</td><td>${r.remarks||'—'}</td>
-    </tr>`).join('')}</tbody></table></div>`;
-}
-
 // ═══ GAP 11: STUDENT PROFILE EDITING ══════════════════════
 async function editStudentProfile(rollNo) {
   const res = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`);
@@ -4087,7 +4011,7 @@ async function saveStudentProfile(rollNo) {
   setSpinner('ep-spinner', true);
   const res = await api('PATCH', `/api/cashier/students/${encodeURIComponent(rollNo)}`, update);
   setSpinner('ep-spinner', false);
-  if (!res?.success) { showAlert('edit-profile-alert', 'Error saving profile.'); return; }
+  if (!res?.success) { showAlert('edit-profile-alert', res?.message || 'Error saving profile.'); return; }
   alert('✅ Profile updated successfully!');
   closeModal('modal-student');
   loadCashierStudents();
@@ -4128,7 +4052,7 @@ async function saveMyProfile() {
   setSpinner('sp-spinner', true);
   const res = await api('PATCH', '/api/student/profile', update);
   setSpinner('sp-spinner', false);
-  if (!res?.success) { showAlert('self-edit-alert', 'Error saving profile.'); return; }
+  if (!res?.success) { showAlert('self-edit-alert', res?.message || 'Error saving profile.'); return; }
   // Update local student data
   if (currentStudent) {
     currentStudent.mobile = update.mobile;
