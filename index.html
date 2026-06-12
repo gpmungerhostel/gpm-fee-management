@@ -438,42 +438,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">🧾</div><div><div class="val" id="sd-receipt-count">0</div><div class="lbl">Receipts</div></div></div>
       </div>
 
-      <!-- Pay New Semester Fee -->
-      <div class="card" style="border-left:3px solid var(--gold);background:var(--gold-pale);padding:14px">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <div style="font-weight:700;font-size:14px;color:var(--navy)">💰 Generate Semester Fee Demand</div>
-          <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap">
-            <select id="stu-pay-semester" style="flex:1;min-width:110px;height:38px;padding:0 10px;border:1.5px solid #e0c97a;border-radius:8px;font-size:13px;background:#fff;color:var(--navy);font-weight:600">
-              <option value="">Select Semester</option>
-              <option value="1">1st Sem</option><option value="2">2nd Sem</option>
-              <option value="3">3rd Sem</option><option value="4">4th Sem</option>
-              <option value="5">5th Sem</option><option value="6">6th Sem</option>
-            </select>
-            <select id="stu-pay-enrollment" style="flex:1;min-width:100px;height:38px;padding:0 10px;border:1.5px solid #e0c97a;border-radius:8px;font-size:13px;background:#fff;color:var(--navy);font-weight:600">
-              <option value="Regular">Regular</option>
-              <option value="Repeat">Repeat</option>
-            </select>
-            <button class="btn btn-gold" style="height:38px;padding:0 18px;white-space:nowrap;font-size:13px;font-weight:600;border-radius:8px" onclick="generateSemesterDemand()">
-              <span id="sem-pay-spinner" class="spinner hidden"></span>Generate
-            </button>
-          </div>
+      <!-- ══ UNIFIED FEE PAYMENT CARD ══ -->
+      <div class="card" style="border-left:3px solid var(--gold);background:linear-gradient(135deg,var(--gold-pale),#fef9f0);padding:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="font-weight:700;font-size:15px;color:var(--navy)">💰 Generate Fee Demand</div>
+          <div style="font-size:11px;color:var(--gray-500);margin-left:auto">Select type, fill details & pay</div>
         </div>
-        <div id="sem-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
-      </div>
+        <div id="fee-gen-alert" class="alert alert-danger hidden" style="margin-bottom:10px"></div>
 
-      <!-- Pending Dues -->
-      <div class="card" style="padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div class="card-title" style="margin:0">All Pending Dues</div>
-          <div style="font-size:11px;color:var(--gray-500)">Scan QR with any UPI app</div>
+        <!-- Fee Type Selector -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="tab-btn active" id="fee-type-btn-semester" onclick="switchFeeType('semester')">📚 Semester Fee</button>
+          <button class="tab-btn" id="fee-type-btn-hostel" onclick="switchFeeType('hostel')">🏠 Hostel Fee</button>
+          <button class="tab-btn" id="fee-type-btn-other" onclick="switchFeeType('other')">📝 Other</button>
         </div>
-        <div id="stu-demands-list"><div class="alert alert-info">Loading fee demands…</div></div>
-      </div>
 
-      <!-- Hostel Fee Self-Entry — styled same as semester demand card -->
-      <div class="card" id="stu-hostel-card" style="border-left:3px solid #1a3a7c;background:#eef3ff;padding:14px">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <div style="font-weight:700;font-size:14px;color:#1a3a7c;white-space:nowrap">🏠 Generate Hostel Fee QR</div>
+        <!-- Semester Fee Form -->
+        <div id="fee-form-semester" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select id="stu-pay-semester" style="flex:1;min-width:110px;height:38px;padding:0 10px;border:1.5px solid #e0c97a;border-radius:8px;font-size:13px;background:#fff;color:var(--navy);font-weight:600">
+            <option value="">Select Semester</option>
+            <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+            <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+            <option value="5">5th Sem</option><option value="6">6th Sem</option>
+          </select>
+          <select id="stu-pay-enrollment" style="flex:1;min-width:100px;height:38px;padding:0 10px;border:1.5px solid #e0c97a;border-radius:8px;font-size:13px;background:#fff;color:var(--navy);font-weight:600">
+            <option value="Regular">Regular</option>
+            <option value="Repeat">Repeat</option>
+          </select>
+          <button class="btn btn-gold" style="height:38px;padding:0 18px;white-space:nowrap;font-size:13px;font-weight:600;border-radius:8px" onclick="generateSemesterDemand()">
+            <span id="sem-pay-spinner" class="spinner hidden"></span>Generate
+          </button>
+        </div>
+
+        <!-- Hostel Fee Form -->
+        <div id="fee-form-hostel" class="hidden" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
           <select id="stu-hostel-semester" style="flex:1;min-width:100px;height:38px;padding:0 10px;border:1.5px solid #c7d7f0;border-radius:8px;font-size:13px;background:#fff;color:#1a3a7c;font-weight:600">
             <option value="">Select Sem</option>
             <option value="1">1st Sem</option><option value="2">2nd Sem</option>
@@ -487,9 +485,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           <button class="btn" style="height:38px;background:#1a3a7c;color:#fff;white-space:nowrap;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600" onclick="generateHostelDemand()">
             <span id="hostel-pay-spinner" class="spinner hidden"></span>Generate QR
           </button>
+          <div style="width:100%;font-size:11px;color:#1a3a7c;opacity:.7;margin-top:4px">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
         </div>
-        <div id="hostel-pay-alert" class="alert alert-danger hidden" style="margin-top:8px"></div>
-        <div style="font-size:11px;color:#1a3a7c;margin-top:6px;opacity:.7">ℹ️ Hostel receipt is issued by cashier after bank verification.</div>
+
+        <!-- Other Fee Form -->
+        <div id="fee-form-other" class="hidden" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
+          <select id="stu-other-semester" style="flex:1;min-width:100px;height:38px;padding:0 10px;border:1.5px solid #d4c7f0;border-radius:8px;font-size:13px;background:#fff;color:#4a2d7a;font-weight:600">
+            <option value="">Select Sem</option>
+            <option value="1">1st Sem</option><option value="2">2nd Sem</option>
+            <option value="3">3rd Sem</option><option value="4">4th Sem</option>
+            <option value="5">5th Sem</option><option value="6">6th Sem</option>
+          </select>
+          <input type="text" id="stu-other-type" placeholder="Fee type (e.g. Exam Fee, Library Fee)"
+            style="flex:1.5;min-width:140px;height:38px;padding:0 12px;border:1.5px solid #d4c7f0;border-radius:8px;font-size:13px;background:#fff;color:var(--navy)"/>
+          <input type="number" id="stu-other-amount" placeholder="Amount (₹)"
+            style="flex:1;min-width:110px;height:38px;padding:0 12px;border:1.5px solid #d4c7f0;border-radius:8px;font-size:13px;background:#fff;color:var(--navy)"/>
+          <input type="text" id="stu-other-desc" placeholder="Description (optional)"
+            style="flex:1.5;min-width:130px;height:38px;padding:0 12px;border:1.5px solid #d4c7f0;border-radius:8px;font-size:13px;background:#fff;color:var(--navy)"/>
+          <button class="btn" style="height:38px;background:#4a2d7a;color:#fff;white-space:nowrap;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600" onclick="generateOtherDemand()">
+            <span id="other-pay-spinner" class="spinner hidden"></span>Generate QR
+          </button>
+        </div>
+      </div>
+
+      <!-- Pending Dues -->
+      <div class="card" style="padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="card-title" style="margin:0">All Pending Dues</div>
+          <div style="font-size:11px;color:var(--gray-500)">Scan QR with any UPI app</div>
+        </div>
+        <div id="stu-demands-list"><div class="alert alert-info">Loading fee demands…</div></div>
       </div>
 
       <!-- ══ SUBMIT UTR AFTER PAYMENT ══ -->
@@ -1848,9 +1873,16 @@ function renderStudentDashboard() {
   setText('sd-pending-count', pending.length);
   setText('sd-receipt-count', paid.length);
 
-  // Show hostel card only for Hosteller students
-  const hostelCard = document.getElementById('stu-hostel-card');
-  if (hostelCard) hostelCard.classList.toggle('hidden', currentStudent?.student_type !== 'Hosteller');
+  // Show/hide hostel tab based on student type
+  const hostelBtn = document.getElementById('fee-type-btn-hostel');
+  if (hostelBtn) {
+    const isHosteller = currentStudent?.student_type === 'Hosteller';
+    hostelBtn.style.display = isHosteller ? '' : 'none';
+    // If currently on hostel tab but student is not hosteller, switch to semester
+    if (!isHosteller && hostelBtn.classList.contains('active')) {
+      switchFeeType('semester');
+    }
+  }
 
   const el = document.getElementById('stu-demands-list');
   if (pending.length === 0) {
@@ -1874,7 +1906,9 @@ function demandCard(d, showQR) {
   const lateFineItem = breakdown.find(b => b.label && b.label.includes('Late Fine'));
   const catBadge = isHostel
     ? `<span class="badge" style="background:#e8f4fd;color:#1a3a7c;font-size:11px">🏠 Hostel</span>`
-    : `<span class="badge" style="background:#eaf5ef;color:#1a6b3c;font-size:11px">📚 Academic</span>`;
+    : d.fee_category === 'Other'
+      ? `<span class="badge" style="background:#f3eef8;color:#4a2d7a;font-size:11px">📝 Other</span>`
+      : `<span class="badge" style="background:#eaf5ef;color:#1a6b3c;font-size:11px">📚 Academic</span>`;
   const lateFineTag = lateFineItem ? `<span style="font-size:11px;color:#b45309;margin-left:4px">(incl. ₹${fmt(lateFineItem.amount)} late fine)</span>` : '';
 
   // Hostel — no amount yet
@@ -1907,7 +1941,7 @@ function demandCard(d, showQR) {
     </div>`;
   }
 
-  return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${isHostel?'#1a3a7c':'var(--gold)'};border-radius:8px;margin-bottom:8px;flex-wrap:wrap">
+  return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-left:3px solid ${isHostel?'#1a3a7c':d.fee_category==='Other'?'#4a2d7a':'var(--gold)'};border-radius:8px;margin-bottom:8px;flex-wrap:wrap">
     <div style="flex:1;min-width:160px">
       <div style="font-weight:600;font-size:13px">${d.fee_type_name}</div>
       <div style="font-size:11px;color:var(--gray-500)">Ref: <code style="font-size:11px">${d.ref_code}</code>${d.due_date ? ' · Due: '+fmtDate(d.due_date) : ''}</div>
@@ -1985,6 +2019,12 @@ function downloadStudentReceipt(rcptNo) {
   const cache = window._stuReceiptCache || [];
   const r = cache.find(x => x.receipt_no === rcptNo);
   if (!r) { alert('Receipt data not found. Please refresh the page.'); return; }
+  // Build breakdown: prefer receipt's own, then _breakdown from demand join, then construct from amount
+  let bd = r.breakdown || r._breakdown || r.payments?.fee_demands?.breakdown || [];
+  // If breakdown is empty but there's an amount, create a single-item breakdown
+  if ((!Array.isArray(bd) || bd.length === 0) && r.amount > 0) {
+    bd = [{ label: r.fee_type_name || 'Fee', amount: r.amount }];
+  }
   currentReceiptData = {
     receiptNo:   r.receipt_no,
     rollNo:      r.roll_no,
@@ -1995,7 +2035,7 @@ function downloadStudentReceipt(rcptNo) {
     paymentDate: r._payment_date || r.payments?.payment_date || '',
     refCode:     r._ref_code || r.payments?.fee_demands?.ref_code || '',
     course:      r.course || currentStudent?.course || '',
-    breakdown:   r.breakdown || r._breakdown || r.payments?.fee_demands?.breakdown || [],
+    breakdown:   bd,
     feeCategory: r._fee_category || r.payments?.fee_demands?.fee_category || '',
     paymentMode: r._payment_mode || r.payment_mode || 'UPI',
   };
@@ -2125,21 +2165,21 @@ function loadStudentProfile() {
   const s = currentStudent;
   document.getElementById('stu-profile-info').innerHTML = `
     <div class="info-grid">
-      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
-      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
-      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${esc(s.roll_no)}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${esc(s.name)}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${esc(s.course)}</div></div>
       <div class="info-item"><div class="key">Semester</div><div class="val">${s.year}${ordinal(s.year)} Sem</div></div>
-      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
-      <div class="info-item"><div class="key">Gender</div><div class="val">${s.gender}</div></div>
-      <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
-      <div class="info-item"><div class="key">Student Type</div><div class="val">${s.student_type || 'Non-Hosteller'}</div></div>
-      <div class="info-item"><div class="key">Enrollment</div><div class="val">${s.enrollment_type || 'Regular'}</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${esc(s.category)}</div></div>
+      <div class="info-item"><div class="key">Gender</div><div class="val">${esc(s.gender)}</div></div>
+      <div class="info-item"><div class="key">Mobile</div><div class="val">${esc(s.mobile)}</div></div>
+      <div class="info-item"><div class="key">Student Type</div><div class="val">${esc(s.student_type || 'Non-Hosteller')}</div></div>
+      <div class="info-item"><div class="key">Enrollment</div><div class="val">${esc(s.enrollment_type || 'Regular')}</div></div>
       <div class="info-item"><div class="key">No Dues</div><div class="val">${s.no_dues ? '✅ Issued on ' + fmtDate(s.no_dues_issued_at) : '—'}</div></div>
-      <div class="info-item"><div class="key">Email</div><div class="val">${s.email || '—'}</div></div>
-      <div class="info-item"><div class="key">Father</div><div class="val">${s.father_name || '—'}</div></div>
-      <div class="info-item"><div class="key">Mother</div><div class="val">${s.mother_name || '—'}</div></div>
+      <div class="info-item"><div class="key">Email</div><div class="val">${esc(s.email) || '—'}</div></div>
+      <div class="info-item"><div class="key">Father</div><div class="val">${esc(s.father_name) || '—'}</div></div>
+      <div class="info-item"><div class="key">Mother</div><div class="val">${esc(s.mother_name) || '—'}</div></div>
     </div>
-    ${s.address ? `<div class="info-item"><div class="key">Address</div><div class="val" style="margin-top:4px">${s.address}</div></div>` : ''}
+    ${s.address ? `<div class="info-item"><div class="key">Address</div><div class="val" style="margin-top:4px">${esc(s.address)}</div></div>` : ''}
     <div style="margin-top:14px">
       <button class="btn btn-primary btn-sm" onclick="editMyProfile()">✏️ Edit Profile</button>
     </div>`;
@@ -2538,6 +2578,11 @@ function renderReceiptsList(list) {
 async function reprintReceipt(rcptNo) {
   const r = await api('GET', `/api/cashier/receipts/${encodeURIComponent(rcptNo)}`, null, cashierHeaders());
   if (!r) { alert('Could not load receipt data. Please try again.'); return; }
+  // Build breakdown: prefer receipt's own, then _breakdown from demand join, then construct from amount
+  let bd = r.breakdown || r._breakdown || r.payments?.fee_demands?.breakdown || [];
+  if ((!Array.isArray(bd) || bd.length === 0) && r.amount > 0) {
+    bd = [{ label: r.fee_type_name || 'Fee', amount: r.amount }];
+  }
   currentReceiptData = {
     receiptNo:    r.receipt_no,
     rollNo:       r.roll_no,
@@ -2548,7 +2593,7 @@ async function reprintReceipt(rcptNo) {
     paymentDate:  r._payment_date || r.payments?.payment_date || '',
     refCode:      r._ref_code || r.payments?.fee_demands?.ref_code || '',
     course:       r.course || r.students?.course || '',
-    breakdown:    r.breakdown || r._breakdown || r.payments?.fee_demands?.breakdown || [],
+    breakdown:    bd,
     feeCategory:  r._fee_category || r.payments?.fee_demands?.fee_category || '',
     paymentMode:  r._payment_mode || r.payment_mode || 'UPI',
   };
@@ -2774,10 +2819,14 @@ function buildReceiptHTML(receipts, qrDataURL) {
             <div class="rcpt-breakdown">
               <div class="rcpt-breakdown-title">Fee Breakdown</div>
               <table class="rcpt-breakdown-table">
-                ${r.breakdown.map(b => `<tr>
-                  <td class="rcpt-bd-label">${b.label}</td>
+                ${r.breakdown.map(b => {
+                  const isLateFine = b.label && b.label.includes('Late Fine');
+                  const rowClass = isLateFine ? ' style="color:#b45309;font-weight:600"' : '';
+                  return `<tr${rowClass}>
+                  <td class="rcpt-bd-label">${b.label}${isLateFine ? ' ⏰' : ''}</td>
                   <td class="rcpt-bd-amt">₹${Number(b.amount).toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
-                </tr>`).join('')}
+                </tr>`;
+                }).join('')}
                 <tr class="rcpt-bd-total">
                   <td class="rcpt-bd-label"><strong>Total</strong></td>
                   <td class="rcpt-bd-amt"><strong>₹${Number(r.amount).toLocaleString('en-IN',{minimumFractionDigits:2})}</strong></td>
@@ -3177,11 +3226,37 @@ async function verifyPublicReceipt() {
 
 
 
+// ═══ STUDENT FEE TYPE SWITCH ════════════════════════════════
+function switchFeeType(type) {
+  // Update tab buttons
+  ['semester','hostel','other'].forEach(t => {
+    const btn = document.getElementById('fee-type-btn-' + t);
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+  // Show/hide forms
+  ['semester','hostel','other'].forEach(t => {
+    const form = document.getElementById('fee-form-' + t);
+    if (form) {
+      if (t === type) {
+        form.style.display = 'flex';
+        form.classList.remove('hidden');
+      } else {
+        form.style.display = 'none';
+        form.classList.add('hidden');
+      }
+    }
+  });
+  // Hide any previous alerts
+  const alertEl = document.getElementById('fee-gen-alert');
+  if (alertEl) alertEl.classList.add('hidden');
+}
+
+
 // ═══ STUDENT SEMESTER FEE GENERATION ══════════════════════════
 async function generateSemesterDemand() {
   const semester = v('stu-pay-semester');
   const enrollType = v('stu-pay-enrollment');
-  if (!semester) { showAlert('sem-pay-alert', 'Please select semester.'); return; }
+  if (!semester) { showAlert('fee-gen-alert', 'Please select semester.'); return; }
 
   setSpinner('sem-pay-spinner', true);
   const res = await api('POST', '/api/student/generate-demand', {
@@ -3189,15 +3264,15 @@ async function generateSemesterDemand() {
   });
   setSpinner('sem-pay-spinner', false);
 
-  if (!res) { showAlert('sem-pay-alert', 'Connection error.'); return; }
-  if (!res.success) { showAlert('sem-pay-alert', res.message || 'Cannot generate demand.'); return; }
+  if (!res) { showAlert('fee-gen-alert', 'Connection error.'); return; }
+  if (!res.success) { showAlert('fee-gen-alert', res.message || 'Cannot generate demand.'); return; }
 
-  document.getElementById('sem-pay-alert').classList.add('hidden');
+  document.getElementById('fee-gen-alert').classList.add('hidden');
   if (res.already_exists) {
     alert('ℹ️ A fee demand for this semester already exists. Check your pending dues below.');
   } else if (res.blocked) {
-    document.getElementById('sem-pay-alert').classList.remove('hidden');
-    document.getElementById('sem-pay-alert').textContent = res.message;
+    document.getElementById('fee-gen-alert').classList.remove('hidden');
+    document.getElementById('fee-gen-alert').textContent = res.message;
     return;
   } else {
     let msg = `✅ Fee demand generated!\n\nSemester: ${semester}\nEnrollment: ${enrollType}`;
@@ -3215,8 +3290,8 @@ async function generateHostelDemand() {
   const semester = v('stu-hostel-semester');
   const amount = parseFloat(v('stu-hostel-amount'));
   const desc = v('stu-hostel-desc').trim();
-  if (!semester) { showAlert('hostel-pay-alert', 'Please select semester.'); return; }
-  if (isNaN(amount) || amount <= 0) { showAlert('hostel-pay-alert', 'Enter valid amount from hostel demand notice.'); return; }
+  if (!semester) { showAlert('fee-gen-alert', 'Please select semester.'); return; }
+  if (isNaN(amount) || amount <= 0) { showAlert('fee-gen-alert', 'Enter valid amount from hostel demand notice.'); return; }
 
   setSpinner('hostel-pay-spinner', true);
   const res = await api('POST', '/api/student/generate-hostel-demand', {
@@ -3224,14 +3299,42 @@ async function generateHostelDemand() {
   });
   setSpinner('hostel-pay-spinner', false);
 
-  if (!res) { showAlert('hostel-pay-alert', 'Connection error.'); return; }
-  if (!res.success) { showAlert('hostel-pay-alert', res.message || 'Cannot generate hostel demand.'); return; }
+  if (!res) { showAlert('fee-gen-alert', 'Connection error.'); return; }
+  if (!res.success) { showAlert('fee-gen-alert', res.message || 'Cannot generate hostel demand.'); return; }
 
-  document.getElementById('hostel-pay-alert').classList.add('hidden');
+  document.getElementById('fee-gen-alert').classList.add('hidden');
   if (res.already_exists) {
     alert('ℹ️ Hostel fee demand already exists. Check your pending dues below.');
   } else {
     alert(`✅ Hostel fee demand generated!\nAmount: ₹${fmt(amount)}\nScroll down to scan QR and pay.`);
+  }
+  await loadStudentData();
+}
+
+// ═══ STUDENT OTHER FEE GENERATION ════════════════════════════
+async function generateOtherDemand() {
+  const semester = v('stu-other-semester');
+  const feeType = v('stu-other-type').trim();
+  const amount = parseFloat(v('stu-other-amount'));
+  const desc = v('stu-other-desc').trim();
+  if (!semester) { showAlert('fee-gen-alert', 'Please select semester.'); return; }
+  if (!feeType) { showAlert('fee-gen-alert', 'Please enter a fee type (e.g. Exam Fee, Library Fee).'); return; }
+  if (isNaN(amount) || amount <= 0) { showAlert('fee-gen-alert', 'Enter a valid amount.'); return; }
+
+  setSpinner('other-pay-spinner', true);
+  const res = await api('POST', '/api/student/generate-other-demand', {
+    semester, fee_type: feeType, amount, description: desc
+  });
+  setSpinner('other-pay-spinner', false);
+
+  if (!res) { showAlert('fee-gen-alert', 'Connection error.'); return; }
+  if (!res.success) { showAlert('fee-gen-alert', res.message || 'Cannot generate demand.'); return; }
+
+  document.getElementById('fee-gen-alert').classList.add('hidden');
+  if (res.already_exists) {
+    alert('ℹ️ A demand for this fee already exists. Check your pending dues below.');
+  } else {
+    alert(`✅ ${feeType} demand generated!\nAmount: ₹${fmt(amount)}\nScroll down to scan QR and pay.`);
   }
   await loadStudentData();
 }
@@ -3700,6 +3803,11 @@ function v(id) {
   const el = document.getElementById(id);
   return el ? el.value : '';
 }
+// Escape HTML attributes to prevent injection in template literals
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 function setText(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
@@ -3939,14 +4047,14 @@ async function editStudentProfile(rollNo) {
   const modal = document.getElementById('modal-student');
   const content = document.getElementById('modal-student-content');
   content.innerHTML = `
-    <div class="modal-title" style="margin-bottom:14px">Edit Profile: ${s.name}</div>
+    <div class="modal-title" style="margin-bottom:14px">Edit Profile: ${esc(s.name)}</div>
     <div id="edit-profile-alert" class="alert alert-danger hidden"></div>
     <div class="form-row">
-      <div class="field"><label>Name</label><input type="text" id="ep-name" value="${s.name||''}"/></div>
-      <div class="field"><label>Mobile</label><input type="text" id="ep-mobile" value="${s.mobile||''}" maxlength="10"/></div>
+      <div class="field"><label>Name</label><input type="text" id="ep-name" value="${esc(s.name)}"/></div>
+      <div class="field"><label>Mobile</label><input type="text" id="ep-mobile" value="${esc(s.mobile)}" maxlength="10"/></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Email</label><input type="text" id="ep-email" value="${s.email||''}"/></div>
+      <div class="field"><label>Email</label><input type="text" id="ep-email" value="${esc(s.email)}"/></div>
       <div class="field"><label>Gender</label>
         <select id="ep-gender">
           <option value="Male" ${s.gender==='Male'?'selected':''}>Male</option>
@@ -3971,25 +4079,25 @@ async function editStudentProfile(rollNo) {
     <div class="form-row">
       <div class="field"><label>Student Type</label>
         <select id="ep-student-type">
-          <option ${s.student_type==='Non-Hosteller'?'selected':''}>Non-Hosteller</option>
-          <option ${s.student_type==='Hosteller'?'selected':''}>Hosteller</option>
+          <option value="Non-Hosteller" ${s.student_type==='Non-Hosteller'?'selected':''}>Non-Hosteller</option>
+          <option value="Hosteller" ${s.student_type==='Hosteller'?'selected':''}>Hosteller</option>
         </select>
       </div>
       <div class="field"><label>Enrollment Type</label>
         <select id="ep-enrollment-type">
-          <option ${s.enrollment_type==='Regular'?'selected':''}>Regular</option>
-          <option ${s.enrollment_type==='Repeat'?'selected':''}>Repeat</option>
+          <option value="Regular" ${s.enrollment_type==='Regular'?'selected':''}>Regular</option>
+          <option value="Repeat" ${s.enrollment_type==='Repeat'?'selected':''}>Repeat</option>
         </select>
       </div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Father's Name</label><input type="text" id="ep-father" value="${s.father_name||''}"/></div>
-      <div class="field"><label>Mother's Name</label><input type="text" id="ep-mother" value="${s.mother_name||''}"/></div>
+      <div class="field"><label>Father's Name</label><input type="text" id="ep-father" value="${esc(s.father_name)}"/></div>
+      <div class="field"><label>Mother's Name</label><input type="text" id="ep-mother" value="${esc(s.mother_name)}"/></div>
     </div>
-    <div class="field"><label>Address</label><input type="text" id="ep-address" value="${s.address||''}"/></div>
+    <div class="field"><label>Address</label><input type="text" id="ep-address" value="${esc(s.address)}"/></div>
     <div class="btn-row" style="margin-top:14px">
       <button class="btn btn-secondary" onclick="closeModal('modal-student')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveStudentProfile('${rollNo}')"><span id="ep-spinner" class="spinner hidden"></span>Save Changes</button>
+      <button class="btn btn-primary" onclick="saveStudentProfile('${esc(rollNo)}')"><span id="ep-spinner" class="spinner hidden"></span>Save Changes</button>
     </div>`;
   openModal('modal-student');
 }
@@ -4025,18 +4133,18 @@ function editMyProfile() {
   el.innerHTML = `
     <div id="self-edit-alert" class="alert alert-danger hidden"></div>
     <div class="info-grid">
-      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
-      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
-      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
-      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${esc(s.roll_no)}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${esc(s.name)}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${esc(s.course)}</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${esc(s.category)}</div></div>
     </div>
     <hr class="divider" style="margin:14px 0"/>
     <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--navy)">Editable Fields</div>
     <div class="form-row">
-      <div class="field"><label>Mobile</label><input type="text" id="sp-mobile" value="${s.mobile||''}" maxlength="10"/></div>
-      <div class="field"><label>Email</label><input type="text" id="sp-email" value="${s.email||''}"/></div>
+      <div class="field"><label>Mobile</label><input type="text" id="sp-mobile" value="${esc(s.mobile)}" maxlength="10"/></div>
+      <div class="field"><label>Email</label><input type="text" id="sp-email" value="${esc(s.email)}"/></div>
     </div>
-    <div class="field"><label>Address</label><input type="text" id="sp-address" value="${s.address||''}"/></div>
+    <div class="field"><label>Address</label><input type="text" id="sp-address" value="${esc(s.address)}"/></div>
     <div class="btn-row" style="margin-top:12px">
       <div></div>
       <button class="btn btn-primary btn-sm" onclick="saveMyProfile()"><span id="sp-spinner" class="spinner hidden"></span>Save Changes</button>
@@ -4107,23 +4215,23 @@ async function viewStudent(rollNo) {
   const content = document.getElementById('modal-student-content');
   content.innerHTML = `
     <div class="info-grid">
-      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
-      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
-      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${esc(s.roll_no)}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${esc(s.name)}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${esc(s.course)}</div></div>
       <div class="info-item"><div class="key">Semester</div><div class="val">${s.year}${ordinal(s.year)} Sem</div></div>
-      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
-      <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${esc(s.category)}</div></div>
+      <div class="info-item"><div class="key">Mobile</div><div class="val">${esc(s.mobile)}</div></div>
     </div>
     <hr class="divider"/>
     <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--navy)">Fee Demands</div>
     ${(demands || []).length === 0 ? '<div class="alert alert-info">No demands issued yet.</div>' :
       demands.map(d => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
-        <div><strong>${d.fee_type_name}</strong><div style="color:var(--gray-600);font-size:11px">${d.ref_code}</div></div>
+        <div><strong>${esc(d.fee_type_name)}</strong><div style="color:var(--gray-600);font-size:11px">${esc(d.ref_code)}</div></div>
         <div style="text-align:right"><strong>₹${fmt(d.amount)}</strong><div><span class="badge badge-${d.status==='paid'?'paid':'pending'}">${d.status}</span></div></div>
       </div>`).join('')}
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" onclick="editStudentProfile('${s.roll_no}')">✏️ Edit Profile</button>
-      <button class="btn btn-secondary btn-sm" onclick="updateStudentType('${s.roll_no}', '${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}')">
+      <button class="btn btn-primary btn-sm" onclick="editStudentProfile('${esc(s.roll_no)}')">✏️ Edit Profile</button>
+      <button class="btn btn-secondary btn-sm" onclick="updateStudentType('${esc(s.roll_no)}', '${esc(s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller')}')">
         Switch to ${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}
       </button>
     </div>`;
