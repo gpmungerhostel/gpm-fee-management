@@ -1747,7 +1747,7 @@ async function loginStudent() {
   setSpinner('sl-spinner', true);
   const res = await api('POST', '/api/auth/student', { roll_no: roll, password: pass });
   setSpinner('sl-spinner', false);
-  if (!res || !res.success) { showLoginAlert(res?.message || 'Login failed.'); return; }
+  if (!res || !res.success) { showLoginAlert(res?.message || res?.error || 'Login failed.'); return; }
   sessionToken = res.token;
   currentStudent = res.student;
   document.getElementById('stu-nav-name').textContent = res.student.name.split(' ')[0];
@@ -1765,7 +1765,7 @@ async function loginCashier() {
   const res = await api('POST', '/api/auth/cashier', { username: user, password: pass });
   setSpinner('cl-spinner', false);
   if (!res || !res.success) {
-    showLoginAlert(res?.message || 'Invalid credentials.');
+    showLoginAlert(res?.message || res?.error || 'Invalid credentials.');
     return;
   }
   sessionToken = res.token;
@@ -1821,7 +1821,7 @@ async function registerStudent() {
     password: pass
   });
   setSpinner('reg-spinner', false);
-  if (!res || !res.success) { showAlert('reg-alert', res?.message || 'Registration failed.'); return; }
+  if (!res || !res.success) { showAlert('reg-alert', res?.message || res?.error || 'Registration failed.'); return; }
   alert('✅ Registration successful! You can now login.');
   showScreen('screen-login');
 }
@@ -2060,7 +2060,7 @@ async function submitStudentUTR() {
   setSpinner('utr-submit-spinner', false);
 
   if (!res || !res.success) {
-    alertEl.textContent = res?.message || 'Submission failed. Please try again.'; alertEl.classList.remove('hidden'); return;
+    alertEl.textContent = res?.message || res?.error || 'Submission failed. Please try again.'; alertEl.classList.remove('hidden'); return;
   }
   successEl.textContent = '✅ ' + (res.message || 'UTR submitted successfully! The cashier will verify and issue your receipt shortly.');
   successEl.classList.remove('hidden');
@@ -2449,7 +2449,7 @@ async function saveFeeType() {
     res = await api('POST', '/api/cashier/fee-types', payload, cashierHeaders());
   }
   setSpinner('ft-spinner', false);
-  if (!res || res.error) { showAlert('ft-alert', 'Error: ' + (res?.error || 'Unknown')); return; }
+  if (!res || res.error) { showAlert('ft-alert', 'Error: ' + (res?.message || res?.error || 'Unknown')); return; }
   closeModal('modal-feetype');
   await loadFeeStructure();
   await loadFeeTypes();
@@ -2494,7 +2494,7 @@ async function verifyPayment() {
   }, cashierHeaders());
   setSpinner('vfy-spinner', false);
 
-  if (!res || !res.success) { showAlert('verify-alert', res?.message || 'Verification failed.'); return; }
+  if (!res || !res.success) { showAlert('verify-alert', res?.message || res?.error || 'Verification failed.'); return; }
 
   currentReceiptData = {
     receiptNo: res.receipt_no,
@@ -3265,7 +3265,7 @@ async function generateSemesterDemand() {
   setSpinner('sem-pay-spinner', false);
 
   if (!res) { showAlert('fee-gen-alert', 'Connection error.'); return; }
-  if (!res.success) { showAlert('fee-gen-alert', res.message || 'Cannot generate demand.'); return; }
+  if (!res.success) { showAlert('fee-gen-alert', res.message || res.error || 'Cannot generate demand.'); return; }
 
   document.getElementById('fee-gen-alert').classList.add('hidden');
   if (res.already_exists) {
@@ -3300,7 +3300,7 @@ async function generateHostelDemand() {
   setSpinner('hostel-pay-spinner', false);
 
   if (!res) { showAlert('fee-gen-alert', 'Connection error.'); return; }
-  if (!res.success) { showAlert('fee-gen-alert', res.message || 'Cannot generate hostel demand.'); return; }
+  if (!res.success) { showAlert('fee-gen-alert', res.message || res.error || 'Cannot generate hostel demand.'); return; }
 
   document.getElementById('fee-gen-alert').classList.add('hidden');
   if (res.already_exists) {
@@ -3328,7 +3328,7 @@ async function generateOtherDemand() {
   setSpinner('other-pay-spinner', false);
 
   if (!res) { showAlert('fee-gen-alert', 'Connection error.'); return; }
-  if (!res.success) { showAlert('fee-gen-alert', res.message || 'Cannot generate demand.'); return; }
+  if (!res.success) { showAlert('fee-gen-alert', res.message || res.error || 'Cannot generate demand.'); return; }
 
   document.getElementById('fee-gen-alert').classList.add('hidden');
   if (res.already_exists) {
@@ -3372,7 +3372,7 @@ async function markPrePaid() {
   setSpinner('pp-spinner', true);
   const res = await api('POST', '/api/cashier/pre-paid', { roll_no: roll, semesters, remark }, cashierHeaders());
   setSpinner('pp-spinner', false);
-  if (!res || !res.success) { showAlert('pp-alert', res?.message || 'Failed.'); return; }
+  if (!res || !res.success) { showAlert('pp-alert', res?.message || res?.error || 'Failed.'); return; }
   document.getElementById('pp-alert').classList.add('hidden');
   alert(`✅ Semesters ${semesters.join(', ')} marked as pre-paid for ${roll}`);
   document.getElementById('pp-roll').value = '';
@@ -3437,7 +3437,7 @@ async function loadSemesterConfig() {
 async function deactivateSemester(id) {
   if (!confirm('Deactivate this semester? Students will no longer be able to generate fee demands for it.')) return;
   const res = await api('PATCH', `/api/cashier/semester-config/${id}`, { status: 'inactive' }, cashierHeaders());
-  if (!res || !res.success) { alert(res?.error || 'Failed to deactivate.'); return; }
+  if (!res || !res.success) { alert(res?.message || res?.error || 'Failed to deactivate.'); return; }
   loadSemesterConfig();
 }
 
@@ -3469,7 +3469,7 @@ async function startSemester() {
     fine_start_date: v('sem-fine-start-date') || null,
   }, cashierHeaders());
   setSpinner('sem-spinner', false);
-  if (!res || !res.success) { showAlert('sem-alert', res?.error || 'Failed to activate semester.'); return; }
+  if (!res || !res.success) { showAlert('sem-alert', res?.message || res?.error || 'Failed to activate semester.'); return; }
   document.getElementById('sem-alert').classList.add('hidden');
   alert(`✅ Semester ${semester} activated for Batch ${batch_year}!\n\nStudents can now generate their fee demands by logging in and selecting their semester.\n📅 Academic deadline: ${academic_deadline}\n📅 Hostel deadline: ${hostel_deadline}`);
   loadSemesterConfig();
@@ -3570,7 +3570,7 @@ async function issueNoDues(rollNo) {
     remarks: v('nd-remarks')
   }, cashierHeaders());
   setSpinner('nd-spinner', false);
-  if (!res || !res.success) { alert(res?.message || 'Failed to issue No Dues.'); return; }
+  if (!res || !res.success) { alert(res?.message || res?.error || 'Failed to issue No Dues.'); return; }
   if (res.caution_warning) alert(res.caution_warning);
   alert('✅ No Dues certificate issued successfully!');
   searchStudentForNoDues();
@@ -3754,7 +3754,7 @@ async function applyOfficeFine() {
     order_no, amount, reason, apply_to, course, fine_type, roll_nos
   }, cashierHeaders());
   setSpinner('fine-spinner', false);
-  if (!res || !res.success) { showAlert('fine-alert', res?.error || 'Failed.'); return; }
+  if (!res || !res.success) { showAlert('fine-alert', res?.message || res?.error || 'Failed.'); return; }
   document.getElementById('fine-alert').classList.add('hidden');
   alert(`✅ Fine applied!\n📋 Demands created: ${res.demands_created}`);
   // Clear form
@@ -3850,7 +3850,7 @@ async function submitHostelAmount(demandId, refCode) {
   const amount = parseFloat(amtEl?.value);
   if (isNaN(amount) || amount <= 0) { alert('Enter a valid amount from your hostel demand notice.'); return; }
   const res = await api('POST', '/api/student/hostel-fee', { demand_id: demandId, amount });
-  if (!res || !res.success) { alert('Error: ' + (res?.error || 'Failed')); return; }
+  if (!res || !res.success) { alert('Error: ' + (res?.message || res?.error || 'Failed')); return; }
   alert('✅ Amount set. You can now scan the QR to pay.');
   await loadStudentData();
   stu_tab('dashboard');
@@ -3938,7 +3938,7 @@ async function processCautionRefund() {
   setSpinner('cm-spinner', true);
   const res = await api('POST', '/api/cashier/caution-refund', { roll_no, amount, reason, remarks });
   setSpinner('cm-spinner', false);
-  if (!res?.success) { showAlert('cm-alert', res?.message || 'Refund failed.'); return; }
+  if (!res?.success) { showAlert('cm-alert', res?.message || res?.error || 'Refund failed.'); return; }
   const el = document.getElementById('cm-result');
   el.classList.remove('hidden');
   el.innerHTML = `<div class="alert alert-success">✅ Refund processed! Receipt: <code>${res.receipt_no}</code></div>`;
@@ -3997,7 +3997,7 @@ async function processCashPayment() {
     ref_code: ref, amount_paid: amount, payment_date: date, remarks
   });
   setSpinner('cash-spinner', false);
-  if (!res?.success) { showAlert('cash-alert', res?.message || 'Cash payment failed.'); return; }
+  if (!res?.success) { showAlert('cash-alert', res?.message || res?.error || 'Cash payment failed.'); return; }
   currentReceiptData = {
     receiptNo: res.receipt_no,
     rollNo: res.demand?.roll_no,
@@ -4034,7 +4034,7 @@ async function waiveFine(demandId, currentAmount) {
   if (!reason || !reason.trim()) return;
   if (!confirm(`Waive late fine for this demand? This cannot be undone.`)) return;
   const res = await api('PATCH', `/api/cashier/demands/${demandId}/waive-fine`, { reason: reason.trim() });
-  if (!res?.success) { alert(res?.message || 'Failed to waive fine.'); return; }
+  if (!res?.success) { alert(res?.message || res?.error || 'Failed to waive fine.'); return; }
   alert(`✅ Fine waived! Amount reduced from ₹${fmt(res.previous_amount)} to ₹${fmt(res.new_amount)}`);
   loadManageDemands();
 }
@@ -4119,7 +4119,7 @@ async function saveStudentProfile(rollNo) {
   setSpinner('ep-spinner', true);
   const res = await api('PATCH', `/api/cashier/students/${encodeURIComponent(rollNo)}`, update);
   setSpinner('ep-spinner', false);
-  if (!res?.success) { showAlert('edit-profile-alert', res?.message || 'Error saving profile.'); return; }
+  if (!res?.success) { showAlert('edit-profile-alert', res?.message || res?.error || 'Error saving profile.'); return; }
   alert('✅ Profile updated successfully!');
   closeModal('modal-student');
   loadCashierStudents();
@@ -4160,7 +4160,7 @@ async function saveMyProfile() {
   setSpinner('sp-spinner', true);
   const res = await api('PATCH', '/api/student/profile', update);
   setSpinner('sp-spinner', false);
-  if (!res?.success) { showAlert('self-edit-alert', res?.message || 'Error saving profile.'); return; }
+  if (!res?.success) { showAlert('self-edit-alert', res?.message || res?.error || 'Error saving profile.'); return; }
   // Update local student data
   if (currentStudent) {
     currentStudent.mobile = update.mobile;
@@ -4177,7 +4177,7 @@ async function uploadHostelNotice(demandId) {
   if (!noticeUrl || !noticeUrl.trim()) return;
   const res = await api('POST', '/api/student/upload-notice', { demand_id: demandId, notice_url: noticeUrl.trim() });
   if (res?.success) { alert('✅ Notice uploaded!'); loadStudentData(); }
-  else alert(res?.error || 'Failed to upload notice.');
+  else alert(res?.message || res?.error || 'Failed to upload notice.');
 }
 
 async function viewHostelNotice(demandId) {
@@ -4194,7 +4194,7 @@ async function verifyHostelDemand(demandId, action) {
       action: 'approve', cashier_verified_amount: verifiedAmt
     });
     if (res?.success) alert('✅ Hostel demand approved! Amount: ₹' + fmt(res.verified_amount));
-    else alert(res?.error || 'Failed to approve.');
+    else alert(res?.message || res?.error || 'Failed to approve.');
   } else {
     const reason = prompt('Enter rejection reason:');
     if (!reason) return;
@@ -4202,7 +4202,7 @@ async function verifyHostelDemand(demandId, action) {
       action: 'reject', rejection_reason: reason
     });
     if (res?.success) alert('❌ Hostel demand rejected.');
-    else alert(res?.error || 'Failed to reject.');
+    else alert(res?.message || res?.error || 'Failed to reject.');
   }
   loadManageDemands();
 }
