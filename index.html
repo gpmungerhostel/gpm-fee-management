@@ -608,6 +608,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       <button class="header-btn" onclick="ca_tab('prepaid')">Pre-Paid</button>
       <button class="header-btn" onclick="ca_tab('nodues')">No Dues</button>
       <button class="header-btn" onclick="ca_tab('fines')">Fines</button>
+      <button class="header-btn" onclick="ca_tab('caution')">Caution Money</button>
+      <button class="header-btn" onclick="ca_tab('passout')">Pass Out / TC</button>
     </div>
     <div class="user-chip">
       <div class="user-avatar" style="background:var(--gold)">C</div>
@@ -754,6 +756,39 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
         <div id="bulk-utr-result" class="hidden" style="margin-top:14px"></div>
       </div>
 
+      <!-- Cash Payment -->
+      <div class="card" style="margin-top:16px;border-left:4px solid var(--gold);background:linear-gradient(135deg,#fffdf5,#fff8e8)">
+        <div class="card-title">💵 Cash Payment</div>
+        <div class="card-subtitle">Record a cash payment directly. No UTR needed — generates receipt immediately.</div>
+        <div id="cash-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Reference Code <span class="req">*</span></label>
+            <input type="text" id="cash-ref" placeholder="e.g. 25CSE2026-SEM1-2026" oninput="lookupCashRef()" style="font-family:monospace;font-size:13px"/>
+            <div class="hint" id="cash-ref-preview"></div>
+          </div>
+          <div class="field">
+            <label>Amount (₹) <span class="req">*</span></label>
+            <input type="number" id="cash-amount" placeholder="Amount paid in cash"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Payment Date <span class="req">*</span></label>
+            <input type="date" id="cash-date"/>
+          </div>
+          <div class="field">
+            <label>Remarks</label>
+            <input type="text" id="cash-remarks" placeholder="Optional remarks"/>
+          </div>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-gold" onclick="processCashPayment()"><span id="cash-spinner" class="spinner hidden"></span>💵 Record Cash Payment</button>
+        </div>
+        <div id="cash-result" class="hidden" style="margin-top:14px"></div>
+      </div>
+
       <!-- Manual single verify (fallback — cashier manually enters ref + UTR) -->
       <div class="card" style="margin-top:16px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer" onclick="toggleManualVerify()">
@@ -845,6 +880,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           <button class="tab-btn active" onclick="reportTab('summary',this)">Summary</button>
           <button class="tab-btn" onclick="reportTab('pending',this)">Pending Dues</button>
           <button class="tab-btn" onclick="reportTab('collected',this)">Collected</button>
+          <button class="tab-btn" onclick="reportTab('daily',this)">Daily</button>
+          <button class="tab-btn" onclick="reportTab('session',this)">Session</button>
+          <button class="tab-btn" onclick="reportTab('defaulters',this)">Defaulters</button>
+          <button class="tab-btn" onclick="reportTab('caution-register',this)">Caution Reg.</button>
+          <button class="tab-btn" onclick="reportTab('late-fines',this)">Late Fines</button>
         </div>
         <div class="form-row" style="margin-bottom:16px">
 
@@ -853,6 +893,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
             <select id="rpt-fee-type" onchange="loadReport()">
               <option value="">All Types</option>
             </select>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="rpt-date" value="" onchange="loadReport()"/>
+          </div>
+          <div class="field">
+            <label>Semester</label>
+            <select id="rpt-semester" onchange="loadReport()">
+              <option value="">All</option>
+              <option value="1">1st</option><option value="2">2nd</option>
+              <option value="3">3rd</option><option value="4">4th</option>
+              <option value="5">5th</option><option value="6">6th</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Batch Year</label>
+            <input type="text" id="rpt-batch-year" placeholder="e.g. 2026" onchange="loadReport()"/>
           </div>
         </div>
         <div id="ca-report-content"><div class="alert alert-info">Select filters above to load report.</div></div>
@@ -919,8 +976,88 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
       </div>
     </div>
 
-    <!-- ═══ PASS-OUT TAB (removed — handled by No Dues) ═══ -->
-    <div id="ca-tab-passout" class="hidden"></div>
+    <!-- ═══ PASS-OUT / TC TAB ═══ -->
+    <div id="ca-tab-passout" class="hidden">
+      <div class="card">
+        <div class="card-title">Pass Out / TC Processing</div>
+        <div class="card-subtitle">Process student pass-out, TC, or cancelled admission. Verifies all dues are cleared before processing.</div>
+        <div id="po-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Student Roll No. <span class="req">*</span></label>
+            <input type="text" id="po-roll" placeholder="e.g. 25/CSE/2026"/>
+          </div>
+          <div class="field">
+            <label>Reason <span class="req">*</span></label>
+            <select id="po-reason">
+              <option value="Passed Out">Passed Out</option>
+              <option value="TC">Transfer Certificate (TC)</option>
+              <option value="Cancelled Admission">Cancelled Admission</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Remarks</label>
+          <input type="text" id="po-remarks" placeholder="Optional remarks"/>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-danger" onclick="processPassOut()"><span id="po-spinner" class="spinner hidden"></span>Process Pass Out</button>
+        </div>
+        <div id="po-result" class="hidden" style="margin-top:14px"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Pass Out Records</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadPassOutList()" style="margin-bottom:12px">↻ Refresh</button>
+        <div id="po-list"><div class="alert alert-info">Click Refresh to load.</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ CAUTION MONEY TAB ═══ -->
+    <div id="ca-tab-caution" class="hidden">
+      <div class="card">
+        <div class="card-title">Caution Money Refund</div>
+        <div class="card-subtitle">Process caution money refund for students. Refund receipt will be generated with prefix GPM/REFUND/.</div>
+        <div id="cm-alert" class="alert alert-danger hidden"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Student Roll No. <span class="req">*</span></label>
+            <input type="text" id="cm-roll" placeholder="e.g. 25/CSE/2026" oninput="lookupCautionMoney()"/>
+            <div class="hint" id="cm-student-preview"></div>
+          </div>
+          <div class="field">
+            <label>Refund Amount (₹) <span class="req">*</span></label>
+            <input type="number" id="cm-amount" placeholder="Amount to refund"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Reason</label>
+            <input type="text" id="cm-reason" value="Refund of Caution Money Deposit"/>
+          </div>
+          <div class="field">
+            <label>Remarks</label>
+            <input type="text" id="cm-remarks" placeholder="Optional remarks"/>
+          </div>
+        </div>
+        <div class="btn-row">
+          <div></div>
+          <button class="btn btn-gold" onclick="processCautionRefund()"><span id="cm-spinner" class="spinner hidden"></span>Process Refund</button>
+        </div>
+        <div id="cm-result" class="hidden" style="margin-top:14px"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Caution Money Register</div>
+        <div class="card-subtitle">Liability summary: total collected vs total refunded.</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadCautionRegister()" style="margin-bottom:12px">↻ Load Register</button>
+        <div id="cm-register"><div class="alert alert-info">Click Load Register to view summary.</div></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Refund Records</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadCautionRefunds()" style="margin-bottom:12px">↻ Refresh</button>
+        <div id="cm-refunds-list"><div class="alert alert-info">Click Refresh to load.</div></div>
+      </div>
+    </div>
 
     <!-- ═══ SEMESTER MANAGEMENT TAB ═══ -->
     <div id="ca-tab-semester" class="hidden">
@@ -980,7 +1117,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
           </div>
 
           <!-- Row 2: Dates -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px">
             <div>
               <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Start Date <span style="color:#c0392b">*</span></div>
               <input type="date" id="sem-start-date" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
@@ -992,6 +1129,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--gray-8
             <div>
               <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Hostel Deadline</div>
               <input type="date" id="sem-hostel-deadline" style="width:100%;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:13px;color:var(--navy);background:#fff"/>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:4px;letter-spacing:.4px;text-transform:uppercase">Fine Start Date</div>
+              <input type="date" id="sem-fine-start-date" style="width:100%;padding:8px 11px;border:1.5px solid #b45309;border-radius:8px;font-size:13px;color:var(--navy);background:#fffef8"/>
+              <div style="font-size:10px;color:var(--gray-500);margin-top:2px">Late fine starts from this date (defaults to academic deadline)</div>
             </div>
           </div>
 
@@ -1891,8 +2033,9 @@ function downloadStudentReceipt(rcptNo) {
     paymentDate: r._payment_date || r.payments?.payment_date || '',
     refCode:     r._ref_code || r.payments?.fee_demands?.ref_code || '',
     course:      r.course || currentStudent?.course || '',
-    breakdown:   r._breakdown || r.payments?.fee_demands?.breakdown || [],
+    breakdown:   r.breakdown || r._breakdown || r.payments?.fee_demands?.breakdown || [],
     feeCategory: r._fee_category || r.payments?.fee_demands?.fee_category || '',
+    paymentMode: r._payment_mode || r.payment_mode || 'UPI',
   };
   _openReceiptPrintWindow();
 }
@@ -2034,7 +2177,10 @@ function loadStudentProfile() {
       <div class="info-item"><div class="key">Father</div><div class="val">${s.father_name || '—'}</div></div>
       <div class="info-item"><div class="key">Mother</div><div class="val">${s.mother_name || '—'}</div></div>
     </div>
-    ${s.address ? `<div class="info-item"><div class="key">Address</div><div class="val" style="margin-top:4px">${s.address}</div></div>` : ''}`;
+    ${s.address ? `<div class="info-item"><div class="key">Address</div><div class="val" style="margin-top:4px">${s.address}</div></div>` : ''}
+    <div style="margin-top:14px">
+      <button class="btn btn-primary btn-sm" onclick="editMyProfile()">✏️ Edit Profile</button>
+    </div>`;
 }
 
 let _qrInstance = null;
@@ -2073,14 +2219,14 @@ function showQRModal(refCode, amount, feeType, upiLink, lateFine) {
 
 // ═══ CASHIER PORTAL ════════════════════════════════════════
 function ca_tab(t) {
-  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','passout'].forEach(tab => {
+  ['dashboard','students','demands','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','caution','passout'].forEach(tab => {
     const el = document.getElementById('ca-tab-' + tab);
     if (el) el.classList.toggle('hidden', tab !== t);
   });
   document.querySelectorAll('#screen-cashier .site-header .header-btn').forEach((b,i) => {
-    b.classList.toggle('active', ['dashboard','students','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines'][i] === t);
+    b.classList.toggle('active', ['dashboard','students','managedemands','verify','receipts','feestructure','reports','semester','prepaid','nodues','fines','caution','passout'][i] === t);
   });
-  if (t === 'verify') { loadPendingUTRs(); document.getElementById('vfy-date') && (document.getElementById('vfy-date').value = new Date().toISOString().split('T')[0]); }
+  if (t === 'verify') { loadPendingUTRs(); document.getElementById('vfy-date') && (document.getElementById('vfy-date').value = new Date().toISOString().split('T')[0]); document.getElementById('cash-date') && (document.getElementById('cash-date').value = new Date().toISOString().split('T')[0]); }
   if (t === 'students') loadCashierStudents();
   if (t === 'managedemands') loadManageDemands();
   if (t === 'receipts') loadCashierReceipts();
@@ -2090,6 +2236,8 @@ function ca_tab(t) {
   if (t === 'prepaid') { document.getElementById('ca-prepaid-list').innerHTML = '<div class="alert alert-info">Search above to view records.</div>'; }
   if (t === 'nodues') loadNoDuesList();
   if (t === 'fines') loadFinesList();
+  if (t === 'caution') loadCautionRefunds();
+  if (t === 'passout') loadPassOutList();
 }
 
 async function loadCashierDashboard() {
@@ -2360,6 +2508,7 @@ async function verifyPayment() {
     refCode: ref,
     breakdown: res.demand?.breakdown || [],
     feeCategory: res.demand?.fee_category || '',
+    paymentMode: 'UPI',
   };
 
   document.getElementById('vfy-receipt-preview').innerHTML = buildReceiptHTML([currentReceiptData]);
@@ -2438,8 +2587,9 @@ async function reprintReceipt(rcptNo) {
     paymentDate:  r._payment_date || r.payments?.payment_date || '',
     refCode:      r._ref_code || r.payments?.fee_demands?.ref_code || '',
     course:       r.course || r.students?.course || '',
-    breakdown:    r._breakdown || r.payments?.fee_demands?.breakdown || [],
+    breakdown:    r.breakdown || r._breakdown || r.payments?.fee_demands?.breakdown || [],
     feeCategory:  r._fee_category || r.payments?.fee_demands?.fee_category || '',
+    paymentMode:  r._payment_mode || r.payment_mode || 'UPI',
   };
   // Build preview without QR (inline modal), show modal
   document.getElementById('modal-receipt-content').innerHTML = buildReceiptHTML([currentReceiptData], null);
@@ -2461,6 +2611,76 @@ async function loadReport() {
   const el = document.getElementById('ca-report-content');
   el.innerHTML = '<div class="alert alert-info">Loading…</div>';
 
+  // Enhanced report tabs
+  if (_currentReportTab === 'daily') {
+    const date = v('rpt-date') || new Date().toISOString().split('T')[0];
+    const res = await api('GET', `/api/cashier/reports/daily?date=${date}`);
+    if (!res) { el.innerHTML = '<div class="alert alert-danger">Error loading data.</div>'; return; }
+    el.innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card"><div class="stat-card-icon" style="background:#eef3ff">📊</div><div><div class="val">₹${fmt(res.total)}</div><div class="lbl">Total Collection</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">📱</div><div><div class="val">₹${fmt(res.upi_total)}</div><div class="lbl">UPI (${res.upi_count})</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">💵</div><div><div class="val">₹${fmt(res.cash_total)}</div><div class="lbl">Cash (${res.cash_count})</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--info-bg)">🧾</div><div><div class="val">${res.receipt_count}</div><div class="lbl">Receipts</div></div></div>
+      </div>`;
+    return;
+  }
+  if (_currentReportTab === 'session') {
+    const semester = v('rpt-semester');
+    const batch_year = v('rpt-batch-year');
+    const res = await api('GET', `/api/cashier/reports/session?semester=${semester}&batch_year=${batch_year}`);
+    if (!res) { el.innerHTML = '<div class="alert alert-danger">Error loading data.</div>'; return; }
+    el.innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card"><div class="stat-card-icon" style="background:#eef3ff">📋</div><div><div class="val">${res.total_demands}</div><div class="lbl">Total Demands</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">✅</div><div><div class="val">₹${fmt(res.total_collected)}</div><div class="lbl">Collected (${res.paid_count})</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏳</div><div><div class="val">₹${fmt(res.total_pending)}</div><div class="lbl">Pending (${res.pending_count})</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--gold-pale)">📋</div><div><div class="val">₹${fmt(res.total_demanded)}</div><div class="lbl">Total Demanded</div></div></div>
+      </div>`;
+    return;
+  }
+  if (_currentReportTab === 'defaulters') {
+    const semester = v('rpt-semester');
+    const res = await api('GET', `/api/cashier/reports/defaulters?semester=${semester}`);
+    if (!res) { el.innerHTML = '<div class="alert alert-danger">Error loading data.</div>'; return; }
+    if (res.count === 0) { el.innerHTML = '<div class="alert alert-success">No defaulters found.</div>'; return; }
+    el.innerHTML = `<div class="alert alert-warning">⚠️ ${res.count} student(s) with pending dues past fine start date (${fmtDate(res.cutoff_date)})</div>
+      <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Roll No.</th><th>Name</th><th>Fee Type</th><th>Amount</th></tr></thead>
+      <tbody>${(res.defaulters||[]).map(d=>`<tr>
+        <td>${d.roll_no}</td><td>${d.students?.name||'—'}</td>
+        <td>${d.fee_type_name}</td><td>₹${fmt(d.amount)}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+    return;
+  }
+  if (_currentReportTab === 'caution-register') {
+    const res = await api('GET', '/api/cashier/reports/caution-register');
+    if (!res) { el.innerHTML = '<div class="alert alert-danger">Error loading data.</div>'; return; }
+    el.innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">💰</div><div><div class="val">₹${fmt(res.total_collected)}</div><div class="lbl">Total Collected</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--danger-bg)">💸</div><div><div class="val">₹${fmt(res.total_refunded)}</div><div class="lbl">Total Refunded</div></div></div>
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⚖️</div><div><div class="val">₹${fmt(res.balance_outstanding)}</div><div class="lbl">Balance Outstanding</div></div></div>
+      </div>`;
+    return;
+  }
+  if (_currentReportTab === 'late-fines') {
+    const semester = v('rpt-semester');
+    const res = await api('GET', `/api/cashier/reports/late-fines?semester=${semester}`);
+    if (!res) { el.innerHTML = '<div class="alert alert-danger">Error loading data.</div>'; return; }
+    if (res.count === 0) { el.innerHTML = '<div class="alert alert-success">No late fines collected.</div>'; return; }
+    el.innerHTML = `<div class="stat-grid" style="margin-bottom:16px">
+        <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⏰</div><div><div class="val">₹${fmt(res.total_late_fines)}</div><div class="lbl">Total Late Fines (${res.count} receipts)</div></div></div>
+      </div>
+      <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Roll No.</th><th>Fee Type</th><th>Late Fine</th></tr></thead>
+      <tbody>${(res.entries||[]).map(d=>`<tr>
+        <td>${d.roll_no}</td><td>${d.fee_type_name}</td><td>₹${fmt(d.late_fine)}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+    return;
+  }
+
+  // Default report tabs (summary/pending/collected)
   let url = '/api/cashier/reports';
   if (ftId) url += `?fee_type_id=${ftId}`;
   const demands = await api('GET', url, null, cashierHeaders());
@@ -2582,6 +2802,7 @@ function buildReceiptHTML(receipts, qrDataURL) {
           <div class="rcpt-field"><span class="rcpt-fl">Course</span><span class="rcpt-fv">${r.course || '—'}</span></div>
           <div class="rcpt-field"><span class="rcpt-fl">Payment Date</span><span class="rcpt-fv">${r.paymentDate || '—'}</span></div>
           <div class="rcpt-field"><span class="rcpt-fl">UTR No.</span><span class="rcpt-fv rcpt-mono">${r.utr || '—'}</span></div>
+          <div class="rcpt-field"><span class="rcpt-fl">Payment Mode</span><span class="rcpt-fv">${r.paymentMode || 'UPI'}</span></div>
           <div class="rcpt-field rcpt-field-full"><span class="rcpt-fl">Ref. Code</span><span class="rcpt-fv rcpt-mono">${r.refCode || '—'}</span></div>
         </div>
 
@@ -2855,6 +3076,8 @@ function renderManageDemands(list) {
     <tbody>${list.map(d => {
       const isPaid = d.status === 'paid';
       const isCancelled = d.status === 'cancelled';
+      const hasLateFine = Array.isArray(d.breakdown) && d.breakdown.some(b => b.label && b.label.includes('Late Fine'));
+      const isHostel = d.fee_category === 'Hostel';
       return `<tr>
         <td>${d.roll_no}</td>
         <td>${d.students?.name || '—'}</td>
@@ -2864,6 +3087,10 @@ function renderManageDemands(list) {
         <td><span class="badge badge-${isPaid?'paid':isCancelled?'overdue':'pending'}">${d.status}</span></td>
         <td>
           ${!isPaid && !isCancelled ? `
+            ${hasLateFine && !d.fine_waived ? `<button class="btn btn-sm" style="background:#b45309;color:#fff;margin-bottom:4px" onclick="waiveFine('${d.id}',${d.amount})">赦 Waive Fine</button>` : ''}
+            ${isHostel ? `<button class="btn btn-sm btn-secondary" style="margin-bottom:4px" onclick="${d.notice_url ? `viewHostelNotice('${d.id}')` : `alert('No notice uploaded')`}">📋 View Notice</button>
+            <button class="btn btn-sm btn-success" style="margin-bottom:4px" onclick="verifyHostelDemand('${d.id}','approve')">✅ Approve</button>
+            <button class="btn btn-sm btn-danger" style="margin-bottom:4px" onclick="verifyHostelDemand('${d.id}','reject')">❌ Reject</button>` : ''}
             <button class="btn btn-sm btn-secondary" onclick="openEditDemand('${d.id}')">✏️ Edit</button>
             <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="cancelDemand('${d.id}')">🚫 Cancel</button>
             <button class="btn btn-sm btn-danger" style="margin-left:4px;background:#6b1a1a" onclick="deleteDemand('${d.id}')">🗑️ Delete</button>
@@ -3175,6 +3402,7 @@ async function startSemester() {
     window_days: 10,
     fee_regular: 0,
     fee_repeat: 0,
+    fine_start_date: v('sem-fine-start-date') || null,
   }, cashierHeaders());
   setSpinner('sem-spinner', false);
   if (!res || !res.success) { showAlert('sem-alert', res?.error || 'Failed to activate semester.'); return; }
@@ -3194,7 +3422,7 @@ async function searchStudentForNoDues() {
   if (!res || !res.found) {
     el.innerHTML = '<div class="alert alert-danger">Student not found.</div>'; return;
   }
-  const { student: s, academic_pending, hostel_pending, eligible, already_issued } = res;
+  const { student: s, academic_pending, hostel_pending, eligible, already_issued, caution_money_collected, caution_money_amount, caution_refund_status } = res;
   if (already_issued) {
     el.innerHTML = `<div class="alert alert-success">✅ No Dues already issued to <strong>${s.name}</strong> on ${fmtDate(s.no_dues_issued_at)}.</div>`;
     return;
@@ -3210,6 +3438,11 @@ async function searchStudentForNoDues() {
     ? `<div class="alert alert-warning" style="margin-top:8px">⚠️ ${hostel_pending.length} hostel due(s) pending — verify physical hostel no dues</div>`
     : '';
 
+  // Gap 7: Caution money status display
+  const cautionHtml = caution_money_collected
+    ? `<div class="alert alert-success" style="margin-top:8px">💰 Caution Money: <strong>₹${fmt(caution_money_amount)}</strong> collected — Status: <strong>${caution_refund_status}</strong></div>`
+    : `<div class="alert alert-warning" style="margin-top:8px">⚠️ Caution Money: <strong>Not yet collected</strong> — Please collect before issuing No Dues.</div>`;
+
   el.innerHTML = `
     <div class="card" style="margin-top:12px">
       <div class="info-grid">
@@ -3221,6 +3454,7 @@ async function searchStudentForNoDues() {
       </div>
       ${pendingHtml}
       ${hostelHtml}
+      ${cautionHtml}
       ${eligible ? `
         ${s.student_type === 'Hosteller' ? `
         <div style="background:#fffbf0;border:1px solid #c8973a;border-radius:8px;padding:16px;margin-top:16px">
@@ -3273,6 +3507,7 @@ async function issueNoDues(rollNo) {
   }, cashierHeaders());
   setSpinner('nd-spinner', false);
   if (!res || !res.success) { alert(res?.message || 'Failed to issue No Dues.'); return; }
+  if (res.caution_warning) alert(res.caution_warning);
   alert('✅ No Dues certificate issued successfully!');
   searchStudentForNoDues();
   loadNoDuesList();
@@ -3611,6 +3846,364 @@ function openModal(id) {
 }
 function closeModal(id) {
   document.getElementById(id).classList.add('hidden');
+}
+
+// ═══ GAP 1: CAUTION MONEY REFUND ══════════════════════════
+async function lookupCautionMoney() {
+  const roll = v('cm-roll').trim().toUpperCase();
+  if (!roll) { setText('cm-student-preview', ''); return; }
+  const data = await api('GET', `/api/cashier/student-lookup?roll_no=${encodeURIComponent(roll)}`);
+  const el = document.getElementById('cm-student-preview');
+  if (!data) { el.textContent = '❌ Student not found'; el.style.color='var(--danger)'; return; }
+  el.textContent = `✅ ${data.name} | ${data.course} | ${data.category}`;
+  el.style.color = 'var(--success)';
+}
+
+async function processCautionRefund() {
+  const roll_no = v('cm-roll').trim().toUpperCase();
+  const amount = parseFloat(v('cm-amount'));
+  const reason = v('cm-reason').trim();
+  const remarks = v('cm-remarks').trim();
+  if (!roll_no || isNaN(amount) || amount <= 0) { showAlert('cm-alert', 'Roll No. and valid amount required.'); return; }
+  if (!confirm(`Process caution money refund of ₹${fmt(amount)} for ${roll_no}?`)) return;
+  setSpinner('cm-spinner', true);
+  const res = await api('POST', '/api/cashier/caution-refund', { roll_no, amount, reason, remarks });
+  setSpinner('cm-spinner', false);
+  if (!res?.success) { showAlert('cm-alert', res?.message || 'Refund failed.'); return; }
+  const el = document.getElementById('cm-result');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="alert alert-success">✅ Refund processed! Receipt: <code>${res.receipt_no}</code></div>`;
+  document.getElementById('cm-roll').value = '';
+  document.getElementById('cm-amount').value = '';
+}
+
+async function loadCautionRegister() {
+  const el = document.getElementById('cm-register');
+  el.innerHTML = '<div class="alert alert-info">Loading…</div>';
+  const res = await api('GET', '/api/cashier/caution-refund/register');
+  if (!res) { el.innerHTML = '<div class="alert alert-danger">Error loading.</div>'; return; }
+  el.innerHTML = `
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card"><div class="stat-card-icon" style="background:var(--success-bg)">💰</div><div><div class="val">₹${fmt(res.total_collected)}</div><div class="lbl">Total Collected (${res.collected_count})</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon" style="background:var(--danger-bg)">💸</div><div><div class="val">₹${fmt(res.total_refunded)}</div><div class="lbl">Total Refunded (${res.refunded_count})</div></div></div>
+      <div class="stat-card"><div class="stat-card-icon" style="background:var(--warning-bg)">⚖️</div><div><div class="val">₹${fmt(res.balance_outstanding)}</div><div class="lbl">Balance Outstanding</div></div></div>
+    </div>`;
+}
+
+async function loadCautionRefunds() {
+  const el = document.getElementById('cm-refunds-list');
+  el.innerHTML = '<div class="alert alert-info">Loading…</div>';
+  const data = await api('GET', '/api/cashier/caution-refund');
+  if (!data || data.length === 0) { el.innerHTML = '<div class="alert alert-info">No refund records yet.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Roll No.</th><th>Amount</th><th>Reason</th><th>Refund Date</th><th>Receipt No.</th><th>Remarks</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td>${r.roll_no}</td><td>₹${fmt(r.amount)}</td><td>${r.reason||'—'}</td>
+      <td>${fmtDate(r.refund_date)}</td><td><code>${r.receipt_no||'—'}</code></td><td>${r.remarks||'—'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+// ═══ GAP 3: CASH PAYMENT ══════════════════════════════════
+async function lookupCashRef() {
+  const ref = v('cash-ref').trim().toUpperCase();
+  if (ref.length < 8) { setText('cash-ref-preview', ''); return; }
+  const data = await api('GET', `/api/cashier/demand-lookup?ref_code=${encodeURIComponent(ref)}`);
+  const el = document.getElementById('cash-ref-preview');
+  if (!data) { el.textContent = '❌ Reference code not found'; el.style.color='var(--danger)'; return; }
+  if (data.status === 'paid') { el.textContent = '⚠️ Already marked as paid'; el.style.color='var(--warning)'; return; }
+  el.textContent = `✅ ${data.students?.name} | ${data.fee_type_name} | ₹${fmt(data.amount)}`;
+  el.style.color = 'var(--success)';
+  document.getElementById('cash-amount').value = data.amount;
+}
+
+async function processCashPayment() {
+  const ref = v('cash-ref').trim().toUpperCase();
+  const amount = parseFloat(v('cash-amount'));
+  const date = v('cash-date');
+  const remarks = v('cash-remarks').trim();
+  if (!ref || isNaN(amount) || amount <= 0 || !date) { showAlert('cash-alert', 'Fill all required fields.'); return; }
+  if (!confirm(`Record cash payment of ₹${fmt(amount)} for ${ref}?`)) return;
+  setSpinner('cash-spinner', true);
+  const res = await api('POST', '/api/cashier/cash-payment', {
+    ref_code: ref, amount_paid: amount, payment_date: date, remarks
+  });
+  setSpinner('cash-spinner', false);
+  if (!res?.success) { showAlert('cash-alert', res?.message || 'Cash payment failed.'); return; }
+  currentReceiptData = {
+    receiptNo: res.receipt_no,
+    rollNo: res.demand?.roll_no,
+    studentName: res.student?.name,
+    course: res.student?.course,
+    feeType: res.demand?.fee_type_name,
+    amount: res.payment?.amount_paid,
+    utr: res.payment?.utr,
+    paymentDate: res.payment?.payment_date,
+    refCode: ref,
+    breakdown: res.demand?.breakdown || [],
+    feeCategory: res.demand?.fee_category || '',
+    paymentMode: 'Cash',
+  };
+  const el = document.getElementById('cash-result');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="card" style="border-left:4px solid var(--success)">
+    <div class="card-title">💵 Cash Payment Recorded ✅</div>
+    <div class="card-subtitle">Receipt: <code>${res.receipt_no}</code> | Mode: Cash</div>
+    <div style="margin-top:10px">${buildReceiptHTML([currentReceiptData])}</div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-gold" onclick="printReceipts()">🖨️ Print Receipt</button>
+    </div>
+  </div>`;
+  document.getElementById('cash-ref').value = '';
+  document.getElementById('cash-amount').value = '';
+  document.getElementById('cash-ref-preview').textContent = '';
+  loadCashierDashboard();
+}
+
+// ═══ GAP 4: LATE FINE WAIVER ═════════════════════════════
+async function waiveFine(demandId, currentAmount) {
+  const reason = prompt(`Enter reason for waiving late fine on this demand (current amount: ₹${fmt(currentAmount)}):`);
+  if (!reason || !reason.trim()) return;
+  if (!confirm(`Waive late fine for this demand? This cannot be undone.`)) return;
+  const res = await api('PATCH', `/api/cashier/demands/${demandId}/waive-fine`, { reason: reason.trim() });
+  if (!res?.success) { alert(res?.message || 'Failed to waive fine.'); return; }
+  alert(`✅ Fine waived! Amount reduced from ₹${fmt(res.previous_amount)} to ₹${fmt(res.new_amount)}`);
+  loadManageDemands();
+}
+
+// ═══ GAP 6: PASS-OUT / TC ════════════════════════════════
+async function processPassOut() {
+  const roll_no = v('po-roll').trim().toUpperCase();
+  const reason = v('po-reason');
+  const remarks = v('po-remarks').trim();
+  if (!roll_no) { showAlert('po-alert', 'Enter Roll No.'); return; }
+  if (!confirm(`Process "${reason}" for ${roll_no}?\n\nThis will:\n• Verify all academic dues are cleared\n• Set student as inactive\n• Create pass-out record\n\nThis cannot be undone.`)) return;
+  setSpinner('po-spinner', true);
+  const res = await api('POST', '/api/cashier/pass-out', { roll_no, reason, remarks });
+  setSpinner('po-spinner', false);
+  if (!res?.success) { showAlert('po-alert', res?.message || 'Failed to process.'); return; }
+  const el = document.getElementById('po-result');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="alert alert-success">✅ ${res.message}</div>
+    ${res.pass_out_record ? `<div class="info-grid" style="margin-top:12px">
+      <div class="info-item"><div class="key">Reason</div><div class="val">${res.pass_out_record.reason}</div></div>
+      <div class="info-item"><div class="key">Caution Refund</div><div class="val">${res.pass_out_record.caution_refund_status}</div></div>
+      <div class="info-item"><div class="key">No Dues Issued</div><div class="val">${res.pass_out_record.final_no_dues_issued ? '✅ Yes' : '❌ No'}</div></div>
+    </div>` : ''}`;
+  document.getElementById('po-roll').value = '';
+}
+
+async function loadPassOutList() {
+  const el = document.getElementById('po-list');
+  el.innerHTML = '<div class="alert alert-info">Loading…</div>';
+  const data = await api('GET', '/api/cashier/pass-out');
+  if (!data || data.length === 0) { el.innerHTML = '<div class="alert alert-info">No pass-out records yet.</div>'; return; }
+  el.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Roll No.</th><th>Reason</th><th>Caution Refund</th><th>No Dues</th><th>Processed At</th><th>Remarks</th></tr></thead>
+    <tbody>${data.map(r => `<tr>
+      <td>${r.roll_no}</td><td>${r.reason}</td>
+      <td><span class="badge ${r.caution_refund_status==='refunded'?'badge-paid':'badge-pending'}">${r.caution_refund_status}</span></td>
+      <td>${r.final_no_dues_issued ? '✅' : '❌'}</td>
+      <td>${fmtDate(r.processed_at)}</td><td>${r.remarks||'—'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+// ═══ GAP 11: STUDENT PROFILE EDITING ══════════════════════
+async function editStudentProfile(rollNo) {
+  const res = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`);
+  if (!res?.student) { alert('Student not found'); return; }
+  const s = res.student;
+  const modal = document.getElementById('modal-student');
+  const content = document.getElementById('modal-student-content');
+  content.innerHTML = `
+    <div class="modal-title" style="margin-bottom:14px">Edit Profile: ${s.name}</div>
+    <div id="edit-profile-alert" class="alert alert-danger hidden"></div>
+    <div class="form-row">
+      <div class="field"><label>Name</label><input type="text" id="ep-name" value="${s.name||''}"/></div>
+      <div class="field"><label>Mobile</label><input type="text" id="ep-mobile" value="${s.mobile||''}" maxlength="10"/></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Email</label><input type="text" id="ep-email" value="${s.email||''}"/></div>
+      <div class="field"><label>Gender</label>
+        <select id="ep-gender">
+          <option value="Male" ${s.gender==='Male'?'selected':''}>Male</option>
+          <option value="Female" ${s.gender==='Female'?'selected':''}>Female</option>
+          <option value="Other" ${s.gender==='Other'?'selected':''}>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Category</label>
+        <select id="ep-category">
+          ${['General','BC','EBC','SC','ST','EWS'].map(c=>`<option ${s.category===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>PWD</label>
+        <select id="ep-pwd">
+          <option value="false" ${!s.pwd?'selected':''}>No</option>
+          <option value="true" ${s.pwd?'selected':''}>Yes</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Student Type</label>
+        <select id="ep-student-type">
+          <option ${s.student_type==='Non-Hosteller'?'selected':''}>Non-Hosteller</option>
+          <option ${s.student_type==='Hosteller'?'selected':''}>Hosteller</option>
+        </select>
+      </div>
+      <div class="field"><label>Enrollment Type</label>
+        <select id="ep-enrollment-type">
+          <option ${s.enrollment_type==='Regular'?'selected':''}>Regular</option>
+          <option ${s.enrollment_type==='Repeat'?'selected':''}>Repeat</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Father's Name</label><input type="text" id="ep-father" value="${s.father_name||''}"/></div>
+      <div class="field"><label>Mother's Name</label><input type="text" id="ep-mother" value="${s.mother_name||''}"/></div>
+    </div>
+    <div class="field"><label>Address</label><input type="text" id="ep-address" value="${s.address||''}"/></div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-student')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudentProfile('${rollNo}')"><span id="ep-spinner" class="spinner hidden"></span>Save Changes</button>
+    </div>`;
+  openModal('modal-student');
+}
+
+async function saveStudentProfile(rollNo) {
+  const update = {
+    name: v('ep-name').trim(),
+    mobile: v('ep-mobile').trim(),
+    email: v('ep-email').trim(),
+    gender: v('ep-gender'),
+    category: v('ep-category'),
+    pwd: v('ep-pwd') === 'true',
+    student_type: v('ep-student-type'),
+    enrollment_type: v('ep-enrollment-type'),
+    father_name: v('ep-father').trim(),
+    mother_name: v('ep-mother').trim(),
+    address: v('ep-address').trim(),
+  };
+  setSpinner('ep-spinner', true);
+  const res = await api('PATCH', `/api/cashier/students/${encodeURIComponent(rollNo)}`, update);
+  setSpinner('ep-spinner', false);
+  if (!res?.success) { showAlert('edit-profile-alert', 'Error saving profile.'); return; }
+  alert('✅ Profile updated successfully!');
+  closeModal('modal-student');
+  loadCashierStudents();
+}
+
+// ═══ GAP 11: STUDENT SELF PROFILE EDIT ════════════════════
+function editMyProfile() {
+  const s = currentStudent;
+  if (!s) return;
+  const el = document.getElementById('stu-profile-info');
+  el.innerHTML = `
+    <div id="self-edit-alert" class="alert alert-danger hidden"></div>
+    <div class="info-grid">
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
+    </div>
+    <hr class="divider" style="margin:14px 0"/>
+    <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--navy)">Editable Fields</div>
+    <div class="form-row">
+      <div class="field"><label>Mobile</label><input type="text" id="sp-mobile" value="${s.mobile||''}" maxlength="10"/></div>
+      <div class="field"><label>Email</label><input type="text" id="sp-email" value="${s.email||''}"/></div>
+    </div>
+    <div class="field"><label>Address</label><input type="text" id="sp-address" value="${s.address||''}"/></div>
+    <div class="btn-row" style="margin-top:12px">
+      <div></div>
+      <button class="btn btn-primary btn-sm" onclick="saveMyProfile()"><span id="sp-spinner" class="spinner hidden"></span>Save Changes</button>
+    </div>`;
+}
+
+async function saveMyProfile() {
+  const update = {
+    mobile: v('sp-mobile').trim(),
+    email: v('sp-email').trim(),
+    address: v('sp-address').trim(),
+  };
+  setSpinner('sp-spinner', true);
+  const res = await api('PATCH', '/api/student/profile', update);
+  setSpinner('sp-spinner', false);
+  if (!res?.success) { showAlert('self-edit-alert', 'Error saving profile.'); return; }
+  // Update local student data
+  if (currentStudent) {
+    currentStudent.mobile = update.mobile;
+    currentStudent.email = update.email;
+    currentStudent.address = update.address;
+  }
+  alert('✅ Profile updated successfully!');
+  loadStudentProfile();
+}
+
+// ═══ GAP 5: HOSTEL NOTICE & VERIFY ════════════════════════
+async function uploadHostelNotice(demandId) {
+  const noticeUrl = prompt('Enter the hostel demand notice URL:');
+  if (!noticeUrl || !noticeUrl.trim()) return;
+  const res = await api('POST', '/api/student/upload-notice', { demand_id: demandId, notice_url: noticeUrl.trim() });
+  if (res?.success) { alert('✅ Notice uploaded!'); loadStudentData(); }
+  else alert(res?.error || 'Failed to upload notice.');
+}
+
+async function viewHostelNotice(demandId) {
+  const demand = _allDemandsCache.find(d => d.id === demandId);
+  if (!demand?.notice_url) { alert('No notice uploaded for this demand.'); return; }
+  window.open(demand.notice_url, '_blank');
+}
+
+async function verifyHostelDemand(demandId, action) {
+  if (action === 'approve') {
+    const amount = prompt('Enter verified amount (leave blank to use demand amount):');
+    const verifiedAmt = amount ? parseFloat(amount) : null;
+    const res = await api('PATCH', `/api/cashier/demands/${demandId}/verify-hostel`, {
+      action: 'approve', cashier_verified_amount: verifiedAmt
+    });
+    if (res?.success) alert('✅ Hostel demand approved! Amount: ₹' + fmt(res.verified_amount));
+    else alert(res?.error || 'Failed to approve.');
+  } else {
+    const reason = prompt('Enter rejection reason:');
+    if (!reason) return;
+    const res = await api('PATCH', `/api/cashier/demands/${demandId}/verify-hostel`, {
+      action: 'reject', rejection_reason: reason
+    });
+    if (res?.success) alert('❌ Hostel demand rejected.');
+    else alert(res?.error || 'Failed to reject.');
+  }
+  loadManageDemands();
+}
+
+// ═══ ENHANCED STUDENT PROFILE VIEW (with caution money) ═══
+async function viewStudent(rollNo) {
+  const res = await api('GET', `/api/cashier/students/${encodeURIComponent(rollNo)}`);
+  const s = res?.student;
+  const demands = res?.demands || [];
+  const content = document.getElementById('modal-student-content');
+  content.innerHTML = `
+    <div class="info-grid">
+      <div class="info-item"><div class="key">Roll No.</div><div class="val">${s.roll_no}</div></div>
+      <div class="info-item"><div class="key">Name</div><div class="val">${s.name}</div></div>
+      <div class="info-item"><div class="key">Course</div><div class="val">${s.course}</div></div>
+      <div class="info-item"><div class="key">Semester</div><div class="val">${s.year}${ordinal(s.year)} Sem</div></div>
+      <div class="info-item"><div class="key">Category</div><div class="val">${s.category}</div></div>
+      <div class="info-item"><div class="key">Mobile</div><div class="val">${s.mobile}</div></div>
+    </div>
+    <hr class="divider"/>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--navy)">Fee Demands</div>
+    ${(demands || []).length === 0 ? '<div class="alert alert-info">No demands issued yet.</div>' :
+      demands.map(d => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
+        <div><strong>${d.fee_type_name}</strong><div style="color:var(--gray-600);font-size:11px">${d.ref_code}</div></div>
+        <div style="text-align:right"><strong>₹${fmt(d.amount)}</strong><div><span class="badge badge-${d.status==='paid'?'paid':'pending'}">${d.status}</span></div></div>
+      </div>`).join('')}
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="editStudentProfile('${s.roll_no}')">✏️ Edit Profile</button>
+      <button class="btn btn-secondary btn-sm" onclick="updateStudentType('${s.roll_no}', '${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}')">
+        Switch to ${s.student_type === 'Hosteller' ? 'Non-Hosteller' : 'Hosteller'}
+      </button>
+    </div>`;
+  openModal('modal-student');
 }
 
 // Close modals on overlay click
